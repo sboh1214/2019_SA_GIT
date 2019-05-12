@@ -10,9 +10,11 @@ Client_Secret = 'vVve0WqXE5'
 
 class NaverNewsAPI:
 
-    def RequestNewsLink(query, n, display=100, sort="sim"):
+    Data = []
+    
+    def RequestNewsLink(self, query, n=1, display=100, sort="sim"):
         q = urllib.parse.quote(query)
-        url = "https://openapi.naver.com/v1/search/news?query=" + q + "&display="+str(display)+"&sort=" + sort
+        url = "https://openapi.naver.com/v1/search/news?query=" + q + "&display="+str(display)+"&sort=" + sort + "&start="+str(n)
         request = urllib.request.Request(url)
         request.add_header("X-Naver-Client-Id", Client_ID)
         request.add_header("X-Naver-Client-Secret", Client_Secret)
@@ -21,23 +23,28 @@ class NaverNewsAPI:
         if(rescode != 200):
             print("Error Code:" + rescode)
             return "Error" + rescode
-        else:
-            response_body = response.read()
-            return response_body.decode('utf-8')
-    
-    def SaveNewsLinkCSV(jsonData, fileName = "NewsLink.csv"):
+        response_body = response.read()
+        jsonData = response_body.decode('utf-8')
+        
         json_data = json.loads(jsonData)
         json_items = json_data['items']
+        for item in json_items:
+            title = self.MakePlainText(item['title'])
+            link = item['link']
+            originalLink = item['originallink']
+            self.Data.append({"Title":title,"Link": link, "OriginalLink":originalLink})
+
+    def SaveNewsLinkCSV(self, fileName = "NewsLink.csv"):
         f = open(fileName, 'w', encoding='utf-8', newline='')
         csvFile = csv.writer(f)
-        for item in json_items:
-            title = NaverNewsAPI.MakePlainText(item['title'])
+        for item in self.Data:
+            title = self.MakePlainText(item['title'])
             link = item['link']
             originalLink = item['originallink']
             csvFile.writerow([title, link, originalLink])
         return True
 
-    def MakePlainText(title):
+    def MakePlainText(self, title):
         print(title)
         title = re.sub('\"\'','',title)
         #html 태그 제거
@@ -51,11 +58,13 @@ class NaverNewsAPI:
         title = re.sub('號', '호', title)
         return title
 
-    def LoadNewsLinkCSV(jsonData):
-        jsonData
+    def LoadNewsLinkCSV(self, fileName):
+        pass
 
 if __name__ == "__main__":
-    jsonData = NaverNewsAPI.RequestNewsLink("19대 대선",1)
-    NaverNewsAPI.SaveNewsLinkCSV(jsonData)
+    naverNewsAPI = NaverNewsAPI()
+    for i in range(1,1000):
+        jsonData = naverNewsAPI.RequestNewsLink("19대 대선",i)
+    naverNewsAPI.SaveNewsLinkCSV(jsonData)
 
 # TODO : Beautifulsoup 활용해서 내용 추출
