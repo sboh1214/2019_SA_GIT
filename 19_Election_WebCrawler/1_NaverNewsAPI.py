@@ -13,6 +13,11 @@ class NaverNewsAPI:
     Data = []
     
     def RequestNewsLink(self, query, n=1, display=100, sort="sim"):
+        if n<1 or n>1000:
+            return "Error (invalid n)"
+        if display<1 or display>100:
+            return "Error (invalid display)"
+
         q = urllib.parse.quote(query)
         url = "https://openapi.naver.com/v1/search/news?query=" + q + "&display="+str(display)+"&sort=" + sort + "&start="+str(n)
         request = urllib.request.Request(url)
@@ -21,8 +26,7 @@ class NaverNewsAPI:
         response = urllib.request.urlopen(request)
         rescode = response.getcode()
         if(rescode != 200):
-            print("Error Code:" + rescode)
-            return "Error" + rescode
+            return "Error (http)" + rescode
         response_body = response.read()
         jsonData = response_body.decode('utf-8')
         
@@ -38,11 +42,11 @@ class NaverNewsAPI:
         f = open(fileName, 'w', encoding='utf-8', newline='')
         csvFile = csv.writer(f)
         for item in self.Data:
-            title = self.MakePlainText(item['title'])
+            title = item['title']
             link = item['link']
             originalLink = item['originallink']
             csvFile.writerow([title, link, originalLink])
-        return True
+        return "Success"
 
     def MakePlainText(self, title):
         print(title)
@@ -58,13 +62,19 @@ class NaverNewsAPI:
         title = re.sub('號', '호', title)
         return title
 
-    def LoadNewsLinkCSV(self, fileName):
+    def OpenNewsLinkCSV(self, fileName):
         pass
+
+class NewsArticleCrawler:
+    Data=[]
+    def GetNews(self):
+        
+    
 
 if __name__ == "__main__":
     naverNewsAPI = NaverNewsAPI()
-    for i in range(1,1000):
-        jsonData = naverNewsAPI.RequestNewsLink("19대 대선",i)
-    naverNewsAPI.SaveNewsLinkCSV(jsonData)
+    naverNewsAPI.RequestNewsLink("19대 대선",1)
+    naverNewsAPI.SaveNewsLinkCSV()
+
 
 # TODO : Beautifulsoup 활용해서 내용 추출
