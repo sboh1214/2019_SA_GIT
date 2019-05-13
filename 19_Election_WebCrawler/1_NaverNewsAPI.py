@@ -1,5 +1,4 @@
 import urllib.request
-import requests
 import json
 import csv
 import re
@@ -67,11 +66,16 @@ class NaverNewsAPI:
 class NewsArticleCrawler:
     Data = []
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
-    header = {"User-Agent":UserAgent}
     def GetNews(self):
         for item in self.Data:
             url = item["Link"]
-            content = requests.get(url,headers=self.header).text
+            request = urllib.request.Request(url)
+            request.add_header("User-Agent",self.UserAgent)
+            response = urllib.request.urlopen(request)
+            rescode = response.getcode()
+            if(rescode != 200):
+                return "Error (http)" + rescode
+            content = response.read()
             if "news.naver.com" in url: #네이버뉴스 모바일 - "dic_area"
                 self.Format_Naver(content)
             else:
