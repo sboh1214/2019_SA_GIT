@@ -2,7 +2,7 @@ import urllib.request
 import json
 import csv
 import re
-import beautifulsoup as bs4
+from bs4 import BeautifulSoup
 
 
 class NaverNewsAPI:
@@ -79,6 +79,8 @@ if __name__ == "__main__":
     naverNewsAPI.SaveNewsLinkCSV()
 
 
-# TODO : Beautifulsoup 활용해서 내용 추출
-# div id = "dic_area"에 모바일 페이지 본문
+
 # 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
+
+soup = BeautifulSoup.BeautifulSoup("") #Fill in the response
+soup.find("div", {"id": "dic_area"})
