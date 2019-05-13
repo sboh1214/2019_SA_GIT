@@ -75,8 +75,10 @@ class NewsArticleCrawler:
 
 if __name__ == "__main__":
     naverNewsAPI = NaverNewsAPI()
-    naverNewsAPI.RequestNewsLink("19대 대선", 1)
+    naverNewsAPI.RequestNewsLink("19대 대선", 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
     naverNewsAPI.SaveNewsLinkCSV()
 
 
 # TODO : Beautifulsoup 활용해서 내용 추출
+# div id = "dic_area"에 모바일 페이지 본문
+# 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
