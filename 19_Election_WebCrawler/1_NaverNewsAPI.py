@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 class NaverNewsAPI:
     Client_ID = 'Mo_tHONZPPs7OeNzZQAE'
     Client_Secret = 'vVve0WqXE5'
-    Data = [] #Title, Link, OriginalLink
+    LinkData = [] #Title, Link, OriginalLink
 
     def RequestNewsLink(self, query, n=1, display=100, sort="sim"):
         if n < 1 or n > 1000:
@@ -34,7 +34,7 @@ class NaverNewsAPI:
             title = self.MakePlainText(item['title'])
             link = item['link']
             originalLink = item['originallink']
-            self.Data.append({"Title": title, "Link": link,
+            self.LinkData.append({"Title": title, "Link": link,
                               "OriginalLink": originalLink})
 
     def SaveNewsLinkCSV(self, fileName="NewsLink.csv"):
@@ -64,10 +64,13 @@ class NaverNewsAPI:
 
 
 class NewsArticleCrawler:
-    Data = []
+    LinkData = [] #Title, Link, OriginalLink
+    NewsData = []
+
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
+
     def GetNews(self):
-        for item in self.Data:
+        for item in self.LinkData:
             url = item["Link"]
             request = urllib.request.Request(url)
             request.add_header("User-Agent",self.UserAgent)
@@ -85,6 +88,7 @@ class NewsArticleCrawler:
         # 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
         soup = BeautifulSoup(content)
         content = soup.find("div", {"id": "dic_area"})
+        #content = BeautifulSoup(content, 'html.parser').text
         print(content)
         return content
 
@@ -92,5 +96,5 @@ if __name__ == "__main__":
     api = NaverNewsAPI()
     api.RequestNewsLink("19대 대선", 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
     crawler = NewsArticleCrawler()
-    crawler.Data = api.Data
+    crawler.LinkData = api.LinkData
     crawler.GetNews()
