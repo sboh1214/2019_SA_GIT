@@ -88,7 +88,8 @@ class NewsArticleCrawler:
         # 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
         soup = BeautifulSoup(content)
         content = soup.find("div", {"id": "dic_area"})
-        #content = BeautifulSoup(content, 'html.parser').text
+        if content is not None:
+            content = BeautifulSoup(content, 'html.parser').text
         print(content)
         return content
 
