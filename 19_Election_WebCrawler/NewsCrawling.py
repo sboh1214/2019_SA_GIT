@@ -37,16 +37,6 @@ class NaverNewsAPI:
             self.LinkData.append({"Title": title, "Link": link,
                               "OriginalLink": originalLink})
 
-    def SaveNewsLinkCSV(self, fileName="NewsLink.csv"):
-        f = open(fileName, 'w', encoding='utf-8', newline='')
-        csvFile = csv.writer(f)
-        for item in self.LinkData:
-            title = item['Title']
-            link = item['Link']
-            originalLink = item['OriginalLink']
-            csvFile.writerow([title, link, originalLink])
-        return "Success"
-
     def MakePlainText(self, title):
         title = re.sub('\"\'', '', title)
         # html 태그 제거
@@ -59,9 +49,15 @@ class NaverNewsAPI:
         title = re.sub('號', '호', title)
         return title
 
-    def OpenNewsLinkCSV(self, fileName): 
-        pass
-
+    def SaveLink(self, fileName="LinkData.csv"):
+        f = open(fileName, 'w', encoding='utf-8', newline='')
+        csvFile = csv.writer(f)
+        for item in self.LinkData:
+            title = item['Title']
+            link = item['Link']
+            originalLink = item['OriginalLink']
+            csvFile.writerow([title, link, originalLink])
+        return "Success"
 
 class NewsArticleCrawler:
     LinkData = [] #Title, Link, OriginalLink
@@ -92,7 +88,10 @@ class NewsArticleCrawler:
         #print(content, date)
         return (item["Title"], item["Link"], date, content)
 
-    def SaveNews(self, fileName):
+    def OpenLink(self, fileName="LinkData.csv"):
+        pass
+
+    def SaveNews(self, fileName="NewsData.csv"):
         pass
 
 if __name__ == "__main__":
