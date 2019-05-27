@@ -65,7 +65,7 @@ class NaverNewsAPI:
 
 class NewsArticleCrawler:
     LinkData = [] #Title, Link, OriginalLink
-    NewsData = [] 
+    NewsData = [] #Content
 
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
 
@@ -80,7 +80,7 @@ class NewsArticleCrawler:
                 return "Error (http)" + rescode
             content = response.read()
             if "news.naver.com" in url: #네이버뉴스 모바일 - "dic_area"
-                return self.Format_Naver(content)
+                self.NewsData.append(self.Format_Naver(content))
             else:
                 pass
 
@@ -89,7 +89,7 @@ class NewsArticleCrawler:
         soup = BeautifulSoup(content, 'html.parser')
         content = soup.find("div", {"id": "dic_area"}).text
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
-        print(content, date)
+        #print(content, date)
         return content
 
 if __name__ == "__main__":
