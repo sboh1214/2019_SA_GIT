@@ -92,6 +92,9 @@ class NewsArticleCrawler:
         #print(content, date)
         return content
 
+    def SaveNews():
+        pass
+
 if __name__ == "__main__":
     api = NaverNewsAPI()
     api.RequestNewsLink("19대 대선", 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
