@@ -90,7 +90,7 @@ class NewsArticleCrawler:
         content = soup.find("div", {"id": "dic_area"}).text
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         #print(content, date)
-        return content
+        return (self.LinkData[0], self.LinkData[1], date, content)
 
 if __name__ == "__main__":
     api = NaverNewsAPI()
