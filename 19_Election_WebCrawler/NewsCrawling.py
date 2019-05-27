@@ -92,7 +92,7 @@ class NewsArticleCrawler:
         #print(content, date)
         return content
 
-    def SaveNews():
+    def SaveNews(self, fileName):
         pass
 
 if __name__ == "__main__":
