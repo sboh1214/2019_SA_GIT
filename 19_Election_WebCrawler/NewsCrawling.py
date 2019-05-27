@@ -40,7 +40,7 @@ class NaverNewsAPI:
     def SaveNewsLinkCSV(self, fileName="NewsLink.csv"):
         f = open(fileName, 'w', encoding='utf-8', newline='')
         csvFile = csv.writer(f)
-        for item in self.Data:
+        for item in self.LinkData:
             title = item['Title']
             link = item['Link']
             originalLink = item['OriginalLink']
@@ -80,17 +80,17 @@ class NewsArticleCrawler:
                 return "Error (http)" + rescode
             content = response.read()
             if "news.naver.com" in url: #네이버뉴스 모바일 - "dic_area"
-                self.NewsData.append(self.Format_Naver(content))
+                self.NewsData.append(self.Format_Naver(content, item))
             else:
                 pass
 
-    def Format_Naver(self, content): 
+    def Format_Naver(self, content, item): 
         # 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
         soup = BeautifulSoup(content, 'html.parser')
         content = soup.find("div", {"id": "dic_area"}).text
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         #print(content, date)
-        return (self.LinkData[0], self.LinkData[1], date, content)
+        return (item["Title"], item["Link"], date, content)
 
 if __name__ == "__main__":
     api = NaverNewsAPI()
@@ -99,4 +99,4 @@ if __name__ == "__main__":
     crawler.LinkData = api.LinkData
     newsData = crawler.GetNews()
     csv = open("test1.csv", "w")
-    csv.write(newsData)
+    csv.write(str(crawler.NewsData))
