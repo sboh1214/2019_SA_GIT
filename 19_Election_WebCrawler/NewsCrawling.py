@@ -3,13 +3,14 @@ import json
 import csv
 import re
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 class NaverNewsAPI:
     Client_ID = 'Mo_tHONZPPs7OeNzZQAE'
     Client_Secret = 'vVve0WqXE5'
     LinkData = [] #Title, Link, OriginalLink
 
-    def RequestNewsLink(self, query, n=1, display=100, sort="sim"):
+    def RequestNewsLink(self, query, n=1, display=10, sort="sim"): #CHANGE THE DISPLAY DEFAULT # TO 100
         if n < 1 or n > 1000:
             return "Error (invalid n)"
         if display < 1 or display > 100:
@@ -61,7 +62,11 @@ class NaverNewsAPI:
 
 class NewsArticleCrawler:
     LinkData = [] #Title, Link, OriginalLink
+<<<<<<< HEAD
     NewsData = [] #Title, Press, Date, Content
+=======
+    NewsData = [] #Title, 언론사, Date, Content
+>>>>>>> 52f5e6325ce4ead44eb45bad3c9387220de823a1
 
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
 
@@ -76,7 +81,7 @@ class NewsArticleCrawler:
                 return "Error (http)" + rescode
             content = response.read()
             if "news.naver.com" in url: #네이버뉴스 모바일 - "dic_area"
-                self.NewsData.append(self.Format_Naver(content, item))
+                csv.writerow(str(self.Format_Naver(content, item)))
             else:
                 pass
 
@@ -84,9 +89,10 @@ class NewsArticleCrawler:
         # 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
         soup = BeautifulSoup(content, 'html.parser')
         content = soup.find("div", {"id": "dic_area"}).text
+        content = re.sub('\"\'', '', title)
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         #print(content, date)
-        return (item["Title"], item["Link"], date, content)
+        return (item["Title"], urlparse(item["OriginalLink"]).netloc.split('.')[1], date, content)
 
     def OpenLink(self, fileName="LinkData.csv"):
         pass
@@ -99,6 +105,6 @@ if __name__ == "__main__":
     api.RequestNewsLink("19대 대선", 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
+    csve = csv.writer(open("test1.csv", "w")
     newsData = crawler.GetNews()
-    csv = open("test1.csv", "w")
-    csv.write(str(crawler.NewsData))
+    
