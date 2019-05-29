@@ -62,11 +62,7 @@ class NaverNewsAPI:
 
 class NewsArticleCrawler:
     LinkData = [] #Title, Link, OriginalLink
-<<<<<<< HEAD
     NewsData = [] #Title, Press, Date, Content
-=======
-    NewsData = [] #Title, 언론사, Date, Content
->>>>>>> 52f5e6325ce4ead44eb45bad3c9387220de823a1
 
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
 
@@ -106,5 +102,4 @@ if __name__ == "__main__":
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
     csve = csv.writer(open("test1.csv", "w")
-    newsData = crawler.GetNews()
     
