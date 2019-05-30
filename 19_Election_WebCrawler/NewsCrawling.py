@@ -86,10 +86,7 @@ class NewsArticleCrawler:
         content = soup.find("div", {"id": "dic_area"}).text
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         #print(content, date)
-        return (item["Title"], urlparse(item["OriginalLink"]).netloc, date, content)
-
-    def OpenLink(self, fileName="LinkData.csv"):
-        pass
+        return (item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.'))
 
     def SaveNews(self, fileName="NewsData.csv"):
         self.GetNews()
@@ -97,6 +94,11 @@ class NewsArticleCrawler:
         csvwriter.writerow(("제목","언론사","날짜","기사원문"))
         for item in self.NewsData:
             csvwriter.writerow(item)
+"""
+    UNUSED FUNCTION FOR LATER USE
+    def OpenLink(self, fileName="LinkData.csv"):
+        pass
+"""
         
 
 if __name__ == "__main__":
