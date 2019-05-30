@@ -100,9 +100,5 @@ if __name__ == "__main__":
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
     csvwriter = csv.writer(open("test1.csv", "w"))
-<<<<<<< HEAD
-    csvwriter = csv.writer(open("test1.csv", "w"))
-    crawler.GetNews().NewsData
-=======
     crawler.GetNews().NewsData
     
