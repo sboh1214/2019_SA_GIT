@@ -82,27 +82,27 @@ class NewsArticleCrawler:
                 pass
 
     def Format_Naver(self, content, item): 
-        # 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
         soup = BeautifulSoup(content, 'html.parser')
         content = soup.find("div", {"id": "dic_area"}).text
+        date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         #print(content, date)
-        return (item["Title"], urlparse(item["OriginalLink"]).netloc.split('.')[1], date, content)
+        return (item["Title"], urlparse(item["OriginalLink"]).netloc, date, content)
 
     def OpenLink(self, fileName="LinkData.csv"):
         pass
 
     def SaveNews(self, fileName="NewsData.csv"):
-        pass
+        self.GetNews()
+        csvwriter = csv.writer(open("test1.csv", "w"))
+        csvwriter.writerow(("제목","언론사","날짜","기사원문"))
+        for item in self.NewsData:
+            csvwriter.writerow(item)
+        
 
 if __name__ == "__main__":
     api = NaverNewsAPI()
     api.RequestNewsLink("19대 대선", 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
-    csvwriter = csv.writer(open("test1.csv", "w"))
-<<<<<<< HEAD
-    csvwriter = csv.writer(open("test1.csv", "w"))
-    crawler.GetNews().NewsData
-=======
-    crawler.GetNews().NewsData
+    crawler.SaveNews()
     
