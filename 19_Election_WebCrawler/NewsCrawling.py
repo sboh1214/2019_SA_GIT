@@ -77,7 +77,7 @@ class NewsArticleCrawler:
                 return "Error (http)" + rescode
             content = response.read()
             if "news.naver.com" in url: #네이버뉴스 모바일 - "dic_area"
-                csv.writerow(str(self.Format_Naver(content, item)))
+                self.NewsData.append(self.Format_Naver(content, item))
             else:
                 pass
 
@@ -85,7 +85,6 @@ class NewsArticleCrawler:
         # 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
         soup = BeautifulSoup(content, 'html.parser')
         content = soup.find("div", {"id": "dic_area"}).text
-        content = re.sub('\"\'', '', title)
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         #print(content, date)
         return (item["Title"], urlparse(item["OriginalLink"]).netloc.split('.')[1], date, content)
@@ -101,6 +100,6 @@ if __name__ == "__main__":
     api.RequestNewsLink("19대 대선", 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
-    csve = csv.writer(open("test1.csv", "w")
-    newsData = crawler.GetNews()
+    csvwriter = csv.writer(open("test1.csv", "w"))
+    crawler.GetNews().NewsData
     
