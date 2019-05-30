@@ -10,7 +10,7 @@ class NaverNewsAPI:
     Client_Secret = 'vVve0WqXE5'
     LinkData = [] #Title, Link, OriginalLink
 
-    def RequestNewsLink(self, query, n=1, display=10, sort="sim"): #CHANGE THE DISPLAY DEFAULT # TO 100
+    def RequestNewsLink(self, query, n =1, display=100, sort="sim"): #CHANGE THE DISPLAY DEFAULT # TO 100
         if n < 1 or n > 1000:
             return "Error (invalid n)"
         if display < 1 or display > 100:
@@ -35,8 +35,8 @@ class NaverNewsAPI:
             title = self.MakePlainText(item['title'])
             link = item['link']
             originalLink = item['originallink']
-            self.LinkData.append({"Title": title, "Link": link,
-                              "OriginalLink": originalLink})
+            self.LinkData.append({"Title": title, "Link": link, "OriginalLink": originalLink})
+        return "Success"
 
     def MakePlainText(self, title):
         title = re.sub('\"\'', '', title)
@@ -51,14 +51,20 @@ class NaverNewsAPI:
         return title
 
     def SaveLink(self, fileName="LinkData.csv"):
-        f = open(fileName, 'w', encoding='utf-8', newline='')
-        csvFile = csv.writer(f)
-        for item in self.LinkData:
-            title = item['Title']
-            link = item['Link']
-            originalLink = item['OriginalLink']
-            csvFile.writerow([title, link, originalLink])
-        return "Success"
+        try:
+            f = open(fileName, 'w', encoding='utf-8', newline='')
+            csvFile = csv.writer(f)
+            for item in self.LinkData:
+                title = item['Title']
+                link = item['Link']
+                originalLink = item['OriginalLink']
+                csvFile.writerow([title, link, originalLink])
+                f.close()
+            return "Success"
+        except:
+            f.close()
+            return "Error"
+
 
 class NewsArticleCrawler:
     LinkData = [] #Title, Link, OriginalLink
