@@ -62,7 +62,7 @@ class NaverNewsAPI:
 
 class NewsArticleCrawler:
     LinkData = [] #Title, Link, OriginalLink
-    NewsData = [] #Title, 언론사, Date, Content
+    NewsData = [] #Title, Press, Date, Content
 
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
 
@@ -85,7 +85,6 @@ class NewsArticleCrawler:
         # 본문 마지막에 언론사 뉴스기사 홍보도 필터링 필요할 것으로 예측 - ex : 자산관리최고위과정 모집 등
         soup = BeautifulSoup(content, 'html.parser')
         content = soup.find("div", {"id": "dic_area"}).text
-        date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         #print(content, date)
         return (item["Title"], urlparse(item["OriginalLink"]).netloc.split('.')[1], date, content)
 
@@ -101,5 +100,9 @@ if __name__ == "__main__":
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
     csvwriter = csv.writer(open("test1.csv", "w"))
+<<<<<<< HEAD
+    csvwriter = csv.writer(open("test1.csv", "w"))
+    crawler.GetNews().NewsData
+=======
     crawler.GetNews().NewsData
     
