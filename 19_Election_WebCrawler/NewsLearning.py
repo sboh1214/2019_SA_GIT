@@ -18,3 +18,4 @@ class NewsML:
         f.close()
     
     
+    
