@@ -1,5 +1,6 @@
 import tensorflow
 import csv
+import keras
 
 class NewsML:
     Title = []
@@ -16,6 +17,3 @@ class NewsML:
             Date.append(line['Date'])
             Content.append(line['Content'])
         f.close()
-    
-    
-    
