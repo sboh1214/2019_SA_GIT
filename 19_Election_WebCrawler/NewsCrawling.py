@@ -2,18 +2,14 @@ import urllib.request
 import json
 import csv
 import re
-<<<<<<< HEAD
 import datetime
-=======
-from tqdm import tqdm
->>>>>>> 70f8edd4ee59cc3a48dfc8855204170cdbccdae5
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
 class NaverNewsAPI:
     Client_ID = 'Mo_tHONZPPs7OeNzZQAE'
     Client_Secret = 'vVve0WqXE5'
-    LinkData = [] #Title, Link, OriginalLink
+    LinkData = [] #Title, Link, OriginalLink, pubDate
 
     def RequestNewsLink(self, query, n =1, display=100, sort="sim"):
         if n < 1 or n > 1000:
@@ -40,7 +36,9 @@ class NaverNewsAPI:
             title = self.MakePlainText(item['title'])
             link = item['link']
             originalLink = item['originallink']
-            self.LinkData.append({"Title": title, "Link": link, "OriginalLink": originalLink})
+            pubDate = item['pubDate']
+            self.LinkData.append({"Title": title, "Link": link, "OriginalLink": originalLink, "pubDate": pubDate})
+            print (pubDate)
         return "Success"
 
     def MakePlainText(self, title):
@@ -70,7 +68,11 @@ class NaverNewsAPI:
             f.close()
             return "Error"
     def NewsByDate(self, query, begin=datetime.date(1900,1,1), end=datetime.date.today()):
-        pass
+        for x in range(1,1000):
+            api.RequestNewsLink(query, x)
+            for data in LinkData:
+                #if data
+                pass
 
 
 class NewsArticleCrawler:
@@ -117,7 +119,7 @@ class NewsArticleCrawler:
 
 if __name__ == "__main__":
     api = NaverNewsAPI()
-    api.RequestNewsLink("19대 대선", 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
+    api.RequestNewsLink("19대 대선", 1, 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
     crawler.SaveNews()
