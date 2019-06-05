@@ -10,7 +10,7 @@ class NaverNewsAPI:
     Client_Secret = 'vVve0WqXE5'
     LinkData = [] #Title, Link, OriginalLink
 
-    def RequestNewsLink(self, query, n =1, display=100, sort="sim"): #CHANGE THE DISPLAY DEFAULT # TO 100
+    def RequestNewsLink(self, query, n =1, display=100, sort="sim"):
         if n < 1 or n > 1000:
             return "Error (invalid n)"
         if display < 1 or display > 100:
@@ -97,7 +97,7 @@ class NewsArticleCrawler:
     def SaveNews(self, fileName="NewsData.csv"):
         self.GetNews()
         csvwriter = csv.writer(open("test1.csv", "w"))
-        csvwriter.writerow(("제목","언론사","날짜","기사원문"))
+        #csvwriter.writerow(("제목","언론사","날짜","기사원문"))
         for item in self.NewsData:
             csvwriter.writerow(item)
 """
