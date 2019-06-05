@@ -2,11 +2,8 @@ import urllib.request
 import json
 import csv
 import re
-<<<<<<< HEAD
 import datetime
-=======
 from tqdm import tqdm
->>>>>>> 70f8edd4ee59cc3a48dfc8855204170cdbccdae5
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
