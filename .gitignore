@@ -114,3 +114,7 @@ dmypy.json
 .pyre/
 /.vs/2019_SA_GIT/v16/.suo
 *.json
+
+#vs temp dir
+.vs/
+.vscode/
