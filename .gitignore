@@ -112,3 +112,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/.vs/2019_SA_GIT/v16/.suo
+*.json
