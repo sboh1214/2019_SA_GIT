@@ -2,6 +2,7 @@ import urllib.request
 import json
 import csv
 import re
+import datetime
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
@@ -64,6 +65,8 @@ class NaverNewsAPI:
         except:
             f.close()
             return "Error"
+    def NewsByDate(self, query, begin=datetime.date(1900,1,1), end=datetime.date.today()):
+        pass
 
 
 class NewsArticleCrawler:
