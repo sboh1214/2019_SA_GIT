@@ -4,7 +4,6 @@ from tqdm import tqdm
 import csv
 import keras
 
-
 class NewsML:
     Title = []
     Press = []
