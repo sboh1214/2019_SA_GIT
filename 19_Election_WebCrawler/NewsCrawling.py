@@ -2,7 +2,11 @@ import urllib.request
 import json
 import csv
 import re
+<<<<<<< HEAD
 import datetime
+=======
+from tqdm import tqdm
+>>>>>>> 70f8edd4ee59cc3a48dfc8855204170cdbccdae5
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
@@ -32,7 +36,7 @@ class NaverNewsAPI:
 
         json_data = json.loads(jsonData)
         json_items = json_data['items']
-        for item in json_items:
+        for item in tqdm(json_items):
             title = self.MakePlainText(item['title'])
             link = item['link']
             originalLink = item['originallink']
@@ -55,7 +59,7 @@ class NaverNewsAPI:
         try:
             f = open(fileName, 'w', encoding='utf-8', newline='')
             csvFile = csv.writer(f)
-            for item in self.LinkData:
+            for item in tqdm(self.LinkData):
                 title = item['Title']
                 link = item['Link']
                 originalLink = item['OriginalLink']
@@ -76,7 +80,7 @@ class NewsArticleCrawler:
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
 
     def GetNews(self):
-        for item in self.LinkData:
+        for item in tqdm(self.LinkData):
             url = item["Link"]
             request = urllib.request.Request(url)
             request.add_header("User-Agent",self.UserAgent)
@@ -101,8 +105,9 @@ class NewsArticleCrawler:
         self.GetNews()
         csvwriter = csv.writer(open("test1.csv", "w"))
         #csvwriter.writerow(("제목","언론사","날짜","기사원문"))
-        for item in self.NewsData:
+        for item in tqdm(self.NewsData):
             csvwriter.writerow(item)
+        return "Success"
 """
     UNUSED FUNCTION FOR LATER USE
     def OpenLink(self, fileName="LinkData.csv"):
