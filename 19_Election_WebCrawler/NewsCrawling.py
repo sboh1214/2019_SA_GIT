@@ -3,6 +3,7 @@ import json
 import csv
 import re
 import datetime
+from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
