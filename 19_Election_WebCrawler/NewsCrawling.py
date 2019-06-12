@@ -3,6 +3,7 @@ import json
 import csv
 import re
 import datetime
+from dateutil import parser
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
@@ -37,9 +38,8 @@ class NaverNewsAPI:
             title = self.MakePlainText(item['title'])
             link = item['link']
             originalLink = item['originallink']
-            pubDate = item['pubDate']
+            pubDate = parser.parse(item['pubDate']) #Tue, 04 Jun 2019 11:52:00 +0900
             self.LinkData.append({"Title": title, "Link": link, "OriginalLink": originalLink, "pubDate": pubDate})
-            print (pubDate)
         return "Success"
 
     def MakePlainText(self, title):
@@ -71,11 +71,12 @@ class NaverNewsAPI:
     def NewsByDate(self, query, begin=datetime.date(1900,1,1), end=datetime.date.today()):
         for x in range(1,1000):
             api.RequestNewsLink(query, x)
-            for data in LinkData:
-                #if data
-                pass
-
-
+            for data in self.LinkData:
+                if data['pubDate'] > end or data['pubDate'] < begin :
+                    LinkData.remove(data)
+                    print('.')
+                    continue
+           
 class NewsArticleCrawler:
     LinkData = [] #Title, Link, OriginalLink
     NewsData = [] #Title, Press, Date, Content
@@ -116,7 +117,6 @@ class NewsArticleCrawler:
     def OpenLink(self, fileName="LinkData.csv"):
         pass
 """
-        
 
 if __name__ == "__main__":
     api = NaverNewsAPI()
@@ -124,4 +124,3 @@ if __name__ == "__main__":
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
     crawler.SaveNews()
-    
