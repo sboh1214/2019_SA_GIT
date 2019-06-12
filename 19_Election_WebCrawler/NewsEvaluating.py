@@ -1,7 +1,7 @@
 import json
 import csv
 from NewsLearning import GetMorpheme
-class Sentiment():
+class Sentiment(word):
 
     def data_list(wordname):
         with open('data/SentiWord_info.json', encoding='utf-8-sig', mode='r') as f:
@@ -15,4 +15,13 @@ class Sentiment():
         return result[0],result[1]
 
 class Analyzer(): #형태소 분석기
-    anlalyze=GetMorpheme()
+    def analyzer(line):
+        return GetMorpheme(line[3])
+    def cost():
+        with open('news.csv',encoding='utf-8',mode='r') as f:
+            data=csv.reader(f)
+            senti=[]
+            for line in data:
+               senti.append(analyzer(line))
+
+if __name__=="__main__":
