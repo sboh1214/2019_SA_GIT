@@ -37,7 +37,7 @@ class Analyzer:  # 형태소 자르기
         else:
             with open(filename, encoding='utf-8', mode='r') as f:
                 data = csv.reader(f)
-        for line in data:
+        for line in tqdm(data,desc=f" {Morpheme} ":
             self.morph.append(self.analyzer(line))
 
     def cost_write(self, filename):
@@ -48,7 +48,7 @@ class Analyzer:  # 형태소 자르기
         else:
             with open(filename, encoding='utf-8', mode='w') as f:
                 data = csv.writer(f)
-        for i in len(data):
+        for i in tqdm(len(data),desc=f" {Sentiment} "):
             data[i].append(senti.total_senti(self.morph[i]))
 
 
