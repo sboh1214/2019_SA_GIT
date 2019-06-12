@@ -25,6 +25,7 @@ class Sentiment:
 
 class Analyzer:  # 형태소 자르기
     morph = []
+    senti = Sentiment()
 
     def analyzer(self, line):
         return GetMorpheme(line[3])
@@ -39,12 +40,17 @@ class Analyzer:  # 형태소 자르기
         for line in data:
             self.morph.append(self.analyzer(line))
 
-    def cost_write(sel):
+    def cost_write(self, filename):
         senti = Sentiment()
-        with open(filename, encoding='utf-8', mode='w') as f:
-            data = csv.writer(f)
-            for i in len(data)
+        if(filename == None):
+            print("No File")
+            exit
+        else:
+            with open(filename, encoding='utf-8', mode='w') as f:
+                data = csv.writer(f)
+        for i in len(data):
+            data[i].append(senti.total_senti(self.morph[i]))
 
 
-if __name__ == "__main__":
+if (__name__ == "__main__"):
     pass
