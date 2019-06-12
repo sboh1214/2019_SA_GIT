@@ -2,13 +2,14 @@ from tensorflow import keras
 import keras
 from tqdm import tqdm
 import csv
-import keras
 from khaiii import KhaiiiApi
 
 def GetMorpheme(sentence):
-        api = KhaiiiApi()
-        for morpheme in api.analyze(sentence):
-            pass
+    api = KhaiiiApi()
+    dic = {}
+    for word in api.analyze(sentence): 
+        morphs_str = ' + '.join([(m.lex + '/' + m.tag) for m in word.morphs])
+        print(f'{word.lex}\t{morphs_str}')
 
 class NewsML:
     Title = []
@@ -39,3 +40,6 @@ class NewsML:
     def FitModel(model):
         model.compile()
         model.fit()
+
+if __name__=="__main__":
+    GetMorpheme("안녕, 세상")

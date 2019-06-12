@@ -1,0 +1,5 @@
+tqdm
+tensorflow
+keras
+bs4
+python-dateutil
