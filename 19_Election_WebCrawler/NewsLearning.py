@@ -6,9 +6,11 @@ import keras
 from khaiii import KhaiiiApi
 
 def GetMorpheme(sentence):
-        api = KhaiiiApi()
-        for morpheme in api.analyze(sentence):
-            pass
+    api = KhaiiiApi()
+    dic = {}
+    for word in api.analyze(sentence): 
+        morphs_str = ' + '.join([(m.lex + '/' + m.tag) for m in word.morphs])
+        print(f'{word.lex}\t{morphs_str}')
 
 class NewsML:
     Title = []
