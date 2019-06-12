@@ -2,7 +2,6 @@ from tensorflow import keras
 import keras
 from tqdm import tqdm
 import csv
-import keras
 from khaiii import KhaiiiApi
 
 def GetMorpheme(sentence):
@@ -41,3 +40,6 @@ class NewsML:
     def FitModel(model):
         model.compile()
         model.fit()
+
+if __name__=="__main__":
+    GetMorpheme("안녕, 세상")

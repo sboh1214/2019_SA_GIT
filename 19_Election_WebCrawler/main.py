@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 Keyword = ["대선"]
 for keyword in Keyword:
-    for i in tqdm(range(1, 101)):
+    for i in tqdm(range(1, 101), desc=f" {keyword}"):
         api = NaverNewsAPI()
-        print(f"Request {str(i)} : {api.RequestNewsLink(keyword, i)}")
+        api.RequestNewsLink(keyword, i)
     
