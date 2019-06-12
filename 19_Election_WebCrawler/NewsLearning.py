@@ -5,6 +5,11 @@ import csv
 import keras
 from khaiii import KhaiiiApi
 
+def GetMorpheme(sentence):
+        api = KhaiiiApi()
+        for morpheme in api.analyze(sentence):
+            pass
+
 class NewsML:
     Title = []
     Press = []
@@ -22,11 +27,6 @@ class NewsML:
             Date.append(line['Date'])
             Content.append(line['Content'])
         f.close()
-
-    def GetMorpheme(sentence):
-        api = KhaiiiApi()
-        for morpheme in api.analyze(sentence):
-            pass
 
     def BuildModel(vocab_size, embedding_dim, rnn_units, batch_size):
         model = keras.Sequential([
