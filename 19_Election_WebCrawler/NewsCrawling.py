@@ -72,7 +72,7 @@ class NaverNewsAPI:
     def RequestNewsByDate(self, query, begin=datetime.datetime(1900,1,1), end=datetime.datetime.today(), pages=1000): #날짜를 기준으로 거르기
         utc=pytz.UTC
         for x in tqdm(range(1,pages+1), desc='Grabbing Links...'):
-            api.RequestNewsLink(query, x, sort='date')
+            self.RequestNewsLink(query, x, sort='date')
             for data in self.LinkData:
                 if data['pubDate'].replace(tzinfo=utc) < begin.replace(tzinfo=utc) :
                     self.LinkData.remove(data)
