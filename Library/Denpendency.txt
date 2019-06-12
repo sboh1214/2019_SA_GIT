@@ -3,3 +3,5 @@ tensorflow
 keras
 bs4
 python-dateutil
+tqdm
+pytz
