@@ -3,7 +3,7 @@ import json
 import csv
 import re
 import datetime
-import dateutil.parser
+import dateutil.parser      #pip install python-dateutil
 import pytz
 from tqdm import tqdm
 from bs4 import BeautifulSoup
@@ -35,7 +35,7 @@ class NaverNewsAPI:
 
         json_data = json.loads(jsonData)
         json_items = json_data['items']
-        for item in tqdm(json_items):
+        for item in json_items:
             title = self.MakePlainText(item['title'])
             link = item['link']
             originalLink = item['originallink']
@@ -69,18 +69,15 @@ class NaverNewsAPI:
         except:
             f.close()
             return "Error"
-    def NewsByDate(self, query, begin=datetime.datetime(1900,1,1), end=datetime.datetime.today(), pages=1000):
+    def NewsByDate(self, query, begin=datetime.datetime(1900,1,1), end=datetime.datetime.today(), pages=1000): #날짜를 기준으로 거르기
         utc=pytz.UTC
-        for x in tqdm(range(1,pages)):
-            api.RequestNewsLink(query, x)
+        for x in tqdm(range(1,pages+1), desc='Grabbing Links...'):
+            api.RequestNewsLink(query, x, sort='date')
             for data in self.LinkData:
-                
                 if data['pubDate'].replace(tzinfo=utc) < begin.replace(tzinfo=utc) :
-                    print(type(data['pubDate']), type(begin), end)
                     self.LinkData.remove(data)
                     continue
                 if data['pubDate'].replace(tzinfo=utc) > end.replace(tzinfo=utc) :
-                    print(data['pubDate'], begin, end)
                     self.LinkData.remove(data)
                     break
            
@@ -91,7 +88,7 @@ class NewsArticleCrawler:
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
 
     def GetNews(self):
-        for item in tqdm(self.LinkData):
+        for item in tqdm(self.LinkData, desc='Fetching News...'):
             url = item["Link"]
             request = urllib.request.Request(url)
             request.add_header("User-Agent",self.UserAgent)
@@ -101,12 +98,18 @@ class NewsArticleCrawler:
                 return "Error (http)" + rescode
             content = response.read()
             if "news.naver.com" in url: #네이버뉴스 모바일 - "dic_area"
-                self.NewsData.append(self.Format_Naver(content, item))
+                formattedData = self.Format_Naver(content, item)
+                if formattedData is None:
+                    print('Error (Parsing Newspaper Content)')
+                self.NewsData.append(formattedData)
             else:
                 pass
 
     def Format_Naver(self, content, item): 
         soup = BeautifulSoup(content, 'html.parser')
+        contentHTML = soup.find("div", {"id": "dic_area"})
+        if contentHTML is None:
+            return None
         content = soup.find("div", {"id": "dic_area"}).text
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         #print(content, date)
@@ -116,8 +119,9 @@ class NewsArticleCrawler:
         self.GetNews()
         csvwriter = csv.writer(open("test1.csv", "w"))
         #csvwriter.writerow(("제목","언론사","날짜","기사원문"))
-        for item in tqdm(self.NewsData):
-            csvwriter.writerow(item)
+        for item in self.NewsData:
+            if item is not None:
+                csvwriter.writerow(item)
         return "Success"
 """
     UNUSED FUNCTION FOR LATER USE
@@ -128,7 +132,7 @@ class NewsArticleCrawler:
 if __name__ == "__main__":
     api = NaverNewsAPI()
     #api.RequestNewsLink("19대 대선", 1, 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링 
-    api.NewsByDate("19대 대선",datetime.datetime(2019,6,1),pages=2)
+    api.NewsByDate("19대 대선",datetime.datetime(2019,6,5), pages=1)
     crawler = NewsArticleCrawler() 
     crawler.LinkData = api.LinkData
     crawler.SaveNews()
