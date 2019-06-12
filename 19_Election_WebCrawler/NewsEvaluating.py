@@ -25,3 +25,4 @@ class Analyzer(): #형태소 분석기
                senti.append(analyzer(line))
 
 if __name__=="__main__":
+    
