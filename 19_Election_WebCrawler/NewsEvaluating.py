@@ -45,6 +45,5 @@ class Analyzer:  # 형태소 자르기
             data = csv.writer(f)
             for i in len(data)
 
-
 if __name__ == "__main__":
     pass

@@ -1,5 +1,5 @@
 from NewsCrawling import *
-from NewsEvaluating import *
+#from NewsEvaluating import *
 from NewsLearning import *
 
 from tqdm import tqdm
