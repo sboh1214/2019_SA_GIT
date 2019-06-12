@@ -69,7 +69,7 @@ class NaverNewsAPI:
         except:
             f.close()
             return "Error"
-    def NewsByDate(self, query, begin=datetime.datetime(1900,1,1), end=datetime.datetime.today(), pages=1000):
+    def NewsByDate(self, query, begin=datetime.datetime(1900,1,1), end=datetime.datetime.today(), pages=1000): #날짜를 기준으로 거르기
         utc=pytz.UTC
         for x in tqdm(range(1,pages+1), desc='Grabbing Links...'):
             api.RequestNewsLink(query, x, sort='date')
@@ -120,7 +120,8 @@ class NewsArticleCrawler:
         csvwriter = csv.writer(open("test1.csv", "w"))
         #csvwriter.writerow(("제목","언론사","날짜","기사원문"))
         for item in self.NewsData:
-            csvwriter.writerow(item)
+            if item is not None:
+                csvwriter.writerow(item)
         return "Success"
 """
     UNUSED FUNCTION FOR LATER USE
