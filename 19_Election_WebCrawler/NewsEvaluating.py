@@ -5,8 +5,14 @@ from tqdm import tqdm
 
 
 class Sentiment:
+    """
+
+    """
 
     def data_list(wordname):
+        """
+
+        """
         with open('data/SentiWord_info.json', encoding='utf-8-sig', mode='r') as f:
             data = json.load(f)
         result = None
@@ -21,13 +27,22 @@ class Sentiment:
 
 
 class Analyzer:  # 형태소 자르기
+    """
+
+    """
     morph = []
     senti = Sentiment()
 
     def analyzer(self, line):
+        """
+
+        """
         return GetMorpheme(line[3])
 
     def morph_process(self, filename):
+        """
+
+        """
         if(filename == None):
             print("No File")
             exit
@@ -38,6 +53,9 @@ class Analyzer:  # 형태소 자르기
             self.morph.append(self.analyzer(line))
 
     def cost_write(self, filename):
+        """
+
+        """
         senti=Sentiment()
         if(filename == None):
             print("No File")

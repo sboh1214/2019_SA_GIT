@@ -10,11 +10,17 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
 class NaverNewsAPI:
+    """
+
+    """
     Client_ID = 'Mo_tHONZPPs7OeNzZQAE'
     Client_Secret = 'vVve0WqXE5'
     LinkData = [] #Title, Link, OriginalLink, pubDate
 
     def RequestNewsLink(self, query, n =1, display=100, sort="sim"):
+        """
+
+        """
         if n < 1 or n > 1000:
             return "Error (invalid n)"
         if display < 1 or display > 100:
@@ -44,6 +50,9 @@ class NaverNewsAPI:
         return "Success"
 
     def MakePlainText(self, title):
+        """
+
+        """
         title = re.sub('\"\'', '', title)
         # html 태그 제거
         title = BeautifulSoup(title, 'html.parser').text
@@ -56,6 +65,9 @@ class NaverNewsAPI:
         return title
 
     def SaveLink(self, fileName="LinkData.csv"):
+        """
+
+        """
         try:
             f = open(fileName, 'w', encoding='utf-8', newline='')
             csvFile = csv.writer(f)
@@ -69,7 +81,11 @@ class NaverNewsAPI:
         except:
             f.close()
             return "Error"
+
     def RequestNewsByDate(self, query, begin=datetime.datetime(1900,1,1), end=datetime.datetime.today(), pages=1000): #날짜를 기준으로 거르기
+        """
+
+        """
         utc=pytz.UTC
         for x in tqdm(range(1,pages+1), desc='Grabbing Links'):
             self.RequestNewsLink(query, x, sort='date')
@@ -82,6 +98,9 @@ class NaverNewsAPI:
                     break
            
 class NewsArticleCrawler:
+    """
+
+    """
     LinkData = [] #Title, Link, OriginalLink
     NewsData = [] #Title, Press, Date, Content
 
@@ -91,6 +110,9 @@ class NewsArticleCrawler:
         self.LinkData = linkData
 
     def GetNews(self):
+        """
+
+        """
         for item in tqdm(self.LinkData, desc='Fetching News...'):
             url = item["Link"]
             request = urllib.request.Request(url)
@@ -108,7 +130,10 @@ class NewsArticleCrawler:
             else:
                 pass
 
-    def Format_Naver(self, content, item): 
+    def Format_Naver(self, content, item):
+        """
+
+        """
         soup = BeautifulSoup(content, 'html.parser')
         contentHTML = soup.find("div", {"id": "dic_area"})
         if contentHTML is None:
@@ -119,6 +144,9 @@ class NewsArticleCrawler:
         return (item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.'))
 
     def SaveNews(self, fileName="NewsData.csv"):
+        """
+
+        """
         self.GetNews()
         csvwriter = csv.writer(open("test1.csv", "w"))
         #csvwriter.writerow(("제목","언론사","날짜","기사원문"))

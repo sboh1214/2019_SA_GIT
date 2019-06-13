@@ -12,6 +12,9 @@ def GetMorpheme(sentence):
         print(f'{word.lex}\t{morphs_str}')
 
 class NewsML:
+    """
+
+    """
     Title = []
     Press = []
     Date = []
@@ -20,6 +23,9 @@ class NewsML:
     Model = None
 
     def GetNewsData(fileName):
+        """
+
+        """
         f = open(fileName+'.csv', 'r', encoding='utf-8')
         rdr = csv.reader(f)
         for line in tqdm(rdr):
@@ -30,6 +36,9 @@ class NewsML:
         f.close()
 
     def BuildModel(vocab_size, embedding_dim, rnn_units, batch_size):
+        """
+
+        """
         model = keras.Sequential([
             keras.layers.Embedding(vocab_size, embedding_dim, batch_input_shape=[batch_size, None]),
             keras.layers.LSTM(rnn_units, return_sequences=True, stateful=True, recurrent_initializer='glorot_uniform'),
@@ -38,6 +47,9 @@ class NewsML:
         return model
 
     def FitModel(model):
+        """
+
+        """
         model.compile()
         model.fit()
 
