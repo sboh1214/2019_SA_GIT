@@ -10,6 +10,5 @@ for keyword in Keyword:
     for i in range(1, 101):
         api = NaverNewsAPI()
         api.RequestNewsByDate(keyword)
-        crawler = NewsArticleCrawler()
-        crawler.LinkData = api.LinkData
+        crawler = NewsArticleCrawler(api.LinkData)
         crawler.SaveNews()

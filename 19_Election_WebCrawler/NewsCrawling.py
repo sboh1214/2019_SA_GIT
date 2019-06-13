@@ -87,6 +87,9 @@ class NewsArticleCrawler:
 
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
 
+    def __init__(self, linkData):
+        self.LinkData = linkData
+
     def GetNews(self):
         for item in tqdm(self.LinkData, desc='Fetching News...'):
             url = item["Link"]
