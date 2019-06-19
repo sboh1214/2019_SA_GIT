@@ -4,12 +4,16 @@ from tqdm import tqdm
 import csv
 from khaiii import KhaiiiApi
 
-def GetMorpheme(sentence):
+def GetMorph(sentence):
+    """
+
+    """
     api = KhaiiiApi()
     dic = {}
     for word in api.analyze(sentence): 
-        morphs_str = ' + '.join([(m.lex + '/' + m.tag) for m in word.morphs])
-        print(f'{word.lex}\t{morphs_str}')
+        for morph in word.morphs:
+            dic[morph.lex] = morph.tag
+    return dic
 
 class NewsML:
     """
@@ -54,4 +58,4 @@ class NewsML:
         model.fit()
 
 if __name__=="__main__":
-    GetMorpheme("안녕, 세상")
+    print(GetMorpheme("안녕, 세상"))
