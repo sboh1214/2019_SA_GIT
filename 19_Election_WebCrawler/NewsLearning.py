@@ -62,4 +62,4 @@ class NewsML:
         model.fit()
 
 if __name__=="__main__":
-    print(GetMorph("안녕, 세상"))
+    print(MorphAnalyzer.GetMorph("안녕, 세상"))
