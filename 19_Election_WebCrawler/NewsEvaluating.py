@@ -18,7 +18,7 @@ class Sentiment:
         result = None
         for i in range(len(data)):
             if data[i]['word'] == wordname:
-                result = data[i]['polarity')
+                result = data[i]['polarity']
         return result
 
     def total_senti(self, article):
@@ -49,7 +49,7 @@ class Analyzer:  # 형태소 자르기
         else:
             with open(filename, encoding='utf-8', mode='r') as f:
                 data = csv.reader(f)
-        for line in tqdm(data, desc=f" {Morpheme} ":
+        for line in tqdm(data, desc=f" {Morpheme} "):
             self.morph.append(self.analyzer(line))
 
     def cost_write(self, filename):

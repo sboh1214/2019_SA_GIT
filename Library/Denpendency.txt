@@ -4,3 +4,4 @@ keras
 bs4
 python-dateutil
 pytz
+matplotlib
