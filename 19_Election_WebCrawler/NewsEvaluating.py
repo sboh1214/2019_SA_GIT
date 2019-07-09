@@ -37,7 +37,7 @@ class Analyzer:  # 형태소 자르기
         else:
             with open(filename, encoding='utf-8', mode='r') as f:
                 data = csv.reader(f)
-        for line in tqdm(data, desc=f" {Morpheme} ":
+        for line in tqdm(data, desc=f" {Morpheme} "):
             self.morph.append(self.analyzer(line))
 
     def cost_write(self, filename):
