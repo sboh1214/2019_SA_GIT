@@ -1,6 +1,6 @@
 import json
 import csv
-from NewsLearning import GetMorpheme
+import NewsLearning as NL
 from tqdm import tqdm
 
 

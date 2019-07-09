@@ -98,3 +98,4 @@ class NewsML:
 
 if __name__=="__main__":
     print(MorphAnalyzer.GetMorph("안녕, 세상"))
+    #{'안녕': 'IC', ',': 'SP', '세상': 'NNG'}
