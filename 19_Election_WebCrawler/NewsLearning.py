@@ -2,6 +2,7 @@ from tqdm import tqdm
 import csv
 from khaiii import KhaiiiApi
 import matplotlib.pyplot as plt
+import os
 
 from keras.preprocessing import sequence
 from keras import layers, models
@@ -40,6 +41,10 @@ class NewsML:
     X_Test = None
     Y_Test = None
     Model = None
+
+    def __init__(self, backend="tensorflow"):
+        os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
+        return super().__init__()
 
     def GetNewsData(self, fileName):
         """
