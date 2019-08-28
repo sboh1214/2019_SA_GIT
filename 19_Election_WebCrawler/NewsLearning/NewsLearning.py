@@ -7,16 +7,17 @@ import os
 from keras.preprocessing import sequence
 from keras import layers, models
 
-import NewsCrawling as NC
-import NewsEvaluating as NE
+from .. import NewsCrawling
+from .. import NewsEvaluating
 
 
 class MorphAnalyzer:
     """
-    
+
     """
+
     @classmethod
-    def getMorph(sentence):
+    def getMorph(cls, sentence):
         """
         >>> MorphAnalyzer.getMorph()
         {'안녕': 'IC', ',': 'SP', '세상': 'NNG'}

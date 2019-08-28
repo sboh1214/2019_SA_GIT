@@ -1,6 +1,4 @@
-from NewsCrawling import *
-from NewsEvaluating import *
-from NewsLearning import *
+from .NewsCrawling.NewsCrawling import NaverNewsAPI, NewsArticleCrawler
 
 from multiprocessing import Pool
 

@@ -9,6 +9,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
+
 class NaverNewsAPI:
     """
 
@@ -34,7 +35,7 @@ class NaverNewsAPI:
         request.add_header("X-Naver-Client-Secret", self.Client_Secret)
         response = urllib.request.urlopen(request)
         rescode = response.getcode()
-        if (rescode != 200):
+        if rescode != 200:
             return "Error (http)" + rescode
         response_body = response.read()
         jsonData = response_body.decode('utf-8')
@@ -106,7 +107,8 @@ class NewsArticleCrawler:
     LinkData = []  # Title, Link, OriginalLink
     NewsData = []  # Title, Press, Date, Content
 
-    UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
+    UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) " \
+                "Version/12.0 Mobile/15E148 Safari/604.1 "
 
     def __init__(self, linkData):
         self.LinkData = linkData
@@ -121,7 +123,7 @@ class NewsArticleCrawler:
             request.add_header("User-Agent", self.UserAgent)
             response = urllib.request.urlopen(request)
             rescode = response.getcode()
-            if (rescode != 200):
+            if rescode != 200:
                 return "Error (http)" + rescode
             content = response.read()
             if "news.naver.com" in url:  # 네이버뉴스 모바일 - "dic_area"
