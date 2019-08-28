@@ -21,6 +21,19 @@ class Sentiment:
         for key in morph.keys():
             cost += senti_dict(key)
         return cost
+class Minutes:
+    keyword={} #키워드 담는 이중 딕셔너리 keyword[키워드][좌파/우파]
+    minute=[] #회의록 담는 튜플 리스트 (좌파/우파,발언내용)
+    for index in minute:
+        for i in range(2,5): #iterator로 수정
+            word=""
+            for j in range(index,index+i):
+                word+=minute[1][j]
+            if word not in keyword.keys():
+                keyword[word]={'L':0,'R':0}
+            keyword[word][minute[0]]+=1
+
+
 
 
 class Analyzer:  # 형태소 자르기
