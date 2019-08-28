@@ -50,7 +50,8 @@ class NaverNewsAPI:
             self.LinkData.append({"Title": title, "Link": link, "OriginalLink": originalLink, "pubDate": pubDate})
         return "Success"
 
-    def MakePlainText(self, title):
+    @staticmethod
+    def MakePlainText(title):
         """
 
         """
@@ -134,7 +135,8 @@ class NewsArticleCrawler:
             else:
                 pass
 
-    def Format_Naver(self, content, item):
+    @staticmethod
+    def Format_Naver(content, item):
         """
 
         """
