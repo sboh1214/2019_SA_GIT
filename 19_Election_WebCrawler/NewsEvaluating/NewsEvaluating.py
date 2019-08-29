@@ -22,16 +22,18 @@ class Sentiment:
             cost += senti_dict(key)
         return cost
 class Minutes:
-    keyword={} #키워드 담는 이중 딕셔너리 keyword[키워드][좌파/우파]
-    minute=[] #회의록 담는 튜플 리스트 (좌파/우파,발언내용)
-    for index in minute:
-        for i in range(2,5): #iterator로 수정
-            word=""
-            for j in range(index,index+i):
-                word+=minute[1][j]
-            if word not in keyword.keys():
-                keyword[word]={'L':0,'R':0}
-            keyword[word][minute[0]]+=1
+    keyword={} #키워드 담는 이중 딕셔너리 keyword[키워드][L(좌파)/R(우파)]
+    minute=[] #회의록 담는 리스트가 담긴 튜플의 리스트 (L/R,발언내용)
+    for comment in minute:
+        for index in range(len(comment[1])-1):
+            for i in range(2,5): #iterator로 수정할 것
+                word=""
+                for j in range(index,index+i):
+                    word+=minute[comment][1][j]
+                if word not in keyword.keys():
+                    keyword[word]={'L':0,'R':0}
+                keyword[word][minute[0]]+=1
+    
 
 
 
