@@ -1,13 +1,11 @@
 import csv
 import os
-import warnings
 
 import matplotlib.pyplot as plt
-from keras import layers, Model
+from keras import Sequential
+from keras.layers import *
 from khaiii import KhaiiiApi
 from tqdm import tqdm
-
-warnings.filterwarnings('ignore')
 
 
 class MorphAnalyzer:
@@ -33,10 +31,6 @@ class NewsML:
     """
 
     """
-    Title = []
-    Press = []
-    Date = []
-    Content = []
 
     X_Train = None
     Y_Train = None
@@ -44,7 +38,8 @@ class NewsML:
     Y_Evaluate = None
     X_Test = None
     Y_Test = None
-    Model = None
+    Rnn_Model = None
+    Cnn_Model = None
 
     plaidml = "plaidml.keras.backend"
     tensorflow = "tensorflow"
@@ -71,26 +66,31 @@ class NewsML:
             self.Content.append(line['Content'])
         f.close()
 
-    @staticmethod
-    def buildRNNModel(maxlen, maxfeatures):
+    def buildRNNModel(self, maxlen, maxfeatures):
         """
 
         """
-        x = layers.Input(shape=(maxlen,))
-        h = layers.Embedding(input_dim=maxfeatures, output_dim=128)(x)
-        h = layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
-        y = layers.Dense(1, activation='sigmoid')(h)
-        model = Model(x, y)
+        model = Sequential()
+        model.add(Input(shape=(maxlen,)))
+        model.add(Embedding(input_dim=maxfeatures, output_dim=128))
+        model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2))
+        model.add(Dense(1, activation='sigmoid'))
+        model.add(Dropout(0.5))
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-        return model
+        self.Rnn_Model = model
 
-    @staticmethod
-    def buildCnnModel():
-        x = layers.Input()
-        y = layers.Dense(1, activation='sigmoid')(x)
-        model = Model(x,y)
+    def buildCnnModel(self, input_shape=None):
+        model = Sequential()
+        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+        model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
+        model.add(MaxPool2D(pool_size=(2, 2)))
+        model.add(Dropout(rate=0.25))
+        model.add(Flatten())
+        model.add(Dense(units=128, activation='relu'))
+        model.add(Dropout(rate=0.5))
+        model.add(Dense(units=1, activation='activation'))
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-        return model
+        self.Cnn_Model = model
 
     @staticmethod
     def plotLoss(history, name="", figure=1, subplot=(1, 1, 1), show=False):
@@ -126,4 +126,4 @@ class NewsML:
 
 
 if __name__ == "__main__":
-    print(MorphAnalyzer.getMorph("올바른 국정교과서"))
+    print(MorphAnalyzer.getMorph("미친전세값"))
