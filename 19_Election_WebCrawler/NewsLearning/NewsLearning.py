@@ -1,14 +1,13 @@
-from tqdm import tqdm
 import csv
-from khaiii import KhaiiiApi
-import matplotlib.pyplot as plt
 import os
+import warnings
 
-from keras.preprocessing import sequence
-from keras import layers, models
+import matplotlib.pyplot as plt
+from keras import layers, Model
+from khaiii import KhaiiiApi
+from tqdm import tqdm
 
-from .. import NewsCrawling
-from .. import NewsEvaluating
+warnings.filterwarnings('ignore')
 
 
 class MorphAnalyzer:
@@ -47,45 +46,54 @@ class NewsML:
     Y_Test = None
     Model = None
 
-    def __init__(self, backend="tensorflow"):
-        os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
+    plaidml = "plaidml.keras.backend"
+    tensorflow = "tensorflow"
+    theano = "theano"
+    ctnk = "ctnk"
+
+    def __init__(self, backend):
+        if backend is self.plaidml:
+            os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
+        else:
+            os.environ["KERAS_BACKEND"] = backend
         super().__init__()
 
-    def getNewsData(self, fileName):
+    def getNewsData(self, filename):
         """
 
         """
-        f = open(fileName + '.csv', 'r', encoding='utf-8')
+        f = open(filename + '.csv', 'r', encoding='utf-8')
         rdr = csv.reader(f)
         for line in tqdm(rdr):
-            Title.append(line['Title'])
-            Press.append(line['Press'])
-            Date.append(line['Date'])
-            Content.append(line['Content'])
+            self.Title.append(line['Title'])
+            self.Press.append(line['Press'])
+            self.Date.append(line['Date'])
+            self.Content.append(line['Content'])
         f.close()
 
-    def BuildRNNModel(self, MaxLen, MaxFeatures):
+    @staticmethod
+    def buildRNNModel(maxlen, maxfeatures):
         """
 
         """
-        x = layers.Input(shape=(MaxLen,))
-        h = layers.Embedding(input_dim=MaxFeatures, output_dim=128)(x)
+        x = layers.Input(shape=(maxlen,))
+        h = layers.Embedding(input_dim=maxfeatures, output_dim=128)(x)
         h = layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
         y = layers.Dense(1, activation='sigmoid')(h)
         model = Model(x, y)
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         return model
 
-    def BuildCNNModel(self):
-        """
-
-        """
-
-        model = Model(x, y)
-        model.compile()
+    @staticmethod
+    def buildCnnModel():
+        x = layers.Input()
+        y = layers.Dense(1, activation='sigmoid')(x)
+        model = Model(x,y)
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         return model
 
-    def PlotLoss(self, history, name="", figure=1, subplot=(1, 1, 1), show=False):
+    @staticmethod
+    def plotLoss(history, name="", figure=1, subplot=(1, 1, 1), show=False):
         """
         Plot history for loss of train and validation data.
         """
@@ -97,10 +105,11 @@ class NewsML:
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.legend(['Train', 'Test'], loc=0)
-        if (show):
+        if show:
             plt.show()
 
-    def PlotAccuracy(self, history, name="", figure=1, subplot=(1, 1, 1), show=False):
+    @staticmethod
+    def plotAccuracy(history, name="", figure=1, subplot=(1, 1, 1), show=False):
         """
         Plot history for accuracy of train and validation data.
         """
@@ -112,9 +121,9 @@ class NewsML:
         plt.xlabel('Epoch')
         plt.ylabel('Accuracy')
         plt.legend(['Train', 'Test'], loc=0)
-        if (show):
+        if show:
             plt.show()
 
 
 if __name__ == "__main__":
-    print(MorphAnalyzer.getMorph("안녕, 세상"))
+    print(MorphAnalyzer.getMorph("올바른 국정교과서"))
