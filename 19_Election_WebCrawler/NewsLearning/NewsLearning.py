@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from keras import Sequential
 from keras.layers import *
 from khaiii import KhaiiiApi
-from tqdm import tqdm
+from .NewsData import NewsList
 
 
 class MorphAnalyzer:
@@ -31,11 +31,11 @@ class NewsML:
     """
 
     """
-
+    NewsList = []
     X_Train = None
     Y_Train = None
-    X_Evaluate = None
-    Y_Evaluate = None
+    X_Validate = None
+    Y_Validate = None
     X_Test = None
     Y_Test = None
     Rnn_Model = None
@@ -47,26 +47,20 @@ class NewsML:
     ctnk = "ctnk"
 
     def __init__(self, backend):
+        super().__init__()
         if backend is self.plaidml:
             os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
         else:
             os.environ["KERAS_BACKEND"] = backend
-        super().__init__()
 
-    def getNewsData(self, filename):
+    def getNewsData(self, filename: str):
         """
 
         """
-        f = open(filename + '.csv', 'r', encoding='utf-8')
-        rdr = csv.reader(f)
-        for line in tqdm(rdr):
-            self.Title.append(line['Title'])
-            self.Press.append(line['Press'])
-            self.Date.append(line['Date'])
-            self.Content.append(line['Content'])
-        f.close()
+        news = NewsList()
+        self.NewsList = news.importPickle(filename)
 
-    def buildRNNModel(self, maxlen, maxfeatures):
+    def buildRNNModel(self, maxlen: int, maxfeatures: int):
         """
 
         """
@@ -91,6 +85,18 @@ class NewsML:
         model.add(Dense(units=1, activation='activation'))
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         self.Cnn_Model = model
+
+    def runRnnModel(self, epochs: int = 1, batch_size: int = 10):
+        self.Rnn_Model.fit(x=self.X_Train, y=self.Y_Train,
+                           batch_size=batch_size,
+                           epochs=epochs,
+                           validation_data=(self.X_Validate, self.Y_Validate))
+
+    def runCnnModel(self, epochs: int = 1, batch_size: int = 10):
+        self.Cnn_Model.fit(x=None, y=None,
+                           batch_size=batch_size,
+                           epochs=epochs,
+                           validation_data=(None, None))
 
     @staticmethod
     def plotLoss(history, name="", figure=1, subplot=(1, 1, 1), show=False):
