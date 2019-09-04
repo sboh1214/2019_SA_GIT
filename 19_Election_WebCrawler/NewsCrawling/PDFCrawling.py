@@ -1,3 +1,13 @@
+"""
+
+Pickle comes in the following format:
+[파일당 한줄,
+[[말하는 사람,[말한 문장, 말한 문장]]]
+[[말하는 사람,[[단어],[단어],...]]
+]
+
+"""
+
 from tika import parser as tikaParse
 from multiprocessing.dummy import Pool
 import os, glob
