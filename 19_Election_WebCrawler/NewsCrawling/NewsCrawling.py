@@ -9,6 +9,30 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
+import pickle
+
+
+class NewsData:
+    def __init__(self, title, press, date, content):
+        self.Title = title
+        self.Press = press
+        self.Date = date
+        self.Content = content
+
+    Title = ""
+    Press = ""
+    Date = ""
+    Content = [[""]]
+
+
+class NewsList:
+
+    List = []
+
+    def exportPickle(self, fileName="NewsData.txt"):
+        with open(fileName, 'wb') as f:
+            pickle.dump(self.List, f)
+
 
 class NaverNewsAPI:
     """
@@ -154,11 +178,12 @@ class NewsArticleCrawler:
 
         """
         self.GetNews()
+        newslist = NewsList().List
         csvwriter = csv.writer(open("test1.csv", "w"))
         # csvwriter.writerow(("제목","언론사","날짜","기사원문"))
         for item in self.NewsData:
             if item is not None:
-                csvwriter.writerow(item)
+                newslist.append(NewsData(item[0], item[1], item[2], item[3]))
         return "Success"
 
 
