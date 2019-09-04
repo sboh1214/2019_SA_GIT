@@ -1,46 +1,49 @@
-from tika import parser
+from tika import parser as tikaParse
 from multiprocessing.dummy import Pool
-import os
-import csv
+import os, glob
+import pickle
 import re
 
 
 class ParsePDF:
     threadCount = 4
 
-    def parse(self, text):
+    def text(self, parsedText):
+        parsedText = re.sub('\n', '', parsedText)
+        parsedText = re.sub(r'\([^)]*\)', '', parsedText)
         try:
-            data = re.search('본회의를 개의하겠습니다.(.+?)ZZZ', text).group(1)
+            parsedText = re.search('본회의를 개의하겠습니다.(.*)산회를 선포합니다.', parsedText).group(1)
         except AttributeError:
-            # AAA, ZZZ not found in the original string
-            found = ''  # apply your error handling
-
-        # found: 1234
+            print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
+        parsedText = parsedText.split('◯')
+        returnText = list()
+        for personText in parsedText:
+            speakerName = personText.split()[:2]
+            personTextList = list()
+            for txt in personText.split('.'):
+                personTextList.append(txt.split()[2:])
+            returnText.append([speakerName, personTextList])
+        return returnText
 
     def readPDF(self, fileName='1.PDF'):
         try:
-            file_data = parser.from_file(fileName)  # Parse data from file
-            text = file_data['content']  # Get file's text content
-        except:
-            print("Error parsing PDF (wrong dir probably)")
+            file_data = tikaParse.from_file(fileName)  # Parse data from file
+            textData = file_data['content']  # Get file's text content
+        except IOError as e:
+            print("Error parsing PDF per next line : ")
+            print(e)
             return " "
-        return text
+        return self.text(textData)
 
-    def readFolder(self, dirName='../Data'):            #Multithreaded Read Operations
-        directories = os.listdir(dirName)
+    def readFolder(self, dirName='../Data/'):  # Multithreaded Read Operations
+        directories = glob.glob("../Data/*.PDF")
         pool = Pool(self.threadCount)
-        f = open("NA.csv", 'w', encoding='utf-8', newline='')
         results = pool.map(self.readPDF, directories)
-        csvFile = csv.writer(f)
-        for result in results:
-            csvFile.writerows([result])
-        f.close()
-
+        with open('../parsedPDF.txt', 'wb') as f:
+            pickle.dump(results,f)
 
 
 if __name__ == "__main__":
-    print (os.path.dirname(os.path.realpath(__file__))+'/1.PDF')
     parser = ParsePDF()
-    parser.readPDF()                    #Default is in git repo
-
-
+    print(parser.readPDF('../Data/1.PDF'))  # Default is 1.PDF
+    parser.readFolder()
