@@ -2,7 +2,7 @@
 
 Pickle comes in the following format:
 [파일당 한줄,
-[[말하는 사람,[말한 문장, 말한 문장]]]
+[[말하는 사람,[말한 문장, 말한 문장]],[말하는 사람,[말한 문장, 말한 문장]],...],
 [[말하는 사람,[[단어],[단어],...]]
 ]
 
@@ -49,11 +49,12 @@ class ParsePDF:
         directories = glob.glob(dir_name)
         pool = Pool(self.threadCount)
         results = pool.map(self.read_pdf, directories)
-        with open('../parsedPDF.txt', 'wb') as f:
+        pdf = PdfList(results)
+        with open('../parsedPDF.txt', 'wb', encoding="utf-8") as f:
             pickle.dump(results, f)
 
 
 if __name__ == "__main__":
     parser = ParsePDF()
-    print(parser.read_pdf('../Data/1.PDF'))  # Default is 1.PDF
+    #print(parser.read_pdf('../Data/1.PDF'))  # Default is 1.PDF
     parser.read_folder()
