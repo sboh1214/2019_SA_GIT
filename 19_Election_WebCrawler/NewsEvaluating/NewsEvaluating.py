@@ -5,8 +5,8 @@
 import json
 import csv
 import pickle
+from .NewsEvaluating import EvaluatingData
 from tqdm import tqdm
-from NewsLearning.NewsLearning import MorphAnalyzer
 
 
 '''class Sentiment:
@@ -28,19 +28,28 @@ from NewsLearning.NewsLearning import MorphAnalyzer
         return cost'''
 class KeyWording:
     def __init__(self,minute):
-        self.Minutes=minute #minute[회의록 번호][[말한사람(L/R),[발언내용(단어 리스트)]]의 리스트]
-    keyword={} #키워드 담는 이중 딕셔너리 keyword[키워드][L(좌파)/R(우파)] 
-    for minute in Minutes:
-        for comment in minute:
-            for word in range(len(comment[2])-1):
-                for i in range(2,5):
-                    if(i>=len(comment[2])) : break
-                    word=""
-                    for j in range(word,word+i):
-                        word+=" "+minute[comment][1][j]
-                    if word not in keyword.keys():
-                        keyword[word]={'L':0,'R':0}
-                    keyword[word][minute[0]]+=1
+        self.keyword=dict() #키워드 담는 이중 딕셔너리 keyword[키워드][L(좌파)/R(우파)] 
+    def PdfKeywording(self):
+        pdfData=EvaluatingData.PdfList()
+        Minutes=pdfData.importPickle() #minute[회의록 번호][말한사람,말한문장,[말한단어]]
+        for minute in Minutes:
+            for comment in minute:
+                for word in range(len(comment[2])-1):
+                    for i in range(2,5):
+                        if(i>=len(comment[2])) : break
+                        word=""
+                        for j in range(word,word+i):
+                            word+=" "+minute[comment][1][j]
+                        if word not in self.keyword.keys():
+                            self.keyword[word]={'L':0,'R':0}
+                        self.keyword[word][minute[0]]+=1
+    def NewsKeywording(self):
+        newsData=EvaluatingData.NewsList()
+        NewsList=newsData.importPickle()
+        for news in NewsList:
+            
+            
+
 '''class Analyzer:  # 형태소 자르기
     morph = []
     senti = Sentiment()
