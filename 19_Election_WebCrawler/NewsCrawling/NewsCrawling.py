@@ -9,29 +9,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-import pickle
-
-
-class NewsData:
-    def __init__(self, title, press, date, content):
-        self.Title = title
-        self.Press = press
-        self.Date = date
-        self.Content = content
-
-    Title = ""
-    Press = ""
-    Date = ""
-    Content = [[""]]
-
-
-class NewsList:
-
-    List = []
-
-    def exportPickle(self, fileName="NewsData.txt"):
-        with open(fileName, 'wb') as f:
-            pickle.dump(self.List, f)
+from ..NewsLearning.NewsData import NewsData, NewsList
 
 
 class NaverNewsAPI:

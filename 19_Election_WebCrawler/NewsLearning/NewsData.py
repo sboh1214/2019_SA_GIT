@@ -2,17 +2,24 @@ import pickle
 
 
 class NewsData:
-    def __init__(self, **kwargs):
-        super().__init__()
-        self.Title = kwargs['title']
-        self.Press = kwargs['press']
-        self.Date = kwargs['date']
-        self.Content = kwargs['content']
-
     Title = ""
     Press = ""
     Date = ""
     Content = [[""]]
+    Bias = 0
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        if 'title' in kwargs:
+            self.Title = kwargs['title']
+        elif 'press' in kwargs:
+            self.Press = kwargs['press']
+        elif 'Date' in kwargs:
+            self.Date = kwargs['date']
+        elif 'Content' in kwargs:
+            self.Content = kwargs['Content']
+        elif 'Bias' in kwargs:
+            self.Bias = kwargs['bias']
 
 
 class NewsList:
