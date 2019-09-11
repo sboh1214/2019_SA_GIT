@@ -13,7 +13,8 @@ from multiprocessing.dummy import Pool
 import os, glob
 import pickle
 import re
-
+from ..NewsEvaluating.PDFData import PdfData as PDFData
+from ..NewsEvaluating.PDFData import PdfList as PDFList
 
 class ParsePDF:
     threadCount = 4
@@ -26,13 +27,12 @@ class ParsePDF:
         except AttributeError:
             print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
         parsed_text = parsed_text.split('◯')
-        return_text = list()
         for personText in parsed_text:
             speaker_name = personText.split()[:2]
-            person_text = list()
+            talk_text = list()
             for txt in personText.split('.'):
-                person_text.append(txt.split()[2:])
-            return_text.append([speaker_name, person_text])
+                talk_text.append(txt.split()[2:])
+            return_text = PDFData(speaker_name, personText, talk_text)
         return return_text
 
     def read_pdf(self, file_name='1.PDF'):
@@ -48,8 +48,8 @@ class ParsePDF:
     def read_folder(self, dir_name="../Data/*.PDF"):  # Multithreaded Read Operations
         directories = glob.glob(dir_name)
         pool = Pool(self.threadCount)
-        results = pool.map(self.read_pdf, directories)
-        pdf = PdfList(results)
+        results = PDFList(pool.map(self.read_pdf, directories))
+        results.exportPickle("../parsedPDF.txt")
         with open('../parsedPDF.txt', 'wb', encoding="utf-8") as f:
             pickle.dump(results, f)
 

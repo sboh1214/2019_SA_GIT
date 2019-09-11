@@ -162,6 +162,7 @@ class NewsArticleCrawler:
         for item in self.NewsData:
             if item is not None:
                 newslist.append(NewsData(item[0], item[1], item[2], item[3]))
+        newslist.exportPickle()
         return "Success"
 
 
