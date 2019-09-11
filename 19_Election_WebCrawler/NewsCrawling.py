@@ -9,7 +9,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-from .NewsData import NewsData, NewsList
+from NewsData import NewsData, NewsList
 
 
 class NaverNewsAPI:
@@ -155,7 +155,7 @@ class NewsArticleCrawler:
 
         """
         self.GetNews()
-        news_list = NewsList()
+        news_list = NewsList(self.NewsData)
         for item in self.NewsData:
             if item is not None:
                 news_list.List.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
