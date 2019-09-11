@@ -8,6 +8,7 @@ import pytz
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+from multiprocessing.dummy import Pool
 
 from NewsData import NewsData, NewsList
 
@@ -116,6 +117,9 @@ class NewsArticleCrawler:
         self.LinkData = linkData
 
     def GetNews(self):
+        threadCount = 4
+        pool = Pool(self.threadCount)
+        pool.map(self.read_pdf, directories)
         """
 
         """
@@ -150,7 +154,7 @@ class NewsArticleCrawler:
         # print(content, date)
         return item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.')
 
-    def SaveNews(self, fileName="NewsData.csv"):
+    def SaveNews(self, fileName="NewsData"):
         """
 
         """
