@@ -9,7 +9,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-from ..NewsLearning.NewsData import NewsData, NewsList
+from .NewsData import NewsData, NewsList
 
 
 class NaverNewsAPI:
@@ -40,16 +40,16 @@ class NaverNewsAPI:
         if rescode != 200:
             return "Error (http)" + rescode
         response_body = response.read()
-        jsonData = response_body.decode('utf-8')
+        json_data = response_body.decode('utf-8')
 
-        json_data = json.loads(jsonData)
+        json_data = json.loads(json_data)
         json_items = json_data['items']
         for item in json_items:
             title = self.MakePlainText(item['title'])
             link = item['link']
-            originalLink = item['originallink']
-            pubDate = dateutil.parser.parse(item['pubDate'])  # Tue, 04 Jun 2019 11:52:00 +0900
-            self.LinkData.append({"Title": title, "Link": link, "OriginalLink": originalLink, "pubDate": pubDate})
+            original_link = item['originallink']
+            pub_date = dateutil.parser.parse(item['pubDate'])  # Tue, 04 Jun 2019 11:52:00 +0900
+            self.LinkData.append({"Title": title, "Link": link, "OriginalLink": original_link, "pubDate": pub_date})
         return "Success"
 
     @staticmethod
@@ -72,19 +72,18 @@ class NaverNewsAPI:
         """
 
         """
-        try:
-            f = open(fileName, 'w', encoding='utf-8', newline='')
-            csvFile = csv.writer(f)
-            for item in tqdm(self.LinkData):
-                title = item['Title']
-                link = item['Link']
-                originalLink = item['OriginalLink']
-                csvFile.writerow([title, link, originalLink])
-                f.close()
-            return "Success"
-        except:
-            f.close()
-            return "Error"
+        with open(fileName, 'w', encoding='utf-8', newline='') as f:
+            try:
+                csv_file = csv.writer(f)
+                for item in tqdm(self.LinkData):
+                    title = item['Title']
+                    link = item['Link']
+                    original_link = item['OriginalLink']
+                    csv_file.writerow([title, link, original_link])
+                    f.close()
+                return "Success"
+            except FileNotFoundError:
+                return f"Error : File {fileName} does not exist."
 
     def RequestNewsByDate(self, query, begin=datetime.datetime(1900, 1, 1), end=datetime.datetime.today(),
                           pages=1000):  # 날짜를 기준으로 거르기
@@ -130,10 +129,10 @@ class NewsArticleCrawler:
                 return "Error (http)" + rescode
             content = response.read()
             if "news.naver.com" in url:  # 네이버뉴스 모바일 - "dic_area"
-                formattedData = self.Format_Naver(content, item)
-                if formattedData is None:
+                formatted_data = self.Format_Naver(content, item)
+                if formatted_data is None:
                     print('Error (Parsing Newspaper Content)')
-                self.NewsData.append(formattedData)
+                self.NewsData.append(formatted_data)
             else:
                 pass
 
@@ -143,25 +142,24 @@ class NewsArticleCrawler:
 
         """
         soup = BeautifulSoup(content, 'html.parser')
-        contentHTML = soup.find("div", {"id": "dic_area"})
-        if contentHTML is None:
+        content_html = soup.find("div", {"id": "dic_area"})
+        if content_html is None:
             return None
         content = soup.find("div", {"id": "dic_area"}).text
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         # print(content, date)
-        return (item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.'))
+        return item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.')
 
     def SaveNews(self, fileName="NewsData.csv"):
         """
 
         """
         self.GetNews()
-        newslist = NewsList().List
-        csvwriter = csv.writer(open("test1.csv", "w"))
-        # csvwriter.writerow(("제목","언론사","날짜","기사원문"))
+        news_list = NewsList()
         for item in self.NewsData:
             if item is not None:
-                newslist.append(NewsData(item[0], item[1], item[2], item[3]))
+                news_list.List.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
+        news_list.exportPickle(fileName)
         return "Success"
 
 

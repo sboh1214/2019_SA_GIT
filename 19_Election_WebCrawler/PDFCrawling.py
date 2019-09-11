@@ -18,7 +18,8 @@ import re
 class ParsePDF:
     threadCount = 4
 
-    def text(self, parsed_text):
+    @staticmethod
+    def text(parsed_text):
         parsed_text = re.sub('\n', '', parsed_text)
         parsed_text = re.sub(r'\([^)]*\)', '', parsed_text)
         try:
@@ -56,5 +57,5 @@ class ParsePDF:
 
 if __name__ == "__main__":
     parser = ParsePDF()
-    #print(parser.read_pdf('../Data/1.PDF'))  # Default is 1.PDF
+    # print(parser.read_pdf('../Data/1.PDF'))  # Default is 1.PDF
     parser.read_folder()

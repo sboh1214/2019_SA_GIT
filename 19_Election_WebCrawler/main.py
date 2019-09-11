@@ -1,4 +1,4 @@
-from .NewsCrawling.NewsCrawling import NaverNewsAPI, NewsArticleCrawler
+from .NewsCrawling import NaverNewsAPI, NewsArticleCrawler
 
 from multiprocessing import Pool
 
