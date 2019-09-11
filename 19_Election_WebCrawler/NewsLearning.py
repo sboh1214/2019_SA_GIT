@@ -1,10 +1,10 @@
-import csv
 import os
 
 import matplotlib.pyplot as plt
 from keras import Sequential
 from keras.layers import *
 from khaiii import KhaiiiApi
+
 from .NewsData import NewsList
 
 
