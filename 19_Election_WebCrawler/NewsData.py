@@ -8,7 +8,7 @@ class NewsData:
     Content = [[""]]
     Bias = 0
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs=None):
         super().__init__()
         if 'title' in kwargs:
             self.Title = kwargs['title']
@@ -23,7 +23,7 @@ class NewsData:
 
 
 class NewsList:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs=None):
         super().__init__()
         self.List = kwargs['list']
 
