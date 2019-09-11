@@ -8,13 +8,16 @@ Pickle comes in the following format:
 
 """
 
-from tika import parser as tikaParse
-from multiprocessing.dummy import Pool
-import os, glob
+import glob
 import pickle
 import re
-from ..NewsEvaluating.PDFData import PdfData as PDFData
-from ..NewsEvaluating.PDFData import PdfList as PDFList
+from multiprocessing.dummy import Pool
+
+from tika import parser as tikaParse
+
+from Test.data import PdfData as PDFData
+from Test.data import PdfList as PDFList
+
 
 class ParsePDF:
     threadCount = 4

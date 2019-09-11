@@ -45,6 +45,19 @@ class NewsList:
         return self.List
 
 
+class PdfData:
+    pass
+
+
+class PdfList:
+    List = []
+
+    def importPickle(self, fileName="PdfData.txt"):
+        with open(fileName, 'rb') as f:
+            self.List = pickle.load(f)
+        return self.List
+
+
 if __name__ == '__main__':
     a = NewsData(title='제목 A', press='신문사 A', date='', content=[["여러분", "안녕하세요"], ["감사합니다"]])
     b = NewsData()
@@ -56,12 +69,3 @@ if __name__ == '__main__':
     print(e.List[0])
     print(e.List[1])
     print(e.List[2])
-
-
-class PdfList:
-    List = []
-
-    def importPickle(self, fileName="PdfData.txt"):
-        with open(fileName, 'rb') as f:
-            self.List = pickle.load(f)
-        return self.List

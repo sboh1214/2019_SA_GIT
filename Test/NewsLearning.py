@@ -5,7 +5,7 @@ from keras import Sequential
 from keras.layers import *
 from khaiii import KhaiiiApi
 
-from .NewsData import NewsList
+from Test.data import NewsList
 
 
 class MorphAnalyzer:

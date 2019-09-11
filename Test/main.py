@@ -1,6 +1,7 @@
-from .NewsCrawling import NaverNewsAPI, NewsArticleCrawler
-
 from multiprocessing import Pool
+
+from Test.NewsCrawling import NaverNewsAPI, NewsArticleCrawler
+
 
 Keyword = ["대선"]
 Processes = 8

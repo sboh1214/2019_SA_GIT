@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
 
-from NewsData import NewsData, NewsList
+from Test.data import NewsData, NewsList
 
 
 class NaverNewsAPI:
@@ -117,8 +117,8 @@ class NewsArticleCrawler:
         self.LinkData = linkData
 
     def GetNews(self):
-        threadCount = 4
-        pool = Pool(self.threadCount)
+        thread_count = 4
+        pool = Pool(thread_count)
         pool.map(self.read_pdf, directories)
         """
 
