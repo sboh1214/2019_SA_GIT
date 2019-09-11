@@ -1,19 +1,7 @@
 import pickle
 
 
-class PdfData:
-    Speaker=""
-    Speech=""
-    Word=[""]
-    def __init__(self, speaker, speech, word):
-        self.Speaker=speaker
-        self.Speech=speech #안잘린거
-        self.Word=word #잘린거
-
-
 class PdfList:
-    def __init__(self, l):
-        self.List = l
 
     List = []
 
@@ -22,8 +10,29 @@ class PdfList:
             self.List=pickle.load(f)
         return self.List
 
+class NewsData:
+    Title = ""
+    Press = ""
+    Date = ""
+    Content = [[""]]
+    Bias = 0
+
+    def __init__(self, **kwargs=None):
+        super().__init__()
+        if 'title' in kwargs:
+            self.Title = kwargs['title']
+        elif 'press' in kwargs:
+            self.Press = kwargs['press']
+        elif 'Date' in kwargs:
+            self.Date = kwargs['date']
+        elif 'Content' in kwargs:
+            self.Content = kwargs['Content']
+        elif 'Bias' in kwargs:
+            self.Bias = kwargs['bias']
+
+
 class NewsList:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs=None):
         super().__init__()
         self.List = kwargs['list']
 
