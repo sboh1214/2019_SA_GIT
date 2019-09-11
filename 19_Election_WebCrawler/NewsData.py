@@ -32,11 +32,11 @@ class NewsList:
         super().__init__()
         self.List = news_list
 
-    def exportPickle(self, fileName: str = "NewsData.txt"):
+    def exportPickle(self, fileName: str = "NewsData.dat"):
         with open(fileName, 'wb') as f:
             pickle.dump(self.List, f)
 
-    def importPickle(self, fileName: str = "NewsData.txt"):
+    def importPickle(self, fileName: str = "NewsData.dat"):
         with open(fileName, 'rb') as f:
             self.List = pickle.load(f)
         return self.List
