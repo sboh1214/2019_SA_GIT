@@ -1,4 +1,5 @@
-from .EvaluatingData import PdfList,NewsList
+from .EvaluatingData import PdfList
+from .NewsData import NewsList
 class KeyWording:
     def __init__(self):
         self.pdfList=PdfList()
@@ -22,13 +23,15 @@ class KeyWording:
     
     def NewsTagging(self):
         News=self.newsList.importPickle()
-        for news in News:
+        for news in News.List:
             allBias=0
-            for sentence in news['content']:
+            for index, sentence in enumerate(news['content']):
                 sentenceBias=0
                 for word in sentence:
                     wordBias=self.keyword[word]['R']-self.keyword[word]['L'] #우편향일수록 양수. 중도가 0
                     sentenceBias+=wordBias; allBias+=wordBias
+                news['sentence_bias'][index]=sentenceBias
+            news['bias']=allBias
                     
 
 
