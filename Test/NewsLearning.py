@@ -5,7 +5,7 @@ from keras import Sequential
 from keras.layers import *
 from khaiii import KhaiiiApi
 
-from .NewsData import NewsList
+from Test.data import NewsList
 
 
 class MorphAnalyzer:
@@ -40,15 +40,16 @@ class NewsML:
     Y_Test = None
     Rnn_Model = None
     Cnn_Model = None
+    History = None
 
-    plaidml = "plaidml.keras.backend"
-    tensorflow = "tensorflow"
-    theano = "theano"
-    ctnk = "ctnk"
+    PLAIDML: str = "plaidml.keras.backend"
+    TENSORFLOW: str = "tensorflow"
+    THEANO: str = "theano"
+    CTNK: str = "ctnk"
 
     def __init__(self, backend):
         super().__init__()
-        if backend is self.plaidml:
+        if backend is self.PLAIDML:
             os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
         else:
             os.environ["KERAS_BACKEND"] = backend
@@ -60,13 +61,13 @@ class NewsML:
         news = NewsList()
         self.NewsList = news.importPickle(filename)
 
-    def buildRNNModel(self, maxlen: int, maxfeatures: int):
+    def buildRNNModel(self, max_length: int, max_features: int):
         """
 
         """
         model = Sequential()
-        model.add(Input(shape=(maxlen,)))
-        model.add(Embedding(input_dim=maxfeatures, output_dim=128))
+        model.add(Input(shape=(max_length,)))
+        model.add(Embedding(input_dim=max_features, output_dim=128))
         model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2))
         model.add(Dense(1, activation='sigmoid'))
         model.add(Dropout(0.5))
@@ -98,38 +99,32 @@ class NewsML:
                            epochs=epochs,
                            validation_data=(None, None))
 
-    @staticmethod
-    def plotLoss(history, name="", figure=1, subplot=(1, 1, 1), show=False):
+    def plotLossAndAccuracy(self, name="", show=False):
         """
-        Plot history for loss of train and validation data.
+        Plot history for loss and accuracy of train and validation data.
         """
-        plt.figure(figure)
-        plt.subplot(subplot)
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
+        plt.figure()
+        plt.subplot((2, 1, 1))
+        plt.plot(self.History.history['loss'])
+        plt.plot(self.History.history['val_loss'])
         plt.title(name + " Loss")
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.legend(['Train', 'Test'], loc=0)
-        if show:
-            plt.show()
 
-    @staticmethod
-    def plotAccuracy(history, name="", figure=1, subplot=(1, 1, 1), show=False):
-        """
-        Plot history for accuracy of train and validation data.
-        """
-        plt.figure(figure)
-        plt.subplot(subplot)
-        plt.plot(history.history['acc'])
-        plt.plot(history.history['val_acc'])
+        plt.subplot((2, 1, 2))
+        plt.plot(self.History.history['acc'])
+        plt.plot(self.History.history['val_acc'])
         plt.title(name + " Accuracy")
         plt.xlabel('Epoch')
         plt.ylabel('Accuracy')
         plt.legend(['Train', 'Test'], loc=0)
+
         if show:
             plt.show()
 
 
 if __name__ == "__main__":
     print(MorphAnalyzer.getMorph("미친전세값"))
+    newsML = NewsML(NewsML.TENSORFLOW)
+    newsML.getNewsData('')

@@ -8,13 +8,16 @@ Pickle comes in the following format:
 
 """
 
-from tika import parser as tikaParse
-from multiprocessing.dummy import Pool
-import os, glob
+import glob
 import pickle
 import re
-from ..NewsEvaluating.PDFData import PdfData as PDFData
-from ..NewsEvaluating.PDFData import PdfList as PDFList
+from multiprocessing.dummy import Pool
+
+from tika import parser as tikaParse
+
+from Test.data import PdfData as PDFData
+from Test.data import PdfList as PDFList
+
 
 class ParsePDF:
     threadCount = 4
@@ -50,8 +53,8 @@ class ParsePDF:
         directories = glob.glob(dir_name)
         pool = Pool(self.threadCount)
         results = PDFList(pool.map(self.read_pdf, directories))
-        results.exportPickle("../parsedPDF.txt")
-        with open('../parsedPDF.txt', 'wb', encoding="utf-8") as f:
+        results.exportPickle("../parsedPDF.dat")
+        with open('../parsedPDF.dat', 'wb', encoding="utf-8") as f:
             pickle.dump(results, f)
 
 
