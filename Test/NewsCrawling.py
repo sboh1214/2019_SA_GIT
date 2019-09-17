@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
 
-from data import NewsData, NewsList
+from .data import NewsData, NewsList
 
 
 class NaverNewsAPI:

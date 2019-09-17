@@ -21,11 +21,13 @@ class NewsData:
             self.Content = kwargs['content']
         if 'sentence_bias' in kwargs:
             self.Sentence_Bias = kwargs['sentence_bias']
+        else:
+            self.Sentence_Bias = [0 for _ in self.Content]
         if 'bias' in kwargs:
             self.Bias = kwargs['bias']
 
     def __str__(self):
-        return f"NewsData Title:{self.Title}, Press:{self.Press}, Date:{self.Date}, Bias:{self.Bias}"
+        return f"NewsData.dat Title:{self.Title}, Press:{self.Press}, Date:{self.Date}, Bias:{self.Bias}, Count of Sentence:{len(self.Content)}, Count of Bias:{len(self.Sentence_Bias)}"
 
 
 class NewsList:

@@ -1,5 +1,3 @@
-import os
-
 import matplotlib.pyplot as plt
 from keras import Sequential
 from keras.layers import *
@@ -32,36 +30,41 @@ class NewsML:
 
     """
     NewsList = []
-    X_Train = None
-    Y_Train = None
-    X_Validate = None
-    Y_Validate = None
-    X_Test = None
-    Y_Test = None
+
+    Rnn_X_Train = []
+    Rnn_Y_Train = []
+    Rnn_X_Test = []
+    Rnn_Y_Test = []
+
+    Cnn_X_Train = []
+    Cnn_Y_Train = []
+    Cnn_X_Test = []
+    Cnn_Y_Test = []
+
     Rnn_Model = None
     Cnn_Model = None
     History = None
-
-    PLAIDML: str = "plaidml.keras.backend"
-    TENSORFLOW: str = "tensorflow"
-    THEANO: str = "theano"
-    CTNK: str = "ctnk"
-
-    def __init__(self, backend):
-        super().__init__()
-        if backend is self.PLAIDML:
-            os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
-        else:
-            os.environ["KERAS_BACKEND"] = backend
 
     def getNewsData(self, filename: str):
         """
 
         """
         news = NewsList()
-        self.NewsList = news.importPickle(filename)
+        news_list = news.importPickle(filename)
+        train: list = news_list[:int(len(news_list) * 0.8)]
+        test: list = news_list[int(len(news_list) * 0.8):]
+        for data in train:
+            for i, sentence in enumerate(data.Content):
+                self.Rnn_X_Train.append(" ".join(sentence))
+                self.Rnn_Y_Train.append(data.Sentence_Bias[i])
+                self.Cnn_Y_Test.append(data.Bias)
+        for data in test:
+            for i, sentence in enumerate(data.Content):
+                self.Rnn_X_Test.append(" ".join(sentence))
+                self.Rnn_Y_Test.append(data.Sentence_Bias[i])
+                self.Cnn_Y_Test.append(data.Bias)
 
-    def buildRNNModel(self, max_length: int, max_features: int):
+    def buildRNNModel(self, max_length: int = 100, max_features: int = 100):
         """
 
         """
@@ -88,16 +91,16 @@ class NewsML:
         self.Cnn_Model = model
 
     def runRnnModel(self, epochs: int = 1, batch_size: int = 10):
-        self.Rnn_Model.fit(x=self.X_Train, y=self.Y_Train,
+        self.Rnn_Model.fit(x=self.Rnn_X_Test, y=self.Rnn_Y_Test,
                            batch_size=batch_size,
                            epochs=epochs,
-                           validation_data=(self.X_Validate, self.Y_Validate))
+                           validation_split=0.2)
 
     def runCnnModel(self, epochs: int = 1, batch_size: int = 10):
-        self.Cnn_Model.fit(x=None, y=None,
+        self.Cnn_Model.fit(x=self.Cnn_X_Test, y=self.Cnn_Y_Test,
                            batch_size=batch_size,
                            epochs=epochs,
-                           validation_data=(None, None))
+                           validation_split=0.2)
 
     def plotLossAndAccuracy(self, name="", show=False):
         """
@@ -126,5 +129,9 @@ class NewsML:
 
 if __name__ == "__main__":
     print(MorphAnalyzer.getMorph("미친전세값"))
-    newsML = NewsML(NewsML.TENSORFLOW)
-    newsML.getNewsData('')
+    newsML = NewsML()
+    newsML.getNewsData('NewsData')
+    newsML.buildRNNModel()
+    newsML.buildCnnModel()
+    newsML.runRnnModel()
+    newsML.runCnnModel()
