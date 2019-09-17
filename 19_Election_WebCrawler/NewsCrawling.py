@@ -117,9 +117,9 @@ class NewsArticleCrawler:
         self.LinkData = linkData
 
     def GetNews(self):
-        threadCount = 4
-        pool = Pool(self.threadCount)
-        pool.map(self.read_pdf, directories)
+        #threadCount = 4
+        #pool = Pool(threadCount)
+        #pool.map(self.GetNews)
         """
 
         """
@@ -159,10 +159,11 @@ class NewsArticleCrawler:
 
         """
         self.GetNews()
-        news_list = NewsList(self.NewsData)
+        news_list = list()
         for item in self.NewsData:
             if item is not None:
-                news_list.List.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
+                news_list.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
+        news_list = NewsList(news_list)
         news_list.exportPickle(fileName)
         return "Success"
 
