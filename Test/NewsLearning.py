@@ -42,14 +42,14 @@ class NewsML:
     Cnn_Model = None
     History = None
 
-    plaidml: str = "plaidml.keras.backend"
-    tensorflow: str = "tensorflow"
-    theano: str = "theano"
-    ctnk: str = "ctnk"
+    PLAIDML: str = "plaidml.keras.backend"
+    TENSORFLOW: str = "tensorflow"
+    THEANO: str = "theano"
+    CTNK: str = "ctnk"
 
     def __init__(self, backend):
         super().__init__()
-        if backend is self.plaidml:
+        if backend is self.PLAIDML:
             os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
         else:
             os.environ["KERAS_BACKEND"] = backend
@@ -126,3 +126,5 @@ class NewsML:
 
 if __name__ == "__main__":
     print(MorphAnalyzer.getMorph("미친전세값"))
+    newsML = NewsML(NewsML.TENSORFLOW)
+    newsML.getNewsData('')

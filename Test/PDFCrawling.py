@@ -53,8 +53,8 @@ class ParsePDF:
         directories = glob.glob(dir_name)
         pool = Pool(self.threadCount)
         results = PDFList(pool.map(self.read_pdf, directories))
-        results.exportPickle("../parsedPDF.txt")
-        with open('../parsedPDF.txt', 'wb', encoding="utf-8") as f:
+        results.exportPickle("../parsedPDF.dat")
+        with open('../parsedPDF.dat', 'wb', encoding="utf-8") as f:
             pickle.dump(results, f)
 
 
