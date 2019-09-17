@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
 
-from Test.data import NewsData, NewsList
+from data import NewsData, NewsList
 
 
 class NaverNewsAPI:
@@ -113,34 +113,36 @@ class NewsArticleCrawler:
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) " \
                 "Version/12.0 Mobile/15E148 Safari/604.1 "
 
-    threadCount = 4
+    threadCount = 6
 
     def __init__(self, linkData):
         self.LinkData = linkData
 
-    def GetNews(self):
+    def GetNewsMultithread(self):
         #threadCount = 4
-        #pool = Pool(threadCount)
-        #pool.map(self.GetNews)
         """
 
         """
-        for item in tqdm(self.LinkData, desc='Fetching News...'):
-            url = item["Link"]
-            request = urllib.request.Request(url)
-            request.add_header("User-Agent", self.UserAgent)
-            response = urllib.request.urlopen(request)
-            rescode = response.getcode()
-            if rescode != 200:
-                return "Error (http)" + rescode
-            content = response.read()
-            if "news.naver.com" in url:  # 네이버뉴스 모바일 - "dic_area"
-                formatted_data = self.Format_Naver(content, item)
-                if formatted_data is None:
-                    print('Error (Parsing Newspaper Content)')
-                self.NewsData.append(formatted_data)
-            else:
-                pass
+        pool = Pool(self.threadCount)
+        print("Fetching News...")
+        pool.map(self.GetNews, self.LinkData)
+
+    def GetNews(self, item):
+        url = item["Link"]
+        request = urllib.request.Request(url)
+        request.add_header("User-Agent", self.UserAgent)
+        response = urllib.request.urlopen(request)
+        rescode = response.getcode()
+        if rescode != 200:
+            return "Error (http)" + rescode
+        content = response.read()
+        if "news.naver.com" in url:  # 네이버뉴스 모바일 - "dic_area"
+            formatted_data = self.Format_Naver(content, item)
+            if formatted_data is None:
+                print('Error (Parsing Newspaper Content)')
+            self.NewsData.append(formatted_data)
+        else:
+            pass
 
     @staticmethod
     def Format_Naver(content, item):
@@ -160,10 +162,8 @@ class NewsArticleCrawler:
         """
 
         """
-        pool = Pool(self.threadCount)
-        pool.map(self.GetNews)
 
-        self.GetNews()
+        self.GetNewsMultithread()
         news_list = list()
         for item in self.NewsData:
             if item is not None:
