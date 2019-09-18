@@ -1,17 +1,16 @@
 import matplotlib.pyplot as plt
 from keras import Sequential
 from keras.layers import *
-from khaiii import KhaiiiApi
+# from khaiii import KhaiiiApi
 from tqdm import tqdm
 
 from Test.data import NewsList
 
-
+'''
 class MorphAnalyzer:
     """
-
+    
     """
-
     @classmethod
     def getMorph(cls, sentence):
         """
@@ -24,6 +23,7 @@ class MorphAnalyzer:
             for morph in word.morphs:
                 dic[morph.lex] = morph.tag
         return dic
+'''
 
 
 class NewsML:
@@ -72,7 +72,6 @@ class NewsML:
 
         """
         model = Sequential()
-        model.add(Input(shape=(max_length,)))
         model.add(Embedding(input_dim=max_features, output_dim=128))
         model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2))
         model.add(Dense(1, activation='sigmoid'))
@@ -80,16 +79,16 @@ class NewsML:
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         self.Rnn_Model = model
 
-    def buildCnnModel(self, input_shape=None):
+    def buildCnnModel(self):
         model = Sequential()
-        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
         model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
         model.add(MaxPool2D(pool_size=(2, 2)))
         model.add(Dropout(rate=0.25))
         model.add(Flatten())
         model.add(Dense(units=128, activation='relu'))
         model.add(Dropout(rate=0.5))
-        model.add(Dense(units=1, activation='activation'))
+        model.add(Dense(units=1, activation='relu'))
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         self.Cnn_Model = model
 
@@ -131,7 +130,6 @@ class NewsML:
 
 
 if __name__ == "__main__":
-    print(MorphAnalyzer.getMorph("미친전세값"))
     newsML = NewsML()
     newsML.getNewsData('NewsData')
     newsML.buildRNNModel()
