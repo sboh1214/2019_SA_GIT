@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from keras import Sequential
 from keras.layers import *
 from khaiii import KhaiiiApi
+from tqdm import tqdm
 
 from Test.data import NewsList
 
@@ -51,18 +52,20 @@ class NewsML:
         """
         news = NewsList()
         news_list = news.importPickle(filename)
+        self.NewsList = news_list
         train: list = news_list[:int(len(news_list) * 0.8)]
         test: list = news_list[int(len(news_list) * 0.8):]
-        for data in train:
+        for data in tqdm(train):
             for i, sentence in enumerate(data.Content):
                 self.Rnn_X_Train.append(" ".join(sentence))
                 self.Rnn_Y_Train.append(data.Sentence_Bias[i])
                 self.Cnn_Y_Test.append(data.Bias)
-        for data in test:
+        for data in tqdm(test):
             for i, sentence in enumerate(data.Content):
                 self.Rnn_X_Test.append(" ".join(sentence))
                 self.Rnn_Y_Test.append(data.Sentence_Bias[i])
                 self.Cnn_Y_Test.append(data.Bias)
+        news.printCell()
 
     def buildRNNModel(self, max_length: int = 100, max_features: int = 100):
         """
@@ -107,18 +110,18 @@ class NewsML:
         Plot history for loss and accuracy of train and validation data.
         """
         plt.figure()
-        plt.subplot((2, 1, 1))
+        plt.subplot((4, 1, 1))
         plt.plot(self.History.history['loss'])
         plt.plot(self.History.history['val_loss'])
-        plt.title(name + " Loss")
+        plt.title(name + " RNN Loss")
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.legend(['Train', 'Test'], loc=0)
 
-        plt.subplot((2, 1, 2))
+        plt.subplot((4, 1, 2))
         plt.plot(self.History.history['acc'])
         plt.plot(self.History.history['val_acc'])
-        plt.title(name + " Accuracy")
+        plt.title(name + " CNN Accuracy")
         plt.xlabel('Epoch')
         plt.ylabel('Accuracy')
         plt.legend(['Train', 'Test'], loc=0)

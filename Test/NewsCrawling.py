@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
 
-from .data import NewsData, NewsList
+from data import NewsData, NewsList
 
 
 class NaverNewsAPI:
@@ -119,7 +119,7 @@ class NewsArticleCrawler:
         self.LinkData = linkData
 
     def GetNewsMultithread(self):
-        #threadCount = 4
+        # threadCount = 4
         """
 
         """
@@ -169,6 +169,7 @@ class NewsArticleCrawler:
             if item is not None:
                 news_list.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
         news_list = NewsList(news_list)
+        news_list.printCell()
         news_list.exportPickle(fileName)
         return "Success"
 

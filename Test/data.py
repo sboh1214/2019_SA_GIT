@@ -27,7 +27,7 @@ class NewsData:
             self.Bias = kwargs['bias']
 
     def __str__(self):
-        return f"NewsData.dat Title:{self.Title}, Press:{self.Press}, Date:{self.Date}, Bias:{self.Bias}, Count of Sentence:{len(self.Content)}, Count of Bias:{len(self.Sentence_Bias)}"
+        return f"Title:{self.Title}, Press:{self.Press}, Date:{self.Date}, Bias:{self.Bias}, Count of Sentence:{len(self.Content)}, Count of Bias:{len(self.Sentence_Bias)}"
 
 
 class NewsList:
@@ -46,6 +46,12 @@ class NewsList:
             self.List = pickle.load(f)
         return self.List
 
+    def printCell(self):
+        print("    {0:^20} {1:^20} {2:^5} {3:^50} ".format('Press', 'Date', 'Bias', 'Title'))
+        print(f"{'-'*3} {'-'*20} {'-'*20} {'-'*5} {'-'*70}")
+        for i, item in enumerate(self.List, 1):
+            print("{4:<3} {0:<20} {1:<20} {2:<5} {3:<50}".format(item.Press[:20], item.Date, item.Bias, item.Title[:50], i))
+
 
 class PdfData:
     pass
@@ -63,8 +69,8 @@ class PdfList:
 if __name__ == '__main__':
     a = NewsData(title='제목 A', press='신문사 A', date='', content=[["여러분", "안녕하세요"], ["감사합니다"]])
     b = NewsData()
-    c = NewsData(title='제목 C', press='신문사 C', date='', content=[["여러분", "안녕하세요"], ["감사합니다"]], sentence_bias=[1, -1],
-                 bias=0)
+    c = NewsData(title='제목 C', press='신문사 C', date='', content=[["여러분", "안녕하세요"], ["감사합니다"]],
+                 sentence_bias=[1, -1], bias=0)
     d = NewsList(news_list=[a, b, c])
     e = NewsList()
     e.List = [a, b, c]
