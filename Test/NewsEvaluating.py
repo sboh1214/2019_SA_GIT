@@ -85,9 +85,9 @@ class KeyWording:
                             sentence_bias += word_bias
                             all_bias += word_bias
                 news.Sentence_Bias[index] = sentence_bias
-                print(index, sentence_split,sentence_bias)
             news.Bias = all_bias
-            print(all_bias)
+            print(news.Content, all_bias/len(news.Content))
+            print("\n\n\n")
 
 if __name__ == "__main__":
 
