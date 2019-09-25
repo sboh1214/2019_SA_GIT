@@ -5,6 +5,7 @@ import re
 import datetime
 import dateutil.parser  # pip install python-dateutil
 import pytz
+import khaiii
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
@@ -87,13 +88,13 @@ class NaverNewsAPI:
                 return f"Error : File {fileName} does not exist."
 
     def RequestNewsByDate(self, query, begin=datetime.datetime(1900, 1, 1), end=datetime.datetime.today(),
-                          pages=1000):  # 날짜를 기준으로 거르기
+                          pages=1000, display=100):  # 날짜를 기준으로 거르기
         """
 
         """
         utc = pytz.UTC
         for x in tqdm(range(1, pages + 1), desc='Grabbing Links'):
-            self.RequestNewsLink(query, x, sort='date')
+            self.RequestNewsLink(query, x, display, sort='date')
             for data in self.LinkData:
                 if data['pubDate'].replace(tzinfo=utc) < begin.replace(tzinfo=utc):
                     self.LinkData.remove(data)
@@ -144,8 +145,22 @@ class NewsArticleCrawler:
         else:
             pass
 
-    @staticmethod
-    def Format_Naver(content, item):
+    def GetSource(self, content):
+        """
+        khaiii만 돌리기엔 신뢰성이 낮다(예 : 더불어민주당 => 더불어 민/NNP 주/NNG 당/NNP으로)
+        아마 preset(당명 등) 만들어 대입?
+        """
+        possible_source = re.findall(r"[^.]*\w*은 [^.]*|[^.]*\w*는 [^.]*", content)
+        api = khaiii.KhaiiiApi()
+        print(possible_source)
+        for line in possible_source:
+            dic = {}
+            for word in api.analyze(line):
+                for morph in word.morphs:
+                    print(morph)
+
+
+    def Format_Naver(self, content, item):
         """
 
         """
@@ -156,6 +171,7 @@ class NewsArticleCrawler:
         content = soup.find("div", {"id": "dic_area"}).text
         date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
         # print(content, date)
+        # self.GetSource(content)
         return item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.')
 
     def SaveNews(self, fileName="NewsData"):
@@ -169,7 +185,7 @@ class NewsArticleCrawler:
             if item is not None:
                 news_list.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
         news_list = NewsList(news_list)
-        news_list.printCell()
+        #news_list.printCell()
         news_list.exportPickle(fileName)
         return "Success"
 
@@ -183,7 +199,7 @@ class NewsArticleCrawler:
 if __name__ == "__main__":
     api = NaverNewsAPI()
     # api.RequestNewsLink("19대 대선", 1, 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링
-    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=1)
+    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=1, display=10)
     crawler = NewsArticleCrawler(api.LinkData)
     crawler.LinkData = api.LinkData
     crawler.SaveNews()
