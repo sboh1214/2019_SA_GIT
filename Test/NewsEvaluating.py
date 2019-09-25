@@ -17,8 +17,9 @@ class KeyWording:
     def congressTotalImport(self,fileName):
         with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
             congress_list = f.read().split()
+            #print(congress_list)
             for i in range(len(congress_list)//4):
-                self.congress[congress_list[4*i-3]]=4*i-1
+                self.congress[congress_list[4*i+1]]=congress_list[4*i+3]
 
 
     def pdfKeywording(self):
@@ -93,7 +94,8 @@ if __name__ == "__main__":
     # keyWording.congressImport("jungui", -5)
     # keyWording.congressImport("minjupyungwha", -7)
     # keyWording.congressImport("theminju", -2)
-    keyWording.congressTotalImport("")
+    keyWording.congressTotalImport("total")
+    print(keyWording.congress)
     '''keyWording.pdfKeywording()
     keyWording.printKeyword()
     keyWording.newsTagging()'''
