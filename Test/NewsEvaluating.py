@@ -93,7 +93,7 @@ if __name__ == "__main__":
     # keyWording.congressImport("jungui", -5)
     # keyWording.congressImport("minjupyungwha", -7)
     # keyWording.congressImport("theminju", -2)
-    print(len(keyWording.congress))
+    keyWording.congressTotalImport("")
     '''keyWording.pdfKeywording()
     keyWording.printKeyword()
     keyWording.newsTagging()'''
