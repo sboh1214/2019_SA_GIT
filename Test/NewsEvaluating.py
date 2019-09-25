@@ -28,7 +28,7 @@ class KeyWording:
             for comment in minute:
                 for sentence in comment[1]:
                     for index in range(len(sentence) - 1):
-                        for i in range(2, 5):
+                        for i in range(1, 5):
                             if index + i > len(sentence):
                                 break
                             word = ""
@@ -70,23 +70,22 @@ class KeyWording:
         for news in news_list:
             #print(news.Content)
             all_bias = 0
-            print(news.Content)
             for index, sentence in enumerate(news.Content):
-                sentence_split=sentence.split()
-                print(index, sentence_split)
+                sentence_split = sentence.split()
                 sentence_bias = 0
                 for wordIndex in range(len(sentence_split)-1):
-                    for i in range(2, 5):
-                        if index + i > len(sentence_split):
+                    for i in range(1, 5):
+                        if wordIndex + i > len(sentence_split):
                             break
-                    word = ""
-                    for j in range(wordIndex, wordIndex+i):
-                        word += sentence_split[j] + " "
-                    if word in self.keyword.keys():
-                        word_bias = self.keyword[word]['R'] - self.keyword[word]['L']  # 우편향일수록 양수. 중도가 0
-                        sentence_bias += word_bias
-                        all_bias += word_bias
+                        word = ""
+                        for j in range(wordIndex, wordIndex+i):
+                            word += sentence_split[j] + " "
+                        if word in self.keyword.keys():
+                            word_bias = self.keyword[word]['bias']  # 우편향일수록 양수. 중도가 0
+                            sentence_bias += word_bias
+                            all_bias += word_bias
                 news.Sentence_Bias[index] = sentence_bias
+                print(index, sentence_split,sentence_bias)
             news.Bias = all_bias
             print(all_bias)
 
