@@ -68,24 +68,26 @@ class KeyWording:
     def newsTagging(self):
         news_list = self.newsList.importPickle()
         for news in news_list:
-            print(news.Content)
+            #print(news.Content)
             all_bias = 0
+            print(news.Content)
             for index, sentence in enumerate(news.Content):
-                print(index)
+                sentence_split=sentence.split()
+                print(index, sentence_split)
                 sentence_bias = 0
-                for word in range(len(sentence)-1):
-                    for i in range(2,5):
-                        if index + i >= len(sentence) :
+                for wordIndex in range(len(sentence_split)-1):
+                    for i in range(2, 5):
+                        if index + i > len(sentence_split):
                             break
                     word = ""
-                    for j in range(word, word+i):
-                        word += sentence[j] + " "
+                    for j in range(wordIndex, wordIndex+i):
+                        word += sentence_split[j] + " "
                     if word in self.keyword.keys():
                         word_bias = self.keyword[word]['R'] - self.keyword[word]['L']  # 우편향일수록 양수. 중도가 0
                         sentence_bias += word_bias
                         all_bias += word_bias
-                news.Sentence_Bias[word] = sentence_bias
-            news.Bias  = all_bias
+                news.Sentence_Bias[index] = sentence_bias
+            news.Bias = all_bias
             print(all_bias)
 
 if __name__ == "__main__":
