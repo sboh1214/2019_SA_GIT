@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from keras import Sequential
-from keras.layers import *
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import *
 # from khaiii import KhaiiiApi
 from tqdm import tqdm
 
@@ -26,7 +26,7 @@ class MorphAnalyzer:
 '''
 
 
-class NewsML:
+class NewsMLKeras:
     """
 
     """
@@ -45,6 +45,11 @@ class NewsML:
     Rnn_Model = None
     Cnn_Model = None
     History = None
+
+    def setKor2Vec(self, train=False):
+        if train:
+
+            pass
 
     def getNewsData(self, filename: str):
         """
@@ -130,8 +135,9 @@ class NewsML:
 
 
 if __name__ == "__main__":
-    newsML = NewsML()
+    newsML = NewsMLKeras()
     newsML.getNewsData('NewsData')
+    newsML.setKor2Vec(train=True)
     newsML.buildRNNModel()
     newsML.buildCnnModel()
     newsML.runRnnModel()
