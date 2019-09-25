@@ -19,7 +19,7 @@ class KeyWording:
             congress_list = f.read().split()
             #print(congress_list)
             for i in range(len(congress_list)//4):
-                self.congress[congress_list[4*i+1]]=congress_list[4*i+3]
+                self.congress[congress_list[4*i+1]]=float(congress_list[4*i+3])
 
 
     def pdfKeywording(self):
@@ -37,7 +37,8 @@ class KeyWording:
                             if word not in self.keyword.keys():
                                 self.keyword[word] = {'bias': 0, 'count': 0}
                             if comment[0][1] == '의원':
-                                self.keyword[word]['bias'] += self.congress[comment[0][0]]
+                                if comment[0][0] in self.congress.keys():
+                                    self.keyword[word]['bias'] += self.congress[comment[0][0]]
                             '''else :
                                 self.keyword[word]['bias'] += self.congress[comment[0][1]]'''
                             self.keyword[word]['count'] += 1
@@ -47,8 +48,10 @@ class KeyWording:
                 nobias.append(word)
         for word in nobias:
             del self.keyword[word]
-    def printKeyword(self):
-        print(self.keyword)
+    def printKeyword(self, count):
+        for word in self.keyword.keys():
+            if self.keyword[word]['count'] >= count:
+                print(word,self.keyword[word])
 
     def printPDF(self):
         minute_list= self.pdfList.importPickle()
@@ -67,21 +70,22 @@ class KeyWording:
         for news in news_list:
             print(news.Content)
             all_bias = 0
-            for index, sentence in enumerate(news['content']):
+            for index, sentence in enumerate(news.Content):
+                print(index)
                 sentence_bias = 0
-                for index in range(len(sentence)-1):
+                for word in range(len(sentence)-1):
                     for i in range(2,5):
                         if index + i >= len(sentence) :
                             break
                     word = ""
-                    for j in range(index, index+i):
+                    for j in range(word, word+i):
                         word += sentence[j] + " "
                     if word in self.keyword.keys():
                         word_bias = self.keyword[word]['R'] - self.keyword[word]['L']  # 우편향일수록 양수. 중도가 0
                         sentence_bias += word_bias
                         all_bias += word_bias
-                news['sentence_bias'][index] = sentence_bias
-            news['bias'] = all_bias
+                news.Sentence_Bias[word] = sentence_bias
+            news.Bias  = all_bias
             print(all_bias)
 
 if __name__ == "__main__":
@@ -96,6 +100,6 @@ if __name__ == "__main__":
     # keyWording.congressImport("theminju", -2)
     keyWording.congressTotalImport("total")
     print(keyWording.congress)
-    '''keyWording.pdfKeywording()
-    keyWording.printKeyword()
-    keyWording.newsTagging()'''
+    keyWording.pdfKeywording()
+    keyWording.printKeyword(5)
+    keyWording.newsTagging()

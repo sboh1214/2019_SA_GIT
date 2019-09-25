@@ -60,7 +60,7 @@ class PdfData:
 class PdfList:
     List = []
 
-    def importPickle(self, fileName="PdfData.txt"):
+    def importPickle(self, fileName="parsedPDF.dat"):
         with open(fileName, 'rb') as f:
             self.List = pickle.load(f)
         return self.List
