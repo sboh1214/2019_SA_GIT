@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
-from keras import Sequential
-from keras.layers import *
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import *
 # from khaiii import KhaiiiApi
 from tqdm import tqdm
-from kor2vec import Kor2Vec
 
 from Test.data import NewsList
 
@@ -27,12 +26,11 @@ class MorphAnalyzer:
 '''
 
 
-class NewsML:
+class NewsMLKeras:
     """
 
     """
     NewsList = []
-    Kor2Vec = None
 
     Rnn_X_Train = []
     Rnn_Y_Train = []
@@ -50,10 +48,8 @@ class NewsML:
 
     def setKor2Vec(self, train=False):
         if train:
-            kor2vec = Kor2Vec(embed_size=128)
-            kor2vec.train("../path/corpus", batch_size=128)  # takes some time
-            kor2vec.save("../mode/path")  # saving embedding
-        self.Kor2Vec = Kor2Vec.load("../model/path")
+
+            pass
 
     def getNewsData(self, filename: str):
         """
@@ -139,7 +135,7 @@ class NewsML:
 
 
 if __name__ == "__main__":
-    newsML = NewsML()
+    newsML = NewsMLKeras()
     newsML.getNewsData('NewsData')
     newsML.setKor2Vec(train=True)
     newsML.buildRNNModel()
