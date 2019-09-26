@@ -68,7 +68,7 @@ class KeyWording:
     def newsTagging(self):
         news_list = self.newsList.importPickle()
         for news in news_list:
-            #print(news.Content)
+            #print(news.Content )
             all_bias = 0
             for index, sentence in enumerate(news.Content):
                 sentence_split = sentence.split()
