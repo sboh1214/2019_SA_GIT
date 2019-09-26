@@ -48,9 +48,11 @@ class NewsMLKeras:
     History = None
 
     @staticmethod
-    def set_kor2vec(train=False):
+    def train_kor2vec(train=False):
         if train:
-            k2v = Kor2Vec()
+            model = Kor2Vec(embed_size=128)
+            model.train("./sejong-corpus/corpus-utf8/", batch_size=128)  # takes some time
+            model.save("./kor2vec/")  # saving embedding
             pass
 
     def get_news_data(self, filename: str = 'NewsData'):
@@ -139,9 +141,8 @@ class NewsMLKeras:
 if __name__ == '__main__':
     print('1')
     newsML = NewsMLKeras()
-
+    newsML.train_kor2vec(train=True)
     newsML.get_news_data()
-    newsML.set_kor2vec(train=True)
     newsML.build_rnn_model()
     newsML.build_cnn_model()
     newsML.run_rnn_model()
