@@ -3,6 +3,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import *
 # from khaiii import KhaiiiApi
 from tqdm import tqdm
+from kor2vec import Kor2Vec
 
 from Test.data import NewsList
 
