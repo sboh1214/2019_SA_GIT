@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import *
-# from khaiii import KhaiiiApi
+from keras import Sequential
+from keras.layers import *
 from tqdm import tqdm
+from kor2vec import Kor2Vec
 
 from Test.data import NewsList
 
 '''
+from khaiii import KhaiiiApi
 class MorphAnalyzer:
     """
     
@@ -46,12 +47,15 @@ class NewsMLKeras:
     Cnn_Model = None
     History = None
 
-    def setKor2Vec(self, train=False):
+    @staticmethod
+    def train_kor2vec(train=False):
         if train:
-
+            model = Kor2Vec(embed_size=128)
+            model.train("./sejong-corpus/corpus-utf8/", batch_size=128)  # takes some time
+            model.save("./kor2vec/")  # saving embedding
             pass
 
-    def getNewsData(self, filename: str):
+    def get_news_data(self, filename: str = 'NewsData'):
         """
 
         """
@@ -72,7 +76,7 @@ class NewsMLKeras:
                 self.Cnn_Y_Test.append(data.Bias)
         news.printCell()
 
-    def buildRNNModel(self, max_length: int = 100, max_features: int = 100):
+    def build_rnn_model(self, max_features: int = 100):
         """
 
         """
@@ -84,7 +88,7 @@ class NewsMLKeras:
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         self.Rnn_Model = model
 
-    def buildCnnModel(self):
+    def build_cnn_model(self):
         model = Sequential()
         model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
         model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
@@ -97,19 +101,19 @@ class NewsMLKeras:
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         self.Cnn_Model = model
 
-    def runRnnModel(self, epochs: int = 1, batch_size: int = 10):
+    def run_rnn_model(self, epochs: int = 1, batch_size: int = 10):
         self.Rnn_Model.fit(x=self.Rnn_X_Test, y=self.Rnn_Y_Test,
                            batch_size=batch_size,
                            epochs=epochs,
                            validation_split=0.2)
 
-    def runCnnModel(self, epochs: int = 1, batch_size: int = 10):
+    def run_cnn_model(self, epochs: int = 1, batch_size: int = 10):
         self.Cnn_Model.fit(x=self.Cnn_X_Test, y=self.Cnn_Y_Test,
                            batch_size=batch_size,
                            epochs=epochs,
                            validation_split=0.2)
 
-    def plotLossAndAccuracy(self, name="", show=False):
+    def plot_loss_and_accuracy(self, name="", show=False):
         """
         Plot history for loss and accuracy of train and validation data.
         """
@@ -134,11 +138,12 @@ class NewsMLKeras:
             plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    print('1')
     newsML = NewsMLKeras()
-    newsML.getNewsData('NewsData')
-    newsML.setKor2Vec(train=True)
-    newsML.buildRNNModel()
-    newsML.buildCnnModel()
-    newsML.runRnnModel()
-    newsML.runCnnModel()
+    newsML.train_kor2vec(train=True)
+    newsML.get_news_data()
+    newsML.build_rnn_model()
+    newsML.build_cnn_model()
+    newsML.run_rnn_model()
+    newsML.run_cnn_model()
