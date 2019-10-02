@@ -8,6 +8,7 @@ class KeyWording:
 
     keyword = {}  # 키워드 담는 이중 딕셔너리 keyword[키워드][L(좌파)/R(우파)]
     congress = {}  # 국회의원의 편향도 (정당기반)
+    headline = []  # 기사 제목 키워드 추출
     def congressImport(self, fileName, bias):
         with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
             congress_list = f.read()
@@ -48,6 +49,7 @@ class KeyWording:
                 nobias.append(word)
         for word in nobias:
             del self.keyword[word]
+
     def printKeyword(self, count):
         for word in self.keyword.keys():
             if self.keyword[word]['count'] >= count:
@@ -60,10 +62,24 @@ class KeyWording:
             print(minute)
             for comment in minute:
                 print("=========comment==========")
-                print(comment[0],comment[1])
+                print(comment[0], comment[1])
                 '''for index in comment:
                     print("=========index==========")
                     print(index)'''
+    def headlineKeywording(self):
+        news_list = self.newsList.importPickle()
+        for news in news_list:
+            title=news.Title.split()
+            for index in range(len(title)-1):
+                for i in range(1, 5):
+                    if index + i > len(title):
+                        break
+                    word = ""
+                    for j in range(index,index+i):
+                        word += title[j] + " "
+                self.headline.append(word)
+
+
 
     def newsTagging(self):
         news_list = self.newsList.importPickle()
