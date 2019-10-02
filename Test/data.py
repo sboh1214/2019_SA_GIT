@@ -54,7 +54,12 @@ class NewsList:
 
 
 class PdfData:
-    pass
+    def __init__(self, speaker, speech, word):
+        self.Speaker=speaker
+        self.Speech=speech #안잘린거
+        self.Word=word #잘린거
+
+    Minutes=[]
 
 
 class PdfList:
