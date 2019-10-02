@@ -25,6 +25,7 @@ class KeyWording:
 
     def pdfKeywording(self):
         minute_list = self.pdfList.importPickle()
+        print(len(minute_list))
         for minute in minute_list:
             for comment in minute:
                 for sentence in comment[1]:
@@ -78,6 +79,12 @@ class KeyWording:
                     for j in range(index,index+i):
                         word += title[j] + " "
                 self.headline.append(word)
+        delWord = []
+        for keyword in self.keyword:
+            if keyword not in self.headline:
+                delWord.append((keyword))
+        for word in delWord:
+            del(self.keyword[word])
 
 
 
@@ -119,4 +126,8 @@ if __name__ == "__main__":
     print(keyWording.congress)
     keyWording.pdfKeywording()
     keyWording.printKeyword(5)
-    keyWording.newsTagging()
+    keyWording.headlineKeywording()
+    print("Head line Keywording")
+    print(keyWording.headline)
+    keyWording.printKeyword(1)
+    # keyWording.newsTagging()
