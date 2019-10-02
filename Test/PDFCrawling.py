@@ -20,7 +20,7 @@ from data import PdfList as PDFList
 
 
 class ParsePDF:
-    threadCount = 4
+    threadCount = 8
 
     @staticmethod
     def text(parsed_text):
@@ -36,7 +36,7 @@ class ParsePDF:
             talk_text = list()
             for txt in personText.split('.'):
                 talk_text.append(txt.split()[2:])
-            return_text = PDFData(speaker_name, personText, talk_text)
+            return_text = (speaker_name, personText, talk_text) # Fix Needed
         return return_text
 
     def read_pdf(self, file_name='1.PDF'):
@@ -45,6 +45,10 @@ class ParsePDF:
             file_data = tikaParse.from_file(file_name)  # Parse data from file
             text_data = file_data['content']  # Get file's text content
         except IOError as e:
+            print("Error parsing PDF per next line : ")
+            print(e)
+            return " "
+        except UnicodeEncodeError as e:
             print("Error parsing PDF per next line : ")
             print(e)
             return " "
