@@ -15,8 +15,8 @@ from multiprocessing.dummy import Pool
 
 from tika import parser as tikaParse
 
-from Test.data import PdfData as PDFData
-from Test.data import PdfList as PDFList
+from data import PdfData as PDFData
+from data import PdfList as PDFList
 
 
 class ParsePDF:
@@ -40,6 +40,7 @@ class ParsePDF:
         return return_text
 
     def read_pdf(self, file_name='1.PDF'):
+        print(file_name)
         try:
             file_data = tikaParse.from_file(file_name)  # Parse data from file
             text_data = file_data['content']  # Get file's text content
@@ -49,12 +50,12 @@ class ParsePDF:
             return " "
         return self.text(text_data)
 
-    def read_folder(self, dir_name="../Data/*.PDF"):  # Multithreaded Read Operations
-        directories = glob.glob(dir_name)
+    def read_folder(self, dir_name="Data/*.PDF"):  # Multithreaded Read Operations
+        files = glob.glob(dir_name)
+        print(files)
         pool = Pool(self.threadCount)
-        results = PDFList(pool.map(self.read_pdf, directories))
-        results.exportPickle("../parsedPDF.dat")
-        with open('../parsedPDF.dat', 'wb', encoding="utf-8") as f:
+        results : PDFList = pool.map(self.read_pdf, files)
+        with open('../parsedPDF.dat', 'wb') as f:
             pickle.dump(results, f)
 
 
