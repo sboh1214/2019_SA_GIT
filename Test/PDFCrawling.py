@@ -31,12 +31,13 @@ class ParsePDF:
         except AttributeError:
             print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
         parsed_text = parsed_text.split('◯')
+        return_text = []
         for personText in parsed_text:
             speaker_name = personText.split()[:2]
             talk_text = list()
             for txt in personText.split('.'):
                 talk_text.append(txt.split()[2:])
-            return_text = (speaker_name, personText, talk_text) # Fix Needed
+            return_text.append([speaker_name, personText, talk_text])
         return return_text
 
     def read_pdf(self, file_name='1.PDF'):
@@ -59,8 +60,9 @@ class ParsePDF:
         print(files)
         pool = Pool(self.threadCount)
         results : PDFList = pool.map(self.read_pdf, files)
-        with open('../parsedPDF.dat', 'wb') as f:
+        with open('parsedPDF.dat', 'wb') as f:
             pickle.dump(results, f)
+        print(results)
 
 
 if __name__ == "__main__":
