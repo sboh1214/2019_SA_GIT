@@ -45,6 +45,7 @@ class NewsMLKeras:
 
     Rnn_Model = None
     Cnn_Model = None
+
     History = None
 
     @staticmethod
@@ -75,7 +76,6 @@ class NewsMLKeras:
                 self.Rnn_Y_Test.append(data.Sentence_Bias[i])
                 self.Cnn_Y_Test.append(data.Bias)
         news.printCell()
-
     def build_rnn_model(self, max_features: int = 100):
         """
 
