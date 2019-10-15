@@ -18,10 +18,11 @@ class KeyWording:
     def congressTotalImport(self,fileName):
         with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
             congress_list = f.read().split()
-            #print(congress_list)
+            #   print(congress_list)
             for i in range(len(congress_list)//4):
                 self.congress[congress_list[4*i+1]]=float(congress_list[4*i+3])
 
+    def morphKeywording(self, content):
 
     def pdfKeywording(self):
         minute_list = self.pdfList.importPickle()
