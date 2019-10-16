@@ -27,7 +27,7 @@ class ParsePDF:
         parsed_text = re.sub('\n', '', parsed_text)
         parsed_text = re.sub(r'\([^)]*\)', '', parsed_text)
         try:
-            parsed_text = re.search('본회의를 개의하겠습니다.(.*)산회를 선포합니다.', parsed_text).group(1)
+            parsed_text = re.search(r"^.*개의하겠습니다\.(.*)선포합니다\..*$", parsed_text).group(1)
         except AttributeError:
             print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
         parsed_text = parsed_text.split('◯')
@@ -59,7 +59,7 @@ class ParsePDF:
         files = glob.glob(dir_name)
         print(files)
         pool = Pool(self.threadCount)
-        results : PDFList = pool.map(self.read_pdf, files)
+        results: PDFList = pool.map(self.read_pdf, files)
         with open('parsedPDF.dat', 'wb') as f:
             pickle.dump(results, f)
         print(results)
@@ -67,5 +67,5 @@ class ParsePDF:
 
 if __name__ == "__main__":
     parser = ParsePDF()
-    # print(parser.read_pdf('../Data/1.PDF'))  # Default is 1.PDF
+    #print(parser.read_pdf('Data/1.PDF'))  # Default is 1.PDF
     parser.read_folder()
