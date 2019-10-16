@@ -1,5 +1,6 @@
 from Test.data import PdfList, NewsList
 from khaiii import KhaiiiApi
+from itertools import groupby
 
 
 class KeyWording:
@@ -26,13 +27,30 @@ class KeyWording:
     def morphAnalyze(self, content):
         api = KhaiiiApi()
         result = list()
-        for word in api.analyze('사회적 대타협을 추구해야 합니다. 사회적으로 큰 논란이 되고 있습니다.'):
+        for word in api.analyze(content):
             for morph in word.morphs:
                 result.append((morph.lex,morph.tag))
         print(result)
         return result
+
     def morphKeywording(self, content):
         keyword = list()
+        for word in content:
+            if(word[1] in ['NNG','NNP']):
+                word[1]='NN'
+        for word in content:
+            if(word[1]=='NN' and len(word[0]) >=5):
+                keyword.append(word[0])
+        group=list()
+        for k,g in groupby(word,lambda x:x[1]):
+	        listg=[x[0] for x in list(g)]
+	        group.append((k,listg))
+        for word in group:
+            if(word[0]=='NN' and len(word[0]) >=5):
+                keyword.append(word[1])
+
+                
+
         # NNG:일반명사 NNP:고유명사 NNB:의존명사 NP:대명사 NR:수사
         # JC:접속조사 JKG:관형격조사(소유격조사) 
         # VA : 형용사
