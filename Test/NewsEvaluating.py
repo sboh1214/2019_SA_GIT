@@ -48,14 +48,17 @@ class KeyWording:
         for word in group: #복합명사 추출
             if(word[0]=='NN' and len(word[0]) >=5): 
                 keyword.append(word[1])
-        for index in range(len(group)-2): #명사+의/와/과+명사 추출
+        for index in range(len(group)-2): #명사+의/와/과+명사 추출 , 명사+관형사형 접미사+명사
             if(group[index][0]=='NN' and group[index+2][0]=='NN'):
                 if(group[index+1][0] in ['JC','XSN'] or group[index+1][1]=='의'):
                     keyword.append(group[index][1]+group[index+1][1]+group[index+2][1])
-        for index in range(len(group)-3):
+        for index in range(len(group)-3): #명사+감성 형용사+명사 , 명사+용언형 접미사+명사
             if(group[index][0]=='NN' and group[index+3][0]=='NN'):
                 if(group[index+1][0] in ['VA','XSV','XSA']):
                     keyword.append(group[index][1]+group[index+1][1]+group[index+2][1]+group[index+3][1])
+        for index in range(len(group)-2):
+            if(group[index][0] in ['VA','VV'] and group[index+1][0]=='ETM' and group[index+2][0]=='NN'):
+                keyword.append(group[index][1]+group[index+1][1]+group[index+2][1])
         return keyword
 
 
