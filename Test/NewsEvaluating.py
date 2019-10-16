@@ -4,9 +4,9 @@ from Test.data import PdfList, NewsList
 class KeyWording:
     def __init__(self):
         self.pdfList = PdfList()
-        self.newsList = NewsList()  # minute[회의록 번호][[말한사람(L/R),[발언내용(단어 리스트)]]의 리스트]
+        self.newsList = NewsList()  # minute[회의록 번호][[말한사람],[발언내용(단어 리스트)]]의 리스트]
 
-    keyword = {}  # 키워드 담는 이중 딕셔너리 keyword[키워드][L(좌파)/R(우파)]
+    keyword = {}  # 키워드 담는 이중 딕셔너리 keyword[키워드][편향도]
     congress = {}  # 국회의원의 편향도 (정당기반)
     headline = []  # 기사 제목 키워드 추출
     def congressImport(self, fileName, bias):
@@ -18,32 +18,54 @@ class KeyWording:
     def congressTotalImport(self,fileName):
         with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
             congress_list = f.read().split()
-            #print(congress_list)
+            #   print(congress_list)
             for i in range(len(congress_list)//4):
                 self.congress[congress_list[4*i+1]]=float(congress_list[4*i+3])
 
+    def morphAnalyze(self, content):
+        result = list()
+        #  대충 형태소 분석하는 코드
+        #  대충 { 단어, 태그 } 의 딕셔너리를 리스트로 모아서 반환한다는 내용
+        return result
+    def morphKeywording(self, content):
+        # NNG:일반명사 NNP:고유명사 NNB:의존명사 NP:대명사 NR:수사
+        # JC:접속조사 JKG:관형격조사(소유격조사) 
+        # VA : 형용사   
 
     def pdfKeywording(self):
         minute_list = self.pdfList.importPickle()
-        print(len(minute_list))
         for minute in minute_list:
-            for comment in minute:
-                for sentence in comment[1]:
-                    for index in range(len(sentence) - 1):
-                        for i in range(1, 5):
-                            if index + i > len(sentence):
-                                break
-                            word = ""
-                            for j in range(index, index + i):
-                                word += sentence[j] + " "
-                            if word not in self.keyword.keys():
-                                self.keyword[word] = {'bias': 0, 'count': 0}
-                            if comment[0][1] == '의원':
-                                if comment[0][0] in self.congress.keys():
-                                    self.keyword[word]['bias'] += self.congress[comment[0][0]]
-                            '''else :
-                                self.keyword[word]['bias'] += self.congress[comment[0][1]]'''
-                            self.keyword[word]['count'] += 1
+            try:
+                for comment in minute:
+                    del_count=0
+                    for sentence in comment[2]:
+                         if sentence == []:
+                                del_count += 1
+                    for i in range(del_count):
+                        comment[2].remove([])
+            except:
+                continue
+        for minute in minute_list:
+            try:
+                for comment in minute:
+                    for sentence in comment[2]:
+                        for index in range(len(sentence) - 1):
+                            for i in range(1, 5):
+                                if index + i > len(sentence):
+                                    break
+                                word = ""
+                                for j in range(index, index + i):
+                                    word += sentence[j] + " "
+                                if word not in self.keyword.keys():
+                                    self.keyword[word] = {'bias': 0, 'count': 0}
+                                if comment[0][1] == '의원':
+                                    if comment[0][0] in self.congress.keys():
+                                        self.keyword[word]['bias'] += self.congress[comment[0][0]]
+                                '''else :
+                                    self.keyword[word]['bias'] += self.congress[comment[0][1]]'''
+                                self.keyword[word]['count'] += 1
+            except:
+                continue
         nobias=[]
         for word in self.keyword.keys():
             if self.keyword[word]['bias'] == 0:
@@ -123,11 +145,12 @@ if __name__ == "__main__":
     # keyWording.congressImport("minjupyungwha", -7)
     # keyWording.congressImport("theminju", -2)
     keyWording.congressTotalImport("total")
-    print(keyWording.congress)
+    #print(keyWording.congress)
     keyWording.pdfKeywording()
     keyWording.printKeyword(5)
-    keyWording.headlineKeywording()
+    '''keyWording.headlineKeywording()
     print("Head line Keywording")
     print(keyWording.headline)
-    keyWording.printKeyword(1)
-    # keyWording.newsTagging()
+    print("Keyword After Headline")
+    print(keyWording.keyword)'''
+    keyWording.newsTagging()

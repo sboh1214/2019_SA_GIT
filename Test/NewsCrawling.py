@@ -5,7 +5,7 @@ import re
 import datetime
 import dateutil.parser  # pip install python-dateutil
 import pytz
-import khaiii
+
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
