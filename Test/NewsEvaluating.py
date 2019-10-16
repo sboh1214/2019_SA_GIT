@@ -35,19 +35,32 @@ class KeyWording:
 
     def morphKeywording(self, content):
         keyword = list()
-        for word in content:
+        for word in content: 
             if(word[1] in ['NNG','NNP']):
                 word[1]='NN'
-        for word in content:
+        for word in content: #단일명사가 5글자 이상인 경우
             if(word[1]=='NN' and len(word[0]) >=5):
                 keyword.append(word[0])
         group=list()
-        for k,g in groupby(word,lambda x:x[1]):
+        for k,g in groupby(content  ,lambda x:x[1]): # Groupby [(태그,단어),(태그,단어), ...]
 	        listg=[x[0] for x in list(g)]
 	        group.append((k,listg))
-        for word in group:
-            if(word[0]=='NN' and len(word[0]) >=5):
+        for word in group: #복합명사 추출
+            if(word[0]=='NN' and len(word[0]) >=5): 
                 keyword.append(word[1])
+        for index in range(len(group)-2): #명사+의/와/과+명사 추출
+            if(group[index][0]=='NN' and group[index+2][0]=='NN'):
+                if(group[index+1][0] in ['JC','XSN'] or group[index+1][1]=='의'):
+                    keyword.append(group[index][1]+group[index+1][1]+group[index+2][1])
+        for index in range(len(group)-3):
+            if(group[index][0]=='NN' and group[index+3][0]=='NN'):
+                if(group[index+1][0] in ['VA','XSV','XSA']):
+                    keyword.append(group[index][1]+group[index+1][1]+group[index+2][1]+group[index+3][1])
+        return keyword
+
+
+
+
 
                 
 
