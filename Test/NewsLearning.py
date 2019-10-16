@@ -2,9 +2,8 @@ import matplotlib.pyplot as plt
 from keras import Sequential
 from keras.layers import *
 from tqdm import tqdm
-from kor2vec import Kor2Vec
 
-from Test.data import NewsList
+from data import NewsList
 
 '''
 from khaiii import KhaiiiApi
@@ -50,11 +49,7 @@ class NewsMLKeras:
 
     @staticmethod
     def train_kor2vec(train=False):
-        if train:
-            model = Kor2Vec(embed_size=128)
-            model.train("./sejong-corpus/corpus-utf8/", batch_size=128)  # takes some time
-            model.save("./kor2vec/")  # saving embedding
-            pass
+        pass
 
     def get_news_data(self, filename: str = 'NewsData'):
         """
