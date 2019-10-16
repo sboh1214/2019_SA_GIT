@@ -3,7 +3,7 @@ from keras import Sequential
 from keras.layers import *
 from tqdm import tqdm
 
-from .Test.data import NewsList
+from data import NewsList
 
 '''
 from khaiii import KhaiiiApi
