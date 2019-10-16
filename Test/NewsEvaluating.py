@@ -30,9 +30,6 @@ class KeyWording:
             for morph in word.morphs:
                 result.append((morph.lex,morph.tag))
         print(result)
-
-        #  대충 형태소 분석하는 코드
-        #  대충 { 단어, 태그 } 의 딕셔너리를 리스트로 모아서 반환한다는 내용
         return result
     def morphKeywording(self, content):
         keyword = list()
