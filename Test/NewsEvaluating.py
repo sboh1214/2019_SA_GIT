@@ -1,4 +1,5 @@
 from Test.data import PdfList, NewsList
+from khaiii import KhaiiiApi
 
 
 class KeyWording:
@@ -23,7 +24,13 @@ class KeyWording:
                 self.congress[congress_list[4*i+1]]=float(congress_list[4*i+3])
 
     def morphAnalyze(self, content):
+        api = KhaiiiApi()
         result = list()
+        for word in api.analyze('사회적 대타협을 추구해야 합니다. 사회적으로 큰 논란이 되고 있습니다.'):
+            for morph in word.morphs:
+                result.append((morph.lex,morph.tag))
+        print(result)
+
         #  대충 형태소 분석하는 코드
         #  대충 { 단어, 태그 } 의 딕셔너리를 리스트로 모아서 반환한다는 내용
         return result
