@@ -1,6 +1,7 @@
 from Test.data import PdfList, NewsList
 from khaiii import KhaiiiApi
 from itertools import groupby
+from pprint import PrettyPrinter as pprint
 
 
 class KeyWording:
@@ -124,7 +125,7 @@ class KeyWording:
     def printKeyword(self, count):
         for word in self.keyword.keys():
             if self.keyword[word]['count'] >= count:
-                print(word,self.keyword[word])
+                pprint(word,self.keyword[word],indent=4)
 
     def printPDF(self):
         minute_list= self.pdfList.importPickle()
@@ -174,7 +175,7 @@ class KeyWording:
             del(self.keyword[word])'''
 
 
-    def newsTagging(self):
+    def newsTagging(self,fileName="NewsData"):
         news_list = self.newsList.importPickle()
         for news in news_list:
             all_bias=0
@@ -190,6 +191,8 @@ class KeyWording:
                 news.Sentence_Bias[index] = sentence_bias
             news.Bias = all_bias
             print(news.Content, all_bias,'\n\n\n')
+        '''newsList=NewsList(news_list)
+        newsList.exportPickle(fileName)'''
 
     '''def newsTagging(self):
         news_list = self.newsList.importPickle()
@@ -219,12 +222,6 @@ if __name__ == "__main__":
 
     keyWording = KeyWording()
     #keyWording.printPDF()
-    # keyWording.congressImport("bareunmirae",-1)
-    # keyWording.congressImport("independent", 0)
-    # keyWording.congressImport("jayuhankuk", 8)
-    # keyWording.congressImport("jungui", -5)
-    # keyWording.congressImport("minjupyungwha", -7)
-    # keyWording.congressImport("theminju", -2)
     keyWording.congressTotalImport("total")
     #print(keyWording.congress)
     keyWording.pdfKeywording()
@@ -233,5 +230,5 @@ if __name__ == "__main__":
     print("Head line Keywording")
     print(keyWording.headline)
     print("Keyword After Headline")
-    print(keyWording.keyword)'''
-    keyWording.newsTagging()
+    print(keyWording.keyword)
+    keyWording.newsTagging()'''
