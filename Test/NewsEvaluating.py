@@ -28,9 +28,11 @@ class KeyWording:
         #  대충 { 단어, 태그 } 의 딕셔너리를 리스트로 모아서 반환한다는 내용
         return result
     def morphKeywording(self, content):
+        keyword = list()
         # NNG:일반명사 NNP:고유명사 NNB:의존명사 NP:대명사 NR:수사
         # JC:접속조사 JKG:관형격조사(소유격조사) 
-        # VA : 형용사   
+        # VA : 형용사
+        return keyword
 
     def pdfKeywording(self):
         minute_list = self.pdfList.importPickle()
