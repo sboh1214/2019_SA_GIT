@@ -1,7 +1,11 @@
-from Test.data import PdfList, NewsList
+import sys
+sys.path.append("/mnt/c/Users/paisa/OneDrive/바탕 화면/2019_SA_GIT/Test")
+
+from data import PdfList, NewsList
 from khaiii import KhaiiiApi
 from itertools import groupby
-from pprint import PrettyPrinter as pprint
+from pprint import PrettyPrinter
+from tqdm import tqdm
 
 
 class KeyWording:
@@ -19,7 +23,7 @@ class KeyWording:
                 self.congress[name] = bias
 
     def congressTotalImport(self,fileName):
-        with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
+        with open("./Test/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
             congress_list = f.read().split()
             #   print(congress_list)
             for i in range(len(congress_list)//4):
@@ -37,7 +41,7 @@ class KeyWording:
     def morphKeywording(self, content):
         keyword = list()
         for word in content: 
-            if(word[1] in ['NNG','NNP']):
+            if(word[1] in ['NNG','NNP','NNB']):
                 word[1]='NN'
         for word in content: #단일명사가 5글자 이상인 경우
             if(word[1]=='NN' and len(word[0]) >=5):
@@ -47,7 +51,7 @@ class KeyWording:
 	        listg=[x[0] for x in list(g)]
 	        group.append((k,listg))
         for word in group: #복합명사 추출
-            if(word[0]=='NN' and len(word[0]) >=5): 
+            if(word[0]=='NN' and len(word[1]) >=5): 
                 keyword.append(word[1])
         for index in range(len(group)-2): #명사+의/와/과+명사 추출 , 명사+관형사형 접미사+명사
             if(group[index][0]=='NN' and group[index+2][0]=='NN'):
@@ -67,18 +71,24 @@ class KeyWording:
         # VA : 형용사
     def pdfKeywording(self):
         minute_list=self.pdfList.importPickle()
+        print("Pdf Number :",len(minute_list))
+        #print(minute_list)
+        print(minute_list)
         for minute in minute_list:
-            try:
-                for comment in minute:
-                    morph=self.morphAnalyze(comment[1])
-                    com_keyword=self.morphKeywording(morph)
-                    for word in com_keyword:
-                        if(word not in self.keyword):
-                            keyword[word]={'bias':0,'count':0}
-                        if comment[0][1] == '의원':
-                            if comment[0][0] in self.congress.keys():
-                                self.keyword[word]['bias'] += self.congress[comment[0][0]]
-                        self.keyword[word]['count']+=1
+            #print(minute)
+            print('Minute len :', len(minute))
+            '''for comment in minute:
+                #print("Comment :",comment)
+                morph=self.morphAnalyze(comment[1])
+                com_keyword=self.morphKeywording(morph)
+                for word in com_keyword:
+                    if(word not in self.keyword):
+                        self.keyword[word]={'bias':0,'count':0}
+                    if comment[0][1] == '의원':
+                        if comment[0][0] in self.congress.keys():
+                            self.keyword[word]['bias'] += self.congress[comment[0][0]]
+                            self.keyword[word]['count']+=1'''
+
 
     '''def pdfKeywording(self):
         minute_list = self.pdfList.importPickle():
@@ -125,7 +135,8 @@ class KeyWording:
     def printKeyword(self, count):
         for word in self.keyword.keys():
             if self.keyword[word]['count'] >= count:
-                pprint(word,self.keyword[word],indent=4)
+                #pp=PrettyPrinter(indent=4)
+                print((word,self.keyword[word]))
 
     def printPDF(self):
         minute_list= self.pdfList.importPickle()
@@ -177,7 +188,7 @@ class KeyWording:
 
     def newsTagging(self,fileName="NewsData"):
         news_list = self.newsList.importPickle()
-        for news in news_list:
+        for news in tqdm(news_list,desc="Tagging News"):
             all_bias=0
             for index, sentence in enumerate(news.Content):
                 sentence_bias = 0
