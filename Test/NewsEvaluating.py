@@ -1,10 +1,6 @@
-import sys
-sys.path.append("/mnt/c/Users/paisa/OneDrive/바탕 화면/2019_SA_GIT/Test")
-
 from data import PdfList, NewsList
 from khaiii import KhaiiiApi
 from itertools import groupby
-from pprint import PrettyPrinter
 from tqdm import tqdm
 
 
@@ -35,7 +31,6 @@ class KeyWording:
         for word in api.analyze(content):
             for morph in word.morphs:
                 result.append([morph.lex,morph.tag])
-        print(result)
         return result
 
     def morphKeywording(self, content):
@@ -50,6 +45,7 @@ class KeyWording:
         for k,g in groupby(content  ,lambda x:x[1]): # Groupby [(태그,단어),(태그,단어), ...]
 	        listg=[x[0] for x in list(g)]
 	        group.append((k,listg))
+        #print("Iter Group :",group)
         for word in group: #복합명사 추출
             if(word[0]=='NN' and len(word[1]) >=5): 
                 keyword.append(word[1])
@@ -64,6 +60,12 @@ class KeyWording:
         for index in range(len(group)-2): #감성 형용사+명사
             if(group[index][0] in ['VA','VV'] and group[index+1][0]=='ETM' and group[index+2][0]=='NN'):
                 keyword.append(group[index][1]+group[index+1][1]+group[index+2][1])
+        for index,word in enumerate(keyword):
+            if type(word)==list:
+                merge=''
+                for i in word:
+                    merge+=i
+                keyword[index]=merge
         return keyword                
 
         # NNG:일반명사 NNP:고유명사 NNB:의존명사 NP:대명사 NR:수사
@@ -72,22 +74,23 @@ class KeyWording:
     def pdfKeywording(self):
         minute_list=self.pdfList.importPickle()
         print("Pdf Number :",len(minute_list))
-        #print(minute_list)
-        print(minute_list)
-        for minute in minute_list:
+        for minute in tqdm(minute_list,desc='Pdf Keywording'):
             #print(minute)
-            print('Minute len :', len(minute))
-            '''for comment in minute:
+            #print('Minute len :', len(minute))
+            for comment in minute:
                 #print("Comment :",comment)
+                if len(minute)==1:
+                    continue
                 morph=self.morphAnalyze(comment[1])
                 com_keyword=self.morphKeywording(morph)
+                #print('Keyword :',com_keyword)
                 for word in com_keyword:
-                    if(word not in self.keyword):
+                    if(word not in self.keyword.keys()):
                         self.keyword[word]={'bias':0,'count':0}
                     if comment[0][1] == '의원':
                         if comment[0][0] in self.congress.keys():
                             self.keyword[word]['bias'] += self.congress[comment[0][0]]
-                            self.keyword[word]['count']+=1'''
+                            self.keyword[word]['count']+=1
 
 
     '''def pdfKeywording(self):
@@ -152,7 +155,7 @@ class KeyWording:
     
     def headlineKeywording(self):
         news_list = self.newsList.importPickle()
-        for news in news_list:
+        for news in tqdm(news_list,desc='Headline Keywording'):
             morph=self.morphAnalyze(news.Title)
             title_keyword=self.morphKeywording(morph)
             for word in title_keyword:
@@ -163,7 +166,7 @@ class KeyWording:
         for keyword in self.keyword:
             if keyword not in self.headline:
                 delWord.append(keyword)
-        for word in keyword:
+        for word in delWord:
             del(self.keyword[word])
 
     '''def headlineKeywording(self):
@@ -235,11 +238,13 @@ if __name__ == "__main__":
     #keyWording.printPDF()
     keyWording.congressTotalImport("total")
     #print(keyWording.congress)
+    #print(keyWording.morphAnalyze("안녕, 세상"))
     keyWording.pdfKeywording()
     keyWording.printKeyword(5)
-    '''keyWording.headlineKeywording()
+    keyWording.headlineKeywording()
     print("Head line Keywording")
     print(keyWording.headline)
-    print("Keyword After Headline")
-    print(keyWording.keyword)
-    keyWording.newsTagging()'''
+    keyWording.headlineDuplicate()
+    print("\n\n\nKeyword After Headline")
+    keyWording.printKeyword(5)
+    #keyWording.newsTagging()
