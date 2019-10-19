@@ -199,7 +199,7 @@ class NewsArticleCrawler:
 if __name__ == "__main__":
     api = NaverNewsAPI()
     # api.RequestNewsLink("19대 대선", 1, 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링
-    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=10, display=100)
+    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=100, display=100)
     crawler = NewsArticleCrawler(api.LinkData)
     crawler.LinkData = api.LinkData
     crawler.SaveNews()
