@@ -20,7 +20,7 @@ from data import PdfList as PDFList
 
 
 class ParsePDF:
-    threadCount = 8
+    threadCount = 4
 
     @staticmethod
     def text(parsed_text):
@@ -55,7 +55,7 @@ class ParsePDF:
             return " "
         return self.text(text_data)
 
-    def read_folder(self, dir_name="Data/*.PDF"):  # Multithreaded Read Operations
+    def read_folder(self, dir_name="./Test/Data/*.PDF"):  # Multithreaded Read Operations
         files = glob.glob(dir_name)
         print(files)
         pool = Pool(self.threadCount)

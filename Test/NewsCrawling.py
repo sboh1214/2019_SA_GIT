@@ -132,8 +132,11 @@ class NewsArticleCrawler:
         url = item["Link"]
         request = urllib.request.Request(url)
         request.add_header("User-Agent", self.UserAgent)
-        response = urllib.request.urlopen(request)
-        rescode = response.getcode()
+        try:
+            response = urllib.request.urlopen(request)
+            rescode = response.getcode()
+        except:
+            return "Error Requesting"
         if rescode != 200:
             return "Error (http)" + rescode
         content = response.read()
