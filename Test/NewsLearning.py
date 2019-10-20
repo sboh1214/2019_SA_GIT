@@ -71,6 +71,7 @@ class NewsMLKeras:
                 self.Rnn_Y_Test.append(data.Sentence_Bias[i])
                 self.Cnn_Y_Test.append(data.Bias)
         news.printCell()
+
     def build_rnn_model(self, max_features: int = 100):
         """
 
@@ -134,10 +135,9 @@ class NewsMLKeras:
 
 
 if __name__ == '__main__':
-    print('1')
     newsML = NewsMLKeras()
     newsML.train_kor2vec(train=True)
-    newsML.get_news_data(filename='Test/NewsData')
+    newsML.get_news_data(filename='NewsData')
     newsML.build_rnn_model()
     newsML.build_cnn_model()
     newsML.run_rnn_model()
