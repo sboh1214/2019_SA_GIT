@@ -5,44 +5,7 @@ from tqdm import tqdm
 from multiprocessing.dummy import Pool
 import pickle, code, traceback, signal
 
-class KeyWording:
-    def __init__(self):
-        self.pdfList = PdfList()
-        self.newsList = NewsList()  # minute[회의록 번호][[말한사람],[발언내용(단어 리스트)]]의 리스트]
-
-    keyword = dict()  # 키워드 담는 이중 딕셔너리 keyword[키워드][편향도]
-    congress = dict()  # 국회의원의 편향도 (정당기반)
-    headline = set()  # 기사 제목 키워드 추출
-    thread = 8
-
-    def debug(self, sig, frame):
-        """Interrupt running process, and provide a python prompt for
-        interactive debugging."""
-        d={'_frame':frame} # Allow access to frame object.
-        d.update(frame.f_globals)  # Unless shadowed by global
-        d.update(frame.f_locals)
-
-        i = code.InteractiveConsole(d)
-        message  = "Signal received : entering python shell.\nTraceback:\n"
-        message += ''.join(traceback.format_stack(frame))
-        i.interact(message)
-
-    def listen(self):
-        signal.signal(signal.SIGABRT, self.debug)
-
-    def congressImport(self, fileName, bias):
-        with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
-            congress_list = f.read()
-            for name in congress_list.split():
-                self.congress[name] = bias
-
-    def congressTotalImport(self,fileName):
-        with open("./Test/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
-            congress_list = f.read().split()
-            #   print(congress_list)
-            for i in range(len(congress_list)//4):
-                self.congress[congress_list[4*i+1]]=float(congress_list[4*i+3])
-
+class MorphAnalyzer():
     def morphAnalyze(self, content):
         api = KhaiiiApi()
         result = list()
@@ -77,7 +40,7 @@ class KeyWording:
                 if(group[index+1][0] in ['VA','XSV','XSA']):
                     keyword.append(group[index][1]+group[index+1][1]+group[index+2][1]+group[index+3][1])
         for index in range(len(group)-2): #감성 형용사+명사
-            if(group[index][0] in ['VA'] and group[index+1][0]=='ETM' and group[index+2][0]=='NN'):
+            if(group[index][0]=='VA' and group[index+1][0]=='ETM' and group[index+2][0]=='NN'):
                 keyword.append(group[index][1]+group[index+1][1]+group[index+2][1])
         del_word=list()
         for index,word in enumerate(keyword):
@@ -90,7 +53,32 @@ class KeyWording:
                 del_word.append(merge)
         for word in del_word:
             keyword.remove(word)
-        return keyword                
+        return keyword
+    
+class KeyWording:
+    def __init__(self):
+        self.pdfList = PdfList()
+        self.newsList = NewsList()
+        self.morphAnalyzer = MorphAnalyzer()  # minute[회의록 번호][[말한사람],[발언내용(단어 리스트)]]의 리스트]
+
+    keyword = dict()  # 키워드 담는 이중 딕셔너리 keyword[키워드][편향도]
+    congress = dict()  # 국회의원의 편향도 (정당기반)
+    headline = set()  # 기사 제목 키워드 추출
+
+    def congressImport(self, fileName, bias):
+        with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
+            congress_list = f.read()
+            for name in congress_list.split():
+                self.congress[name] = bias
+
+    def congressTotalImport(self,fileName):
+        with open("./Test/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
+            congress_list = f.read().split()
+            #   print(congress_list)
+            for i in range(len(congress_list)//4):
+                self.congress[congress_list[4*i+1]]=float(congress_list[4*i+3])
+
+                    
 
         # NNG:일반명사 NNP:고유명사 NNB:의존명사 NP:대명사 NR:수사
         # JC:접속조사 JKG:관형격조사(소유격조사) 
@@ -116,8 +104,8 @@ class KeyWording:
                 if len(minute)==1:
                     continue
                 #pool=Pool(self.thread)
-                morph=self.morphAnalyze(comment[1])
-                com_keyword=self.morphKeywording(morph)
+                morph=self.morphAnalyzer.morphAnalyze(comment[1])
+                com_keyword=self.morphAnalyzer.morphKeywording(morph)
                 #print('Keyword :',com_keyword)
                 for word in com_keyword:
                     if comment[0][1] == '의원':
@@ -135,8 +123,31 @@ class KeyWording:
                             #not_in_name.add(comment[0][0])
         #print("Congress in list :",in_congress)
         #print("Congress not in list :",not_in_congress,not_in_name)
+    
+    def keywordFilter(self):
+        del_list=list()
+        append_list=dict()
+        for word in self.keyword.keys():
+            if word[-1] in ['것','수']:
+                del_list.append(word)
+            elif word[3:5] == '의원':
+                del_list.append(word)
+                append_list[word[5:]]=self.keyword[word]
+            elif '.' in word or '․' in word or '․' in word:
+                del_list.append(word)
+        
+        for word in del_list :
+            del self.keyword[word]
 
+        for word in append_list :
+            self.keyword[word]=append_list[word]
 
+        del_list=list()
+        for word in self.keyword.keys():
+            if len(word)<5:
+                del_list.append(word)
+        for word in del_list :
+            del self.keyword[word]
 
     '''def pdfKeywording(self):
         minute_list = self.pdfList.importPickle():
@@ -211,8 +222,8 @@ class KeyWording:
         print(len(news_list))
         for news in tqdm(news_list,desc='Headline Keywording'):
             #print(news.Title)
-            morph=self.morphAnalyze(news.Title)
-            title_keyword=self.morphKeywording(morph)
+            morph=self.morphAnalyzer.morphAnalyze(news.Title)
+            title_keyword=self.morphAnalyzer.morphKeywording(morph)
             for word in title_keyword:
                 self.headline.add(word)
 
@@ -254,8 +265,8 @@ class KeyWording:
             try:
                 for index, sentence in enumerate(news.Content):
                     sentence_bias = 0
-                    morph = self.morphAnalyze(sentence)
-                    sent_keyword = self.morphKeywording(morph)
+                    morph = self.morphAnalyzer.morphAnalyze(sentence)
+                    sent_keyword = self.morphAnalyzer.morphKeywording(morph)
                     for word in sent_keyword:
                         if(word in self.keyword):
                             word_bias = self.keyword[word]['bias']
@@ -302,12 +313,14 @@ if __name__ == "__main__":
     keyWording = KeyWording()
     keyWording.congressTotalImport("total")
     keyWording.importPickle()
+    keyWording.keywordFilter()
     #keyWording.pdfKeywording()
     #keyWording.exportPickle()
-    #keyWording.printKeyword(1)
+    keyWording.printByCount(1)
     '''keyWording.headlineKeywording()
     print("Head line Keywording")
     print(keyWording.headline)
     keyWording.headlineDuplicate()
-    print("\n\n\nKeyword After Headline")'''    
-    keyWording.newsTagging()
+    print("\n\n\nKeyword After Headline")
+    keyWording.printByCount(1)'''
+    #keyWording.newsTagging()
