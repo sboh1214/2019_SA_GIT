@@ -3,7 +3,7 @@ from khaiii import KhaiiiApi
 from itertools import groupby
 from tqdm import tqdm
 from multiprocessing.dummy import Pool
-import pickle
+import pickle, code, traceback, signal
 
 class KeyWording:
     def __init__(self):
@@ -14,6 +14,22 @@ class KeyWording:
     congress = dict()  # 국회의원의 편향도 (정당기반)
     headline = set()  # 기사 제목 키워드 추출
     thread = 8
+
+    def debug(self, sig, frame):
+        """Interrupt running process, and provide a python prompt for
+        interactive debugging."""
+        d={'_frame':frame} # Allow access to frame object.
+        d.update(frame.f_globals)  # Unless shadowed by global
+        d.update(frame.f_locals)
+
+        i = code.InteractiveConsole(d)
+        message  = "Signal received : entering python shell.\nTraceback:\n"
+        message += ''.join(traceback.format_stack(frame))
+        i.interact(message)
+
+    def listen(self):
+        signal.signal(signal.SIGABRT, self.debug)
+
     def congressImport(self, fileName, bias):
         with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
             congress_list = f.read()
@@ -30,6 +46,7 @@ class KeyWording:
     def morphAnalyze(self, content):
         api = KhaiiiApi()
         result = list()
+        print(content,'\n')
         for word in api.analyze(content):
             for morph in word.morphs:
                 result.append([morph.lex,morph.tag])
@@ -85,14 +102,14 @@ class KeyWording:
                 if minute_list[i]==minute_list[j]:
                     print("Same Minute!")
         #print("Pdf Number :",len(minute_list))
-        in_congress=0
+        '''in_congress=0
         not_in_congress=0
-        not_in_name=set()
+        not_in_name=set()'''
         for minute in tqdm(minute_list,desc='Pdf Keywording'):
             #print(minute)
-            print('Minute len :', len(minute))
+            '''print('Minute len :', len(minute))
             print(minute,'\n\n\n')
-            '''if len(minute)==951:
+            if len(minute)==951:
                 break'''
             for comment in minute:
                 #print("Comment :",comment)
@@ -103,7 +120,6 @@ class KeyWording:
                 com_keyword=self.morphKeywording(morph)
                 #print('Keyword :',com_keyword)
                 for word in com_keyword:
-                    
                     if comment[0][1] == '의원':
                         if comment[0][0] in self.congress.keys():
                             if(word not in self.keyword.keys()):
@@ -233,9 +249,7 @@ class KeyWording:
         excepted=0
         for news in tqdm(news_list,desc="Tagging News"):
             all_bias=0
-            for index,sentence in enumerate(news.Content):
-                if '@' in sentence:
-                    news.Content=news.Content[:index]
+            #print(len(news.Content))
             #print(news.Content,"\n\n\n")
             try:
                 for index, sentence in enumerate(news.Content):
@@ -251,7 +265,9 @@ class KeyWording:
                 news.Bias = all_bias
                 #print(news.Content, all_bias,'\n\n\n')
             except:
+                news.Bias = None
                 excepted+=1
+                #print("Excepted")
                 continue
         print("Excepted News :",excepted)
         newsList=NewsList(news_list)
@@ -287,15 +303,11 @@ if __name__ == "__main__":
     keyWording.congressTotalImport("total")
     #keyWording.importPickle()
     keyWording.pdfKeywording()
-    #keyWording.exportPickle()
+    keyWording.exportPickle()
     #keyWording.printKeyword(1)
     '''keyWording.headlineKeywording()
     print("Head line Keywording")
     print(keyWording.headline)
     keyWording.headlineDuplicate()
     print("\n\n\nKeyword After Headline")'''    
-    #keyWording.printKeyword(5)
-    #keyWording.delKeyword(10)
-    keyWording.printByCount(5)
-    #keyWording.printByBias(30,1000)
-    #keyWording.newsTagging()
+    keyWording.newsTagging()
