@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from keras import Sequential
 from keras.layers import *
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
 from tqdm import tqdm
 
 from data import NewsList
