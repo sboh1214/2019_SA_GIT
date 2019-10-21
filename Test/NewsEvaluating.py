@@ -46,7 +46,7 @@ class KeyWording:
     def morphAnalyze(self, content):
         api = KhaiiiApi()
         result = list()
-        print(content,'\n')
+        #print(content,'\n')
         for word in api.analyze(content):
             for morph in word.morphs:
                 result.append([morph.lex,morph.tag])
@@ -301,9 +301,9 @@ if __name__ == "__main__":
 
     keyWording = KeyWording()
     keyWording.congressTotalImport("total")
-    #keyWording.importPickle()
-    keyWording.pdfKeywording()
-    keyWording.exportPickle()
+    keyWording.importPickle()
+    #keyWording.pdfKeywording()
+    #keyWording.exportPickle()
     #keyWording.printKeyword(1)
     '''keyWording.headlineKeywording()
     print("Head line Keywording")
