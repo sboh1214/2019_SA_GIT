@@ -64,6 +64,7 @@ class KeyWording:
     keyword = dict()  # 키워드 담는 이중 딕셔너리 keyword[키워드][편향도]
     congress = dict()  # 국회의원의 편향도 (정당기반)
     headline = set()  # 기사 제목 키워드 추출
+    news_keyword = dict()
 
     def congressImport(self, fileName, bias):
         with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
@@ -144,24 +145,14 @@ class KeyWording:
 
     def newsKeywording(self,count):
         news_list=self.newsList.importPickle()
-        
         for news in tqdm(news_list,desc="Tagging News"):
-            all_bias=0
-            
-            #print(len(news.Content))
-            #print(news.Content,"\n\n\n")
-            try:
-                for index, sentence in enumerate(news.Content):
-                    morph = self.morphAnalyzer.morphAnalyze(sentence)
-                    sent_keyword = self.morphAnalyzer.morphKeywording(morph)
-                    for word in sent_keyword:
-                    
-            except:
-                news.Bias = None
-                excepted+=1
-                #print("Excepted")
-                continue
-        
+            for index, sentence in enumerate(news.Content):
+                morph = self.morphAnalyzer.morphAnalyze(sentence)
+                sent_keyword = self.morphAnalyzer.morphKeywording(morph)
+                for word in sent_keyword:
+                    if word not in self.news_keyword:
+                        self.news_keyword[word]=0
+                    self.news_keyword+=1
         
 
     def printByCount(self, count):
@@ -285,6 +276,7 @@ if __name__ == "__main__":
 
     keyWording = KeyWording()
     keyWording.congressTotalImport("total")
+    keyWording.newsKeywording()
     keyWording.importPickle()
     keyWording.keywordFilter()
     #keyWording.pdfKeywording()
