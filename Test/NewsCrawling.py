@@ -140,6 +140,9 @@ class NewsArticleCrawler:
         except URLError as e:
             print("URL Error -", e, url)
             return "Error " + str(e)
+        except ConnectionResetError as e:
+            print("CR Error -", e, url)
+            return "Error " + str(e)
         if rescode != 200:
             return "Error (http)" + rescode
         content = response.read()
@@ -199,16 +202,10 @@ class NewsArticleCrawler:
         return "Success"
 
 
-"""
-    UNUSED FUNCTION FOR LATER USE
-    def OpenLink(self, fileName="LinkData.csv"):
-        pass
-"""
-
 if __name__ == "__main__":
     api = NaverNewsAPI()
     # api.RequestNewsLink("19대 대선", 1, 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링
-    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=100, display=100)
+    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=30, display=100)
     # api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=1, display=10)
     crawler = NewsArticleCrawler(api.LinkData)
     crawler.LinkData = api.LinkData
