@@ -1,8 +1,4 @@
+matplotlib
 tqdm
 tensorflow
 keras
-bs4
-python-dateutil
-pytz
-matplotlib
-tika
