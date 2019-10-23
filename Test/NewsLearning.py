@@ -131,7 +131,7 @@ class RNN(models.Model):
         h=layers.LSTM(128, dropout=0.2, recurrent_dropout= 0.2)(h)
         y=layers.Dense(units=1, activation='sigmoid')(h)
         super().__init__(x,y)
-        self.compile(loss='binary_crossentropy',optimizer='adam', metrics=['accuracy'])
+        self.compile(loss='binary_crossentropy',optimizer='adam', metrics=['acc'])
 
 class CNN(models.Model):
     def __init__(self, input_shape=(10,10,)):
@@ -142,7 +142,7 @@ class CNN(models.Model):
         h=layers.Flatten()(h)
         y=layers.Dense(units=1, activation='sigmoid')(h)
         super().__init__(x,y)
-        self.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+        self.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])
 
 class NewsML():
     def __init__(self, rnn_maxlen=100 ,verbose=False):
