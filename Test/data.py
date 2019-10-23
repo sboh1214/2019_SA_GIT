@@ -82,6 +82,3 @@ if __name__ == '__main__':
     print(e.List[0])
     print(e.List[1])
     print(e.List[2])
-
-    e.exportPickle('test')
-    e.importPickle('test')
