@@ -145,13 +145,13 @@ class CNN(models.Model):
         self.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])
 
 class NewsML():
-    def __init__(self, rnn_maxlen=100 ,verbose=False):
+    def __init__(self, rnn_maxlen=100 ,verbose=False, file='Test/NewsData'):
         self.Verbose = verbose
         self.RnnMaxLen = rnn_maxlen
         count = itertools.count(1)
         
         self.__info(f'[{next(count)}] Prepare Data')
-        self.Data = Data(file='NewsData', max_len=rnn_maxlen ,verbose=self.Verbose)
+        self.Data = Data(file=file, max_len=rnn_maxlen ,verbose=self.Verbose)
 
         self.__info(f'[{next(count)}] Build RNN Model')
         self.Rnn = RNN(max_len=self.RnnMaxLen,data_count=len(self.Data.RnnX),max_features=20000)
@@ -201,5 +201,5 @@ class NewsML():
     
 
 if __name__ == '__main__':
-    ml = NewsML(verbose=True)
+    ml = NewsML(verbose=True, file='Test/NewsData_small')
     ml.plot_loss_and_accuracy(name='Test', show=True)
