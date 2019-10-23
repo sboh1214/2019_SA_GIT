@@ -1,6 +1,6 @@
 import itertools
 import matplotlib.pyplot as plt
-from keras import layers, models
+from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
 from keras.callbacks import TensorBoard
 from tqdm import tqdm
@@ -47,9 +47,10 @@ class Data:
 
     History = None
 
-    def __init__(self, file, verbose=False, max_len=100):
+    def __init__(self, file, verbose=False, max_len=100, dev=False):
         self.Verbose = verbose
         self.MaxLen = max_len
+        self.Dev = dev
         self.__get_news_data(filename=file)
 
     @staticmethod
@@ -63,18 +64,11 @@ class Data:
         return sentences
 
     @staticmethod
-    def __square(a):
-        output = []
-        length = ceil(sqrt(len(a)))
-        while True:
-            if len(a)>length:
-                output.append([a.pop() for _ in range(length)])
-            elif len(a)==length:
-                output.append([a.pop() for _ in range(length)])
-                return output
-            else:
-                output.append(a.extend([0 for _ in range(length-len(a))]))
-                return output
+    def __square(a, side):
+        output = [[0]*side for _ in range(side)]
+        for i, bias in enumerate(a):
+            output[i//side][i%side] = bias
+        return output
 
     @staticmethod
     def __pad(a, max_len):
@@ -94,14 +88,24 @@ class Data:
         if self.Verbose:
             print(news_list[0])
         print(f'{len(news_list)} News Imported')
+        if self.Dev == True:
+            news_list = news_list[:100]
+        print(f'{len(news_list)} News will be used')
+
+        self.__info('\nAnalyze Data')
+        max_sentence = 0
+        for i in news_list:
+            if max_sentence<len(i.Content):
+                max_sentence = len(i.Content)
+        self.CnnSide = max_sentence
+        print(f'Maximum Sentences Count : {max_sentence}')
 
         self.__info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
         for news in tqdm(news_list):
             self.RnnX.extend(self.__clean(news.Content))
             self.RnnY.extend(news.Sentence_Bias)
             length = ceil(sqrt(len(news.Sentence_Bias)))
-            #self.CnnX.append(self.__square(news.Sentence_Bias))
-            self.CnnX.append(news.Sentence_Bias)
+            self.CnnX.append(self.__square(news.Sentence_Bias, max_sentence))
             self.CnnY.append(news.Bias)
         if self.Verbose:
             self.__info(f'Rnn X ({len(self.RnnX)})')
@@ -109,7 +113,7 @@ class Data:
             self.__info(f'Rnn Y ({len(self.RnnY)})')
             print(self.RnnY[0])
             self.__info(f'Cnn X ({len(self.CnnX)})')
-            print(self.CnnX[0])
+            print(str(self.CnnX[0])[:80])
             self.__info(f'Cnn Y ({len(self.CnnY)})')
             print(self.CnnY[0])
 
@@ -122,51 +126,50 @@ class Data:
         rnnXarray=np.array([self.__pad(i, self.MaxLen) for i in rnnXlist])
         self.RnnX = rnnXarray
         if self.Verbose:
-            print(self.RnnX[0])
+            print(str(self.RnnX[0])[:80])
 
 class RNN(models.Model):
     def __init__(self, max_len , data_count, max_features=20000):
         x=layers.Input((max_len, ))
         h=layers.Embedding(max_features, 128)(x)
         h=layers.LSTM(128, dropout=0.2, recurrent_dropout= 0.2)(h)
-        y=layers.Dense(units=1, activation='sigmoid')(h)
+        y=layers.Dense(units=1, activation=activations.sigmoid)(h)
         super().__init__(x,y)
-        self.compile(loss='binary_crossentropy',optimizer='adam', metrics=['acc'])
+        self.compile(loss=losses.BinaryCrossentropy(),optimizer=optimizers.Adam(), metrics=['acc'])
 
 class CNN(models.Model):
-    def __init__(self, input_shape=(10,10,)):
-        x=layers.Input(shape=input_shape)
-        h=layers.Conv2D(filters=3, kernel_size=(3,3),activation='relu',input_shape=input_shape)(x)
-        h=layers.MaxPooling2D()(h)
+    def __init__(self, side = 100):
+        x=layers.Conv2D(filters=3, kernel_size=(3,3),activation=activations.relu, input_shape=(1,side,side))
+        h=layers.MaxPooling2D(pool_size=(2,2))(x)
         h=layers.Dropout(rate=0.25)(h)
         h=layers.Flatten()(h)
-        y=layers.Dense(units=1, activation='sigmoid')(h)
+        y=layers.Dense(units=1, activation=activations.sigmoid)(h)
         super().__init__(x,y)
-        self.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(), metrics=['acc'])
 
 class NewsML():
-    def __init__(self, rnn_maxlen=100 ,verbose=False, file='Test/NewsData'):
+    def __init__(self, rnn_maxlen=100 ,verbose=False, file='Test/NewsData', dev=False):
         self.Verbose = verbose
         self.RnnMaxLen = rnn_maxlen
         count = itertools.count(1)
         
         self.__info(f'[{next(count)}] Prepare Data')
-        self.Data = Data(file=file, max_len=rnn_maxlen ,verbose=self.Verbose)
+        self.Data = Data(file=file, max_len=rnn_maxlen ,verbose=self.Verbose, dev=dev)
 
         self.__info(f'[{next(count)}] Build RNN Model')
         self.Rnn = RNN(max_len=self.RnnMaxLen,data_count=len(self.Data.RnnX),max_features=20000)
 
         self.__info(f'[{next(count)}] Build CNN Model')
-        #self.Cnn = CNN()
+        #self.Cnn = CNN(side=self.Data.CnnSide)
 
         self.__info(f'[{next(count)}] Connect Tensorboard')
         tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
         self.__info(f'[{next(count)}] Run RNN Model')
-        self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, batch_size=256, epochs=1, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
+        self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, batch_size=256, epochs=10, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
         self.__info(f'[{next(count)}] Run CNN Model')
-        #self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, batch_size=256, epochs=5, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
+        #self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, batch_size=256, epochs=10, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
     def plot_loss_and_accuracy(self, name="", show=False):
         """
@@ -201,5 +204,5 @@ class NewsML():
     
 
 if __name__ == '__main__':
-    ml = NewsML(verbose=True, file='Test/NewsData_small')
+    ml = NewsML(verbose=True, file='Test/NewsData', dev=True)
     ml.plot_loss_and_accuracy(name='Test', show=True)
