@@ -85,28 +85,19 @@ class KeyWording:
         # VA : 형용사
     def pdfKeywording(self):
         minute_list=self.pdfList.importPickle()
+        left_sum=0
+        right_sum=0
         for i in range(len(minute_list)):
             for j in range(i+1,len(minute_list)):
                 if minute_list[i]==minute_list[j]:
                     print("Same Minute!")
-        #print("Pdf Number :",len(minute_list))
-        '''in_congress=0
-        not_in_congress=0
-        not_in_name=set()'''
         for minute in tqdm(minute_list,desc='Pdf Keywording'):
-            #print(minute)
-            '''print('Minute len :', len(minute))
-            print(minute,'\n\n\n')
-            if len(minute)==951:
-                break'''
             for comment in minute:
-                #print("Comment :",comment)
                 if len(minute)==1:
                     continue
                 #pool=Pool(self.thread)
                 morph=self.morphAnalyzer.morphAnalyze(comment[1])
                 com_keyword=self.morphAnalyzer.morphKeywording(morph)
-                #print('Keyword :',com_keyword)
                 for word in com_keyword:
                     if comment[0][1] == '의원':
                         if comment[0][0] in self.congress.keys():
@@ -115,8 +106,10 @@ class KeyWording:
                             self.keyword[word]['bias'] += self.congress[comment[0][0]]
                             if self.keyword[word]['bias'] < 0 :
                                 self.keyword[word]['left']+=1
+                                left_sum+=1
                             else:
                                 self.keyword[word]['right']+=1
+                                right_sum+=1
                             #in_congress+=1
                         #else:
                             #not_in_congress+=1
@@ -149,47 +142,27 @@ class KeyWording:
         for word in del_list :
             del self.keyword[word]
 
-    '''def pdfKeywording(self):
-        minute_list = self.pdfList.importPickle():
-
-        for minute in minute_list:
+    def newsKeywording(self,count):
+        news_list=self.newsList.importPickle()
+        
+        for news in tqdm(news_list,desc="Tagging News"):
+            all_bias=0
+            
+            #print(len(news.Content))
+            #print(news.Content,"\n\n\n")
             try:
-                for comment in minute:
-                    del_count=0
-                    for sentence in comment[2]:
-                         if sentence == []:
-                                del_count += 1
-                    for i in range(del_count):
-                        comment[2].remove([])
+                for index, sentence in enumerate(news.Content):
+                    morph = self.morphAnalyzer.morphAnalyze(sentence)
+                    sent_keyword = self.morphAnalyzer.morphKeywording(morph)
+                    for word in sent_keyword:
+                    
             except:
+                news.Bias = None
+                excepted+=1
+                #print("Excepted")
                 continue
-        for minute in minute_list:
-            try:
-                for comment in minute:
-                    for sentence in comment[2]:
-                        for index in range(len(sentence) - 1):
-                            for i in range(1, 5):
-                                if index + i > len(sentence):
-                                    break
-                                word = ""
-                                for j in range(index, index + i):
-                                    word += sentence[j] + " "
-                                if word not in self.keyword.keys():
-                                    self.keyword[word] = {'bias': 0, 'count': 0}
-                                if comment[0][1] == '의원':
-                                    if comment[0][0] in self.congress.keys():
-                                        self.keyword[word]['bias'] += self.congress[comment[0][0]]
-                                else :
-                                    self.keyword[word]['bias'] += self.congress[comment[0][1]]
-                                self.keyword[word]['count'] += 1
-            except:
-                continue
-        nobias=[]
-        for word in self.keyword.keys():
-            if self.keyword[word]['bias'] == 0:
-                nobias.append(word)
-        for word in nobias:
-            del self.keyword[word]'''
+        
+        
 
     def printByCount(self, count):
         for word in self.keyword.keys():
@@ -323,4 +296,4 @@ if __name__ == "__main__":
     keyWording.headlineDuplicate()
     print("\n\n\nKeyword After Headline")
     keyWording.printByCount(1)'''
-    keyWording.newsTagging()
+    keyWording.newsTagging("./Test/newsData")
