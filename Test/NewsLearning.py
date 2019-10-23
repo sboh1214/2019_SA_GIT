@@ -2,6 +2,7 @@ import itertools
 import matplotlib.pyplot as plt
 from keras import layers, models
 from keras.preprocessing.text import Tokenizer
+from keras.callbacks import TensorBoard
 from tqdm import tqdm
 from math import sqrt, ceil
 from numpy import reshape
@@ -133,7 +134,7 @@ class RNN(models.Model):
         self.compile(loss='binary_crossentropy',optimizer='adam', metrics=['accuracy'])
 
 class CNN(models.Model):
-    def __init__(self, input_shape):
+    def __init__(self, input_shape=(10,10,)):
         x=layers.Input(shape=input_shape)
         h=layers.Conv2D(filters=3, kernel_size=(3,3),activation='relu',input_shape=input_shape)(x)
         h=layers.MaxPooling2D()(h)
@@ -158,35 +159,41 @@ class NewsML():
         self.__info(f'[{next(count)}] Build CNN Model')
         #self.Cnn = CNN()
 
+        self.__info(f'[{next(count)}] Connect Tensorboard')
+        tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
+
         self.__info(f'[{next(count)}] Run RNN Model')
-        self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, batch_size=256, epochs=5, validation_split=0.2, verbose=self.Verbose)
+        self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, batch_size=256, epochs=1, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
         self.__info(f'[{next(count)}] Run CNN Model')
-        #self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, batch_size=128, epochs=5, validation_split=0.2, verbose=self.Verbose)
+        #self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, batch_size=256, epochs=5, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
     def plot_loss_and_accuracy(self, name="", show=False):
         """
         Plot history for loss and accuracy of train and validation data.
         """
-        plt.figure()
-        plt.subplot(2, 1, 1)
-        plt.plot(self.RnnHistory.history['loss'])
-        plt.plot(self.RnnHistory.history['val_loss'])
-        plt.title(name + " RNN Loss")
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.legend(['Train', 'Validation'], loc=0)
+        fig, loss_ax = plt.subplots()
 
-        # plt.subplot(2, 1, 2)
-        # plt.plot(self.RnnHistory.history['acc'])
-        # plt.plot(self.RnnHistory.history['val_acc'])
-        # plt.title(name + " RNN Accuracy")
-        # plt.xlabel('Epoch')
-        # plt.ylabel('Accuracy')
-        # plt.legend(['Train', 'Test'], loc=0)
+        acc_ax = loss_ax.twinx()
+
+        loss_ax.plot(self.RnnHistory.history['loss'], 'y', label='train loss')
+        loss_ax.plot(self.RnnHistory.history['val_loss'], 'r', label='val loss')
+
+        acc_ax.plot(self.RnnHistory.history['acc'], 'b', label='train acc')
+        acc_ax.plot(self.RnnHistory.history['val_acc'], 'g', label='val acc')
+
+        loss_ax.set_xlabel('epoch')
+        loss_ax.set_ylabel('loss')
+        acc_ax.set_ylabel('accuray')
+
+        loss_ax.legend(loc='upper left')
+        acc_ax.legend(loc='lower left')
 
         if show:
             plt.show()
+
+    def open_tensorboard(self):
+        pass
 
     @staticmethod
     def __info(msg):
