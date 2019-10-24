@@ -42,16 +42,36 @@ class MorphAnalyzer():
         for index in range(len(group)-2): #감성 형용사+명사
             if(group[index][0]=='VA' and group[index+1][0]=='ETM' and group[index+2][0]=='NN'):
                 keyword.append(group[index][1]+group[index+1][1]+group[index+2][1])
-        del_word=list()
-        for index,word in enumerate(keyword):
+
+        for index,word in enumerate(keyword): #키워드 합치기
             if type(word)==list:
                 merge=''
                 for i in word:
                     merge+=i
                 keyword[index]=merge
-            if len(keyword[index])<5:
-                del_word.append(merge)
-        for word in del_word:
+        
+        del_list=list()
+        append_list=list()
+        for word in keyword: #키워드 거르기
+            if word[-1] in ['것','수']:
+                del_list.append(word)
+            elif word[3:5] == '의원':
+                del_list.append(word)
+                append_list.append(word[5:])
+            elif '.' in word or '․' in word or '․' in word:
+                del_list.append(word)
+        
+        for word in del_list :
+            keyword.remove(word)
+
+        for word in append_list :
+            keyword.append(word)
+
+        del_list=list()
+        for word in keyword:
+            if len(word)<5:
+                del_list.append(word)
+        for word in del_list :
             keyword.remove(word)
         return keyword
     
@@ -66,18 +86,12 @@ class KeyWording:
     headline = set()  # 기사 제목 키워드 추출
     news_keyword = dict()
 
-    def congressImport(self, fileName, bias):
-        with open("./Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
-            congress_list = f.read()
-            for name in congress_list.split():
-                self.congress[name] = bias
-
     def congressTotalImport(self,fileName):
         with open("./Test/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
             congress_list = f.read().split()
             #   print(congress_list)
             for i in range(len(congress_list)//4):
-                self.congress[congress_list[4*i+1]]=float(congress_list[4*i+3])
+                self.congress[congress_list[4*i+1]]={'bias':(float(congress_list[4*i+3])+50)/100,'word':dict()}
 
                     
 
@@ -86,8 +100,6 @@ class KeyWording:
         # VA : 형용사
     def pdfKeywording(self):
         minute_list=self.pdfList.importPickle()
-        left_sum=0
-        right_sum=0
         for i in range(len(minute_list)):
             for j in range(i+1,len(minute_list)):
                 if minute_list[i]==minute_list[j]:
@@ -103,47 +115,22 @@ class KeyWording:
                     if comment[0][1] == '의원':
                         if comment[0][0] in self.congress.keys():
                             if(word not in self.keyword.keys()):
-                                self.keyword[word]={'bias':0,'left':0,'right':0}
-                            self.keyword[word]['bias'] += self.congress[comment[0][0]]
-                            if self.keyword[word]['bias'] < 0 :
+                                self.keyword[word]={'left':0,'right':0,'a':0,'b':0}
+                            if self.congress[comment[0][0]]<0.5: 
                                 self.keyword[word]['left']+=1
-                                left_sum+=1
                             else:
                                 self.keyword[word]['right']+=1
-                                right_sum+=1
+                            if(word not in self.congress['word']):
+                                self.congress['word'][word]=0
+                            self.congress['word'][word]+=1
                             #in_congress+=1
                         #else:
                             #not_in_congress+=1
                             #not_in_name.add(comment[0][0])
         #print("Congress in list :",in_congress)
         #print("Congress not in list :",not_in_congress,not_in_name)
-    
-    def keywordFilter(self):
-        del_list=list()
-        append_list=dict()
-        for word in self.keyword.keys():
-            if word[-1] in ['것','수']:
-                del_list.append(word)
-            elif word[3:5] == '의원':
-                del_list.append(word)
-                append_list[word[5:]]=self.keyword[word]
-            elif '.' in word or '․' in word or '․' in word:
-                del_list.append(word)
-        
-        for word in del_list :
-            del self.keyword[word]
 
-        for word in append_list :
-            self.keyword[word]=append_list[word]
-
-        del_list=list()
-        for word in self.keyword.keys():
-            if len(word)<5:
-                del_list.append(word)
-        for word in del_list :
-            del self.keyword[word]
-
-    def newsKeywording(self,count):
+    def newsKeywording(self):
         news_list=self.newsList.importPickle()
         for news in tqdm(news_list,desc="Tagging News"):
             for index, sentence in enumerate(news.Content):
@@ -278,7 +265,6 @@ if __name__ == "__main__":
     keyWording.congressTotalImport("total")
     keyWording.newsKeywording()
     keyWording.importPickle()
-    keyWording.keywordFilter()
     #keyWording.pdfKeywording()
     keyWording.exportPickle()
     #keyWording.printByCount(1)
