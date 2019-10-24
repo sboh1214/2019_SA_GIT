@@ -15,21 +15,22 @@ from multiprocessing.dummy import Pool
 
 from tika import parser as tikaParse
 
-from data import PdfData as PDFData
-from data import PdfList as PDFList
+from .data import PdfList as PDFList
 
 
 class ParsePDF:
     threadCount = 4
+    error_count = 0
 
     @staticmethod
-    def text(parsed_text):
+    def text(self, parsed_text):
         parsed_text = re.sub('\n', '', parsed_text)
         parsed_text = re.sub(r'\([^)]*\)', '', parsed_text)
         try:
             parsed_text = re.search(r"^.*개의하겠습니다\.(.*)선포합니다\..*$", parsed_text).group(1)
         except AttributeError:
             print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
+            self.error_count += 1
         parsed_text = parsed_text.split('◯')
         return_text = []
         for personText in parsed_text:
@@ -67,5 +68,6 @@ class ParsePDF:
 
 if __name__ == "__main__":
     parser = ParsePDF()
-    #print(parser.read_pdf('Data/1.PDF'))  # Default is 1.PDF
+    # print(parser.read_pdf('Data/1.PDF'))  # Default is 1.PDF
     parser.read_folder()
+    print("Error count :", parser.error_count)
