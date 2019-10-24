@@ -160,7 +160,7 @@ class NewsML():
         self.Rnn = RNN(max_len=self.RnnMaxLen,data_count=len(self.Data.RnnX),max_features=20000)
 
         self.__info(f'[{next(count)}] Build CNN Model')
-        #self.Cnn = CNN(side=self.Data.CnnSide)
+        self.Cnn = CNN(side=self.Data.CnnSide)
 
         self.__info(f'[{next(count)}] Connect Tensorboard')
         tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
@@ -169,7 +169,7 @@ class NewsML():
         self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, batch_size=256, epochs=10, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
         self.__info(f'[{next(count)}] Run CNN Model')
-        #self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, batch_size=256, epochs=10, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
+        self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, batch_size=256, epochs=10, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
     def plot_loss_and_accuracy(self, name="", show=False):
         """
@@ -206,3 +206,4 @@ class NewsML():
 if __name__ == '__main__':
     ml = NewsML(verbose=True, file='Test/NewsData', dev=True)
     ml.plot_loss_and_accuracy(name='Test', show=True)
+    input('Enter to Exit (Prevent stopping docker)')
