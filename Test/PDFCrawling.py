@@ -15,22 +15,26 @@ from multiprocessing.dummy import Pool
 
 from tika import parser as tikaParse
 
-from .data import PdfList as PDFList
+from data import PdfList as PDFList
 
 
 class ParsePDF:
     threadCount = 4
     error_count = 0
 
-    @staticmethod
-    def text(self, parsed_text):
+    def text(self, parsed_text, file_name):
         parsed_text = re.sub('\n', '', parsed_text)
         parsed_text = re.sub(r'\([^)]*\)', '', parsed_text)
         try:
-            parsed_text = re.search(r"^.*개의하겠습니다\.(.*)선포합니다\..*$", parsed_text).group(1)
+            parsed_text = re.search(r"^.*개의하겠습니다\.(.*)산회를 선포.*$", parsed_text).group(1)
         except AttributeError:
-            print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
-            self.error_count += 1
+            try:
+                parsed_text = re.search(r"^.*개회하겠습니다\.(.*)산회를 선포.*$$", parsed_text).group(1)
+            except AttributeError:
+                print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
+                self.error_count += 1
+                print(file_name)
+                #print(parsed_text)
         parsed_text = parsed_text.split('◯')
         return_text = []
         for personText in parsed_text:
@@ -42,7 +46,7 @@ class ParsePDF:
         return return_text
 
     def read_pdf(self, file_name='1.PDF'):
-        print(file_name)
+        # print(file_name)
         try:
             file_data = tikaParse.from_file(file_name)  # Parse data from file
             text_data = file_data['content']  # Get file's text content
@@ -54,9 +58,9 @@ class ParsePDF:
             print("Error parsing PDF per next line : ")
             print(e)
             return " "
-        return self.text(text_data)
+        return self.text(text_data, file_name)
 
-    def read_folder(self, dir_name="./Test/Data/*.PDF"):  # Multithreaded Read Operations
+    def read_folder(self, dir_name="./Data/*.PDF"):  # Multithreaded Read Operations
         files = glob.glob(dir_name)
         print(files)
         pool = Pool(self.threadCount)
