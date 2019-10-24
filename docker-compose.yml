@@ -3,6 +3,6 @@ version: '3'
 services:
   python:
     build: .
-    command: python NewsLearning.py
+    command: python Test/NewsLearning.py
     ports:
       - "8000:8000"
