@@ -1,12 +1,18 @@
 import itertools
+from datetime import datetime
+import os
+from math import sqrt, ceil
+import sys
+import platform
+
 import matplotlib.pyplot as plt
 from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
 from keras.callbacks import TensorBoard
 from tqdm import tqdm
-from math import sqrt, ceil
 from numpy import reshape
 import numpy as np
+from bs4 import BeautifulSoup
 
 from data import NewsList
 
@@ -79,7 +85,7 @@ class Data:
         else:
             return a.extend([0 for _ in range(max_len-len(a))])
 
-    def __get_news_data(self, filename: str = 'NewsData'):
+    def __get_news_data(self, filename: str):
         """
 
         """
@@ -117,6 +123,11 @@ class Data:
             self.__info(f'Cnn Y ({len(self.CnnY)})')
             print(self.CnnY[0])
 
+        self.__info('\nPre-Process CnnX')
+        cnnx = np.array(self.CnnX)
+        cnnx = cnnx.reshape((len(cnnx), max_sentence, max_sentence, 1))
+        self.CnnX = cnnx
+
         self.__info('\nPre-Process RnnX')
         tokenizer = Tokenizer()
         tokenizer.fit_on_texts(self.RnnX)
@@ -130,7 +141,7 @@ class Data:
 
 class RNN(models.Model):
     def __init__(self, max_len , data_count, max_features=20000):
-        x=layers.Input((max_len, ))
+        x=layers.Input((max_len,))
         h=layers.Embedding(max_features, 128)(x)
         h=layers.LSTM(128, dropout=0.2, recurrent_dropout= 0.2)(h)
         y=layers.Dense(units=1, activation=activations.sigmoid)(h)
@@ -139,8 +150,9 @@ class RNN(models.Model):
 
 class CNN(models.Model):
     def __init__(self, side = 100):
-        x=layers.Conv2D(filters=3, kernel_size=(3,3),activation=activations.relu, input_shape=(1,side,side))
-        h=layers.MaxPooling2D(pool_size=(2,2))(x)
+        x=layers.Input((side,side,1))
+        h=layers.Conv2D(filters=3, kernel_size=(3,3),activation=activations.relu)(x)
+        h=layers.MaxPooling2D(pool_size=(2,2))(h)
         h=layers.Dropout(rate=0.25)(h)
         h=layers.Flatten()(h)
         y=layers.Dense(units=1, activation=activations.sigmoid)(h)
@@ -148,13 +160,22 @@ class CNN(models.Model):
         self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(), metrics=['acc'])
 
 class NewsML():
-    def __init__(self, rnn_maxlen=100 ,verbose=False, file='Test/NewsData', dev=False):
-        self.Verbose = verbose
-        self.RnnMaxLen = rnn_maxlen
+    def __init__(self):
+        self.Verbose:bool = True
+        self.Dev:bool = True
+        self.File = 'Test/NewsData'
+
+        self.RnnEpoch:int = 10
+        self.RnnBatch:int = 256
+        self.RnnMaxLen:int = 100
+
+        self.CnnEpoch:int = 10
+        self.CnnBatch:int = 256
+    
+    def run(self):
         count = itertools.count(1)
-        
         self.__info(f'[{next(count)}] Prepare Data')
-        self.Data = Data(file=file, max_len=rnn_maxlen ,verbose=self.Verbose, dev=dev)
+        self.Data = Data(file=self.File, max_len=self.RnnMaxLen ,verbose=self.Verbose, dev=self.Dev)
 
         self.__info(f'[{next(count)}] Build RNN Model')
         self.Rnn = RNN(max_len=self.RnnMaxLen,data_count=len(self.Data.RnnX),max_features=20000)
@@ -166,44 +187,115 @@ class NewsML():
         tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
         self.__info(f'[{next(count)}] Run RNN Model')
-        self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, batch_size=256, epochs=10, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
+        self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, 
+        batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
         self.__info(f'[{next(count)}] Run CNN Model')
-        self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, batch_size=256, epochs=10, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
+        self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, 
+        batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
-    def plot_loss_and_accuracy(self, name="", show=False):
+        self.__info(f'[{next(count)}] Make Plot')
+        self.__make_plot()
+
+        self.__info(f'[{next(count)}] Save History and Configuration as HTML')
+        self.__save()
+
+        self.__info(f'Done')
+
+    def __make_plot(self):
         """
         Plot history for loss and accuracy of train and validation data.
         """
-        fig, loss_ax = plt.subplots()
+        fig, ((rnn_loss,cnn_loss),(rnn_acc, cnn_acc)) = plt.subplots(nrows=2, ncols=2, constrained_layout=True)
 
-        acc_ax = loss_ax.twinx()
+        rnn_loss.plot(self.RnnHistory.history['loss'], 'y', label='train loss')
+        rnn_loss.plot(self.RnnHistory.history['val_loss'], 'r', label='val loss')
+        rnn_acc.plot(self.RnnHistory.history['acc'], 'b', label='train acc')
+        rnn_acc.plot(self.RnnHistory.history['val_acc'], 'g', label='val acc')
+        cnn_loss.plot(self.CnnHistory.history['loss'], 'y', label='train loss')
+        cnn_loss.plot(self.CnnHistory.history['val_loss'], 'r', label='val loss')
+        cnn_acc.plot(self.CnnHistory.history['acc'], 'b', label='train acc')
+        cnn_acc.plot(self.CnnHistory.history['val_acc'], 'g', label='val acc')
 
-        loss_ax.plot(self.RnnHistory.history['loss'], 'y', label='train loss')
-        loss_ax.plot(self.RnnHistory.history['val_loss'], 'r', label='val loss')
+        rnn_loss.set_xlabel('epoch')
+        rnn_acc.set_xlabel('epoch')
+        cnn_loss.set_xlabel('epoch')
+        cnn_acc.set_xlabel('epoch')
 
-        acc_ax.plot(self.RnnHistory.history['acc'], 'b', label='train acc')
-        acc_ax.plot(self.RnnHistory.history['val_acc'], 'g', label='val acc')
+        rnn_loss.set_ylabel('loss')
+        rnn_acc.set_ylabel('accuray')
+        cnn_loss.set_ylabel('loss')
+        cnn_acc.set_ylabel('accuray')
 
-        loss_ax.set_xlabel('epoch')
-        loss_ax.set_ylabel('loss')
-        acc_ax.set_ylabel('accuray')
+        rnn_loss.title.set_text('RNN Loss')
+        rnn_acc.title.set_text('RNN Accuracy')
+        cnn_loss.title.set_text('CNN Loss')
+        cnn_acc.title.set_text('CNN Accuracy')
 
-        loss_ax.legend(loc='upper left')
-        acc_ax.legend(loc='lower left')
-
-        if show:
-            plt.show()
+        self.Fig = fig
 
     def open_tensorboard(self):
         pass
 
+    def __save(self):
+        n = datetime.now()
+        os.makedirs(f'./result/{n}')
+        self.Fig.savefig(f'./result/{n}/plot.png', dpi=1000)
+        basic="""
+        <html>
+        <head>
+
+        </head>
+        <body>
+            <h1>Machine Learning Result</h1>
+            <div class="datetime">Date and Time : </div>
+
+            <h2>Environment</h2>
+            <div class="sys_info">System Info : </div>
+            <div class="py_version">Python Version : </div>
+
+            <h2>RNN Configuration</h2>
+            <div class="rnn_epoch">Epoch : </div>
+            <div class="rnn_batch">Batch Size : </div>
+            <div class="rnn_maxlen">Max Length per Sentence : </div>
+
+            <h2>CNN Configuration</h2>
+            <div class="cnn_epoch">Epoch : </div>
+            <div class="cnn_batch">Batch Size : </div>
+
+            <h2>Plot<h2>
+            <img src="plot.png" alt="plt" height="400" width="600">
+        </body>
+        </html>
+        """
+        soup = BeautifulSoup(basic,'html.parser')
+        soup.html.body.find('div', attrs={'class': 'datetime'}).append(str(n))
+        soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform.platform()))
+        soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(sys.version_info))
+
+        soup.html.body.find('div', attrs={'class': 'rnn_epoch'}).append(str(self.RnnEpoch))
+        soup.html.body.find('div', attrs={'class': 'rnn_batch'}).append(str(self.RnnBatch))
+        soup.html.body.find('div', attrs={'class': 'rnn_maxlen'}).append(str(self.RnnMaxLen))
+
+        soup.html.body.find('div', attrs={'class': 'cnn_epoch'}).append(str(self.CnnEpoch))
+        soup.html.body.find('div', attrs={'class': 'cnn_batch'}).append(str(self.CnnBatch))
+
+        soup.prettify()
+        with open(f'./result/{n}/result.html',mode='w') as f:
+            f.write(str(soup))
+        
+
+    def show_plot(self):
+        plt.show()
+
     @staticmethod
     def __info(msg):
         print('\n\033[35m'+msg+'\033[0m')
-    
+
+class NewsMLHistory():
+    pass    
 
 if __name__ == '__main__':
-    ml = NewsML(verbose=True, file='Test/NewsData', dev=True)
-    ml.plot_loss_and_accuracy(name='Test', show=True)
-    input('Enter to Exit (Prevent stopping docker)')
+    ml = NewsML()
+    ml.run()
+    ml.show_plot()
