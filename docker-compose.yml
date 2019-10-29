@@ -3,6 +3,8 @@ version: '3'
 services:
   python:
     build: .
-    command: python Test/NewsLearning.py
+    command: python /code/Test/NewsLearning.py file=/code/Test/NewsData
     ports:
-      - "8000:8000"
+      - "8000:8000
+    volumes:
+      - ./:/code

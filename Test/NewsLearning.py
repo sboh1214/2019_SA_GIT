@@ -5,12 +5,13 @@ from math import sqrt, ceil
 import sys
 import platform
 
-import matplotlib.pyplot as plt
 from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
 from keras.callbacks import TensorBoard
+from keras import backend as K
+
+import matplotlib.pyplot as plt
 from tqdm import tqdm
-from numpy import reshape
 import numpy as np
 from bs4 import BeautifulSoup
 
@@ -240,31 +241,37 @@ class NewsML():
     def __save(self):
         n = datetime.now()
         os.makedirs(f'./result/{n}')
+
         self.Fig.savefig(f'./result/{n}/plot.png', dpi=1000)
+
+        self.Rnn.save(f'./result/{n}/rnn_model.h5')
+        self.Cnn.save(f'./result/{n}/cnn_model.h5')
+
         basic="""
         <html>
-        <head>
-
-        </head>
         <body>
-            <h1>Machine Learning Result</h1>
-            <div class="datetime">Date and Time : </div>
+        
+        <h1>Machine Learning Result</h1>
+        <div class="datetime">Date and Time : </div>
+        
+        <h2>Environment</h2>
+        <div class="sys_info">System Info : </div>
+        <div class="py_version">Python Version : </div>
+        <div class="keras_backend">Keras Backend : </div>
+        
+        <h2>RNN Configuration</h2>
+        <div class="rnn_epoch">Epoch : </div>
+        <div class="rnn_batch">Batch Size : </div>
+        <div class="rnn_model"></div>
+        
+        <h2>CNN Configuration</h2>
+        <div class="cnn_epoch">Epoch : </div>
+        <div class="cnn_batch">Batch Size : </div>
+        <div class="cnn_model"></div>
+        
+        <h2>Plot<h2>
+        <img src="plot.png" alt="plt" height="400" width="600">
 
-            <h2>Environment</h2>
-            <div class="sys_info">System Info : </div>
-            <div class="py_version">Python Version : </div>
-
-            <h2>RNN Configuration</h2>
-            <div class="rnn_epoch">Epoch : </div>
-            <div class="rnn_batch">Batch Size : </div>
-            <div class="rnn_maxlen">Max Length per Sentence : </div>
-
-            <h2>CNN Configuration</h2>
-            <div class="cnn_epoch">Epoch : </div>
-            <div class="cnn_batch">Batch Size : </div>
-
-            <h2>Plot<h2>
-            <img src="plot.png" alt="plt" height="400" width="600">
         </body>
         </html>
         """
@@ -272,18 +279,23 @@ class NewsML():
         soup.html.body.find('div', attrs={'class': 'datetime'}).append(str(n))
         soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform.platform()))
         soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(sys.version_info))
+        soup.html.body.find('div', attrs={'class': 'keras_backend'}).append(K.backend())
 
         soup.html.body.find('div', attrs={'class': 'rnn_epoch'}).append(str(self.RnnEpoch))
         soup.html.body.find('div', attrs={'class': 'rnn_batch'}).append(str(self.RnnBatch))
-        soup.html.body.find('div', attrs={'class': 'rnn_maxlen'}).append(str(self.RnnMaxLen))
+        self.Rnn.summary(print_fn=lambda x: self.__to_html(soup,'rnn_model',x))
 
         soup.html.body.find('div', attrs={'class': 'cnn_epoch'}).append(str(self.CnnEpoch))
         soup.html.body.find('div', attrs={'class': 'cnn_batch'}).append(str(self.CnnBatch))
+        self.Rnn.summary(print_fn=lambda x: self.__to_html(soup,'cnn_model',x))
 
         soup.prettify()
         with open(f'./result/{n}/result.html',mode='w') as f:
             f.write(str(soup))
-        
+
+    def __to_html(self, soup:BeautifulSoup, class_:str , x:str):
+        soup.html.body.find('div', attrs={'class': class_}).append(x)
+        soup.html.body.find('div', attrs={'class': class_}).append(soup.new_tag('br'))
 
     def show_plot(self):
         plt.show()
@@ -297,5 +309,11 @@ class NewsMLHistory():
 
 if __name__ == '__main__':
     ml = NewsML()
+    ml.Dev = True
+    for item in sys.argv:
+        if item[:4] == 'file':
+            ml.File = item[5:]
     ml.run()
-    ml.show_plot()
+    #ml.show_plot()
+    while True:
+        pass
