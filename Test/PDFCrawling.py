@@ -26,15 +26,12 @@ class ParsePDF:
         parsed_text = re.sub('\n', '', parsed_text)
         parsed_text = re.sub(r'\([^)]*\)', '', parsed_text)
         try:
-            parsed_text = re.search(r"^.*개의하겠습니다\.(.*)산회를 선포.*$", parsed_text).group(1)
+            parsed_text = re.search(r"^.*(개의하겠습니다\.|의석을 정돈|개회하겠습니다\.|개의하도록 하겠습니다\.)(.*)(산회를 선포|마치도록 하겠습니다\.|속개하도록 하겠습니다\.|정회를 선포합니다\.|회의중지\)|회의를 잠시 중지하고).*$", parsed_text).group(1)
         except AttributeError:
-            try:
-                parsed_text = re.search(r"^.*개회하겠습니다\.(.*)산회를 선포.*$$", parsed_text).group(1)
-            except AttributeError:
-                print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
-                self.error_count += 1
-                print(file_name)
-                #print(parsed_text)
+            print("본회의가 개의되지 않았거나 내가 Regex 잘못 씀.")
+            self.error_count += 1
+            print(file_name)
+            print(parsed_text)
         parsed_text = parsed_text.split('◯')
         return_text = []
         for personText in parsed_text:

@@ -3,6 +3,7 @@ import json
 import csv
 import re
 import datetime
+import glob
 from urllib.error import URLError
 
 import dateutil.parser  # pip install python-dateutil
@@ -12,8 +13,9 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
+from openpyxl import load_workbook
 
-from .data import NewsData, NewsList
+from data import NewsData, NewsList
 
 
 class NaverNewsAPI:
@@ -110,13 +112,14 @@ class NewsArticleCrawler:
     """
 
     """
-    LinkData = []  # Title, Link, OriginalLink
-    NewsData = []  # Title, Press, Date, Content
+    LinkData = []   # Title, Link, OriginalLink
+    NewsData = []   # Title, Press, Date, Content
+    NewsData_K = [] # NewsData List
 
     UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) " \
                 "Version/12.0 Mobile/15E148 Safari/604.1 "
 
-    threadCount = 6
+    threadCount = 56
 
     def __init__(self, linkData):
         self.LinkData = linkData
@@ -153,12 +156,10 @@ class NewsArticleCrawler:
             self.NewsData.append(formatted_data)
         else:
             pass
-
+    """
     def GetSource(self, content):
-        """
-        khaiii만 돌리기엔 신뢰성이 낮다(예 : 더불어민주당 => 더불어 민/NNP 주/NNG 당/NNP으로)
-        아마 preset(당명 등) 만들어 대입?
-        """
+        # khaiii만 돌리기엔 신뢰성이 낮다(예 : 더불어민주당 => 더불어 민/NNP 주/NNG 당/NNP으로)
+        # 아마 preset(당명 등) 만들어 대입?
         possible_source = re.findall(r"[^.]*\w*은 [^.]*|[^.]*\w*는 [^.]*", content)
         api = khaiii.KhaiiiApi()
         print(possible_source)
@@ -167,7 +168,7 @@ class NewsArticleCrawler:
             for word in api.analyze(line):
                 for morph in word.morphs:
                     print(morph)
-
+    """
 
     def Format_Naver(self, content, item):
         """
@@ -186,6 +187,23 @@ class NewsArticleCrawler:
         # self.GetSource(content)
         return item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.')
 
+    def ReadNewsFromFolder(self, dir_name="./Data/*/*.xlsx"):  # Multithreaded Read Operations
+        files = glob.glob(dir_name)
+        print(files)
+        pool = Pool(self.threadCount)
+        results: NewsList = pool.map(self.GetFromBigKinds, files)
+        return results
+    
+    def GetFromBigKinds(self, fileName="/Users/sjk/Desktop/뉴스/Fasttrack-NewsResult_20180101-20191029.xlsx"):
+        wb = load_workbook(fileName)
+        ws = wb.active
+        row_range = list(ws)
+        row_range.pop(0)
+        for news_line in row_range:
+            news = NewsData(id = news_line[0].value, date = news_line[1].value, press = news_line[2].value, journalist = news_line[3].value, title = news_line[4].value, content = news_line[16].value)
+            self.NewsData_K.append(news)
+        return 
+
     def SaveNews(self, fileName="NewsData"):
         """
 
@@ -196,7 +214,7 @@ class NewsArticleCrawler:
         for item in self.NewsData:
             if item is not None:
                 news_list.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
-        news_list = NewsList(news_list)
+        news_list = NewsList(news_list + self.ReadNewsFromFolder())
         #news_list.printCell()
         news_list.exportPickle(fileName)
         return "Success"
@@ -205,8 +223,8 @@ class NewsArticleCrawler:
 if __name__ == "__main__":
     api = NaverNewsAPI()
     # api.RequestNewsLink("19대 대선", 1, 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링
-    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=30, display=100)
-    # api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=1, display=10)
+    # api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=30, display=100)
+    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=1, display=10)
     crawler = NewsArticleCrawler(api.LinkData)
     crawler.LinkData = api.LinkData
     crawler.SaveNews()
