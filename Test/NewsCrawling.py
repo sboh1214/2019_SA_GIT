@@ -187,7 +187,7 @@ class NewsArticleCrawler:
         # self.GetSource(content)
         return item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.')
 
-    def ReadNewsFromFolder(self, dir_name="./Data/*/*.xlsx"):  # Multithreaded Read Operations
+    def ReadNewsFromFolder(self, dir_name="./Data/BigKinds/*/*.xlsx"):  # Multithreaded Read Operations
         files = glob.glob(dir_name)
         print(files)
         pool = Pool(self.threadCount)
