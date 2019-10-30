@@ -89,7 +89,7 @@ class NaverNewsAPI:
                     f.close()
                 return "Success"
             except FileNotFoundError:
-                return f"Error : File {fileName} does not exist."
+                return "Error : File {fileName} does not exist."
 
     def RequestNewsByDate(self, query, begin=datetime.datetime(1900, 1, 1), end=datetime.datetime.today(),
                           pages=1000, display=100):  # 날짜를 기준으로 거르기
