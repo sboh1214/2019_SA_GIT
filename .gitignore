@@ -127,7 +127,5 @@ dmypy.json
 .DS_Store
 
 graph/
-Test/Data/*.PDF
-Test/Data/*.pdf
-Test/Data/*.Pdf
+Test/Data/*
 result/
