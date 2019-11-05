@@ -25,8 +25,8 @@ class MorphAnalyzer():
                 keyword.append(word[0])
         group=list()
         for k,g in groupby(content  ,lambda x:x[1]): # Groupby [(태그,단어),(태그,단어), ...]
-	        listg=[x[0] for x in list(g)]
-	        group.append((k,listg))
+            listg=[x[0] for x in list(g)]
+            group.append((k,listg))
         #print("Iter Group :",group)
         for word in group: #복합명사 추출
             if(word[0]=='NN' and len(word[1]) >=5): 
