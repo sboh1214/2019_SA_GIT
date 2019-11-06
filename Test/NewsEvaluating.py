@@ -92,7 +92,6 @@ class KeyWording:
     headline = set()  # 기사 제목 키워드 추출
     news_keyword = dict()
     word_regress = dict()
-    news_list = self.NewsList.importPickle("./Test/Data/NewsData")
 
     def congressTotalImport(self,fileName):
         with open("./Test/Data/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
@@ -122,7 +121,7 @@ class KeyWording:
                             self.congress[comment[0][0]]['word'][word]+=1
                             self.congress[comment[0][0]]['count']+=1
         except:
-            print("Shit Khaiii")
+            print("PDF 펑")
 
     def pdfKeywording(self,threadCount=56):
         minute_list = self.pdfList.importPickle()
@@ -144,21 +143,13 @@ class KeyWording:
             if len(f_pc_list)>1:
                 model.fit(X=y_c,y=f_pc_list)
                 self.keyword[keyword]['a'],self.keyword[keyword]['b']=model.intercept_[0],model.coef_[0][0]
-
-    def newsKeywording(self):
-        for news in tqdm(self.news_list,desc="Tagging News"):
-            for index, sentence in enumerate(news.Content):
-                morph = self.morphAnalyzer.morphAnalyze(sentence)
-                sent_keyword = self.morphAnalyzer.morphKeywording(morph)
-                for word in sent_keyword:
-                    if word not in news.Keyword.keys():
-                        news.Keyword[word] = 0
-                    news.Keyword+=1
-            beta_square_sum=0
-            f_minus_alpha=0
-            for keyword in news.Keyword:
-                        
-            
+        del_list=list()
+        for keyword in self.keyword.keys():
+            if(self.keyword[keyword]['a']==0):
+                del_list.append(keyword)
+        for word in del_list:
+            del(self.keyword[word])
+                
     def printByCount(self, count):
         for word in self.keyword.keys():
             if self.keyword[word]['left']+self.keyword[word]['right'] >= count:
@@ -209,43 +200,67 @@ class KeyWording:
                 delWord.append(keyword)
         for word in delWord:
             del(self.keyword[word])
-    def newsTaggingMulti(self,news):
-        all_bias=0
-        try:
-            for index, sentence in enumerate(news.Content):
-                sentence_bias = 0
-                morph = self.morphAnalyzer.morphAnalyze(sentence)
-                sent_keyword = self.morphAnalyzer.morphKeywording(morph)
-                for word in sent_keyword:
-                    if(word in self.keyword):
-                        word_bias = self.keyword[word]['bias']
-                        sentence_bias += word_bias
-                        all_bias += word_bias
-                news.Sentence_Bias[index] = sentence_bias
-            news.Bias = all_bias
-            #print(news.Content, all_bias,'\n\n\n')
-        except:
-            news.Bias = None
 
-    def newsTagging(self,fileName="NewsData",threadCount=56):
-        self.news_list = self.newsList.importPickle()
+    def newsLabelingMulti(self,news):
+        try:
+            news_keyword = dict()
+            news_count = 0
+            for index, sentence in enumerate(news.Content):
+                sentence_keyword = dict()
+                sentence_count = 0
+                morph = self.morphAnalyzer.morphAnalyze(sentence)
+                sent_analyze = self.morphAnalyzer.morphKeywording(morph)
+                for word in sent_analyze:
+                    if word in self.keyword():
+                        if word not in news_keyword:
+                            news_keyword[word]=0
+                            sentence_keyword[word]=0
+                        elif word not in sentence_keyword:
+                            sentence_keyword[word]=0
+                    news_count+=1
+                    sentence_count+=1
+                    news_keyword[word]+=1
+                    sentence_keyword[word]+=1
+                sent_beta_square_sum=0
+                sent_f_minus_alpha=0
+                for keyword in sentence_keyword:
+                    f_pn=sentence_keyword[keyword]/sentence_count
+                    if keyword in self.keyword:
+                        sent_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
+                        sent_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
+                news.Sentence_Bias[index]=sent_f_minus_alpha/sent_beta_square_sum
+
+            news_beta_square_sum=0
+            news_f_minus_alpha=0
+            for keyword in news_keyword:
+                f_pn=news_keyword[keyword]/news_count
+                if keyword in self.keyword:
+                    news_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
+                    news_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
+            news.Bias=news_f_minus_alpha/news_beta_square_sum   
+            return news
+        except:
+            news.Bias=None
+            print("News 펑")
+            return news
+
+    def newsLabeling(self,fileName="NewsData",threadCount=56):
+        news_list = self.newsList.importPickle("./Test/Data/NewsData")
         excepted=0
         pool=Pool(threadCount)
-        result: NewsList=tqdm(pool.map(self.newsTaggingMulti,self.news_list),desc="News Labeling")
-            
-        print("Excepted News :",excepted)
+        result:NewsList = pool.map(self.newsLabelingMulti,news_list)
         newsList=NewsList(result)
         newsList.exportPickle(fileName)
 
 if __name__ == "__main__":
-
+    threadCount=int(input("Process Count?"))
     keyWording = KeyWording()
     keyWording.congressTotalImport("total")
     #keyWording.newsKeywording()
     keyWording.importPickle()
-    #keyWording.pdfKeywording(int(input(" PDF Thread Number? ")))
+    #keyWording.pdfKeywording(threadCount)
     #keyWording.exportPickle()
-    keyWording.linearRegression()
-    keyWording.printByCount(5)
+    keyWording.keywordRegression()
+    #keyWording.printByCount(5)
     #keyWording.printByCount(1)
-    #keyWording.newsTagging("./Test/newsData")
+    keyWording.newsLabeling(threadCount)

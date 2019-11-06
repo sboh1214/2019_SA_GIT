@@ -10,7 +10,6 @@ class NewsData:
     Bias: int = 0
     ID: str = ""
     Journalist: str = ""
-    Keyword: dict = dict()
 
     def __init__(self, **kwargs):
         super().__init__()
@@ -32,8 +31,6 @@ class NewsData:
             self.ID = kwargs['id']
         if 'journalist' in kwargs:
             self.Journalist = kwargs['journalist']
-        if 'keyword' in kwargs:
-            self.Keyword = kwargs['keyword']
 
     def __str__(self):
         return f"Title:{self.Title}, Press:{self.Press}, Date:{self.Date}, Bias:{self.Bias}, Count of Sentence:{len(self.Content)}, Count of Bias:{len(self.Sentence_Bias)}"
