@@ -1,6 +1,6 @@
 matplotlib
 tqdm
-tensorflow
+tensorflow==2.0.0
 #tensorflow-gpu
-keras
+keras==2.3.1
 bs4
