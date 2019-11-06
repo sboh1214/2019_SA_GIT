@@ -5,6 +5,7 @@ import re
 import datetime
 import glob
 from urllib.error import URLError
+from functools import partial
 
 import dateutil.parser  # pip install python-dateutil
 import pytz
@@ -13,7 +14,8 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
-from openpyxl import load_workbook
+import xlrd
+from xlrd.sheet import ctype_text 
 
 from data import NewsData, NewsList
 
@@ -115,11 +117,11 @@ class NewsArticleCrawler:
     LinkData = []   # Title, Link, OriginalLink
     NewsData = []   # Title, Press, Date, Content
     NewsData_K = [] # NewsData List
+    error_cnt=0
 
-    UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) " \
-                "Version/12.0 Mobile/15E148 Safari/604.1 "
+    UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15"
 
-    threadCount = 56
+    threadCount = 16
 
     def __init__(self, linkData):
         self.LinkData = linkData
@@ -170,15 +172,107 @@ class NewsArticleCrawler:
                     print(morph)
     """
 
+    def multi_parser(self, html):
+        soup = BeautifulSoup(html, 'html.parser')
+        content = soup.find("div", {"class": "art_txt"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"class": "article_area"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "article_body"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "article_content"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "article_story"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "contents"}) #동아
+        if content is not None:
+            try:
+                soup1 = BeautifulSoup(content, 'html.parser')
+                content = soup1.find("div", {"class": "article_txt"})
+                return content.text
+            except:
+                pass
+        content = soup.find("div", {"id": "article_txt"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "articleBody"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "articleText"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "articletxt"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "CmAdContent"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "cont_newstext"}) #KBS
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"class": "description"}) #KBS_i
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "contents"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "contents-article"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"class": "news_article"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "news_body_id"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "NewsAdContent"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"class": "text_area"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "textBody"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"class": "txt"})
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"itemprop": "articleBody"}) #아경 ㄱㅅㄲ
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"class": "va_cont"}) #아경 ㄱㅅㄲ(2)
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"class": "view_con"})
+        if content is not None:
+            return content.text
+        content = soup.find("section", {"class": "txt"})    #MBC
+        if content is not None:
+            return content.text
+        content = soup.find("section", {"id": "articleBody"})    #ETNEWS
+        if content is not None:
+            return content.text
+        content = soup.find("div", {"id": "article-view-content-div"}) #전북일보
+        if content is not None:
+            return content.text
+        #print("PARSE FAIL")
+        #print(html)
+        self.error_cnt += 1
+        return "ERR"
+
     def Format_Naver(self, content, item):
         """
 
         """
         soup = BeautifulSoup(content, 'html.parser')
-        content_html = soup.find("div", {"id": "dic_area"})
-        if content_html is None:
-            return None
         content = soup.find("div", {"id": "dic_area"})
+        if content is None:
+            return None
         content = str(content)
         content = content.split('<a href')[0]
         content = BeautifulSoup(content, 'html.parser').text
@@ -187,21 +281,71 @@ class NewsArticleCrawler:
         # self.GetSource(content)
         return item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.')
 
-    def ReadNewsFromFolder(self, dir_name="./Data/BigKinds/*/*.xlsx"):  # Multithreaded Read Operations
+    def SmartFetch(self, url):
+        if url.startswith('http:www.'): #아시아경제 나뻐
+            url = 'http://' + url[5:]
+        elif url.startswith('www.'):
+            url = 'http://' + url
+        request = urllib.request.Request(url)
+        request.add_header("User-Agent", self.UserAgent)
+        try :
+            response = urllib.request.urlopen(request)
+            rescode = response.getcode()
+        except URLError as e:
+            print("URL Error -", e, url)
+            return "Error " + str(e)
+        except ConnectionResetError as e:
+            print("CR Error -", e, url)
+            return "Error " + str(e)
+        if rescode != 200:
+            return "Error (http)" + rescode
+        try:
+            content = response.read().decode('UTF-8')
+        except UnicodeDecodeError as e:
+            try:
+                content = response.read().decode('EUC-KR')
+            except UnicodeDecodeError as e:
+                print('ay shit')
+        if content == "":
+            #print('aye shit')
+            return None
+        content = self.multi_parser(content)
+        if content == "ERR":
+            #print(url)
+            return ""
+        #print("OK")
+        return content
+    def ReadNewsFromFolder(self, dir_name="./Test/Data/BigKinds/조국/*.xlsx"):  # Multithreaded Read Operations
         files = glob.glob(dir_name)
         print(files)
-        pool = Pool(self.threadCount)
-        results: NewsList = pool.map(self.GetFromBigKinds, files)
+        results = list()
+        for file in tqdm(files):
+            results.append(self.GetFromBigKinds(file))
         return results
-    
+
+    def ReadAppend(self, xl_sheet, row_idx):
+        #print(xl_sheet.cell(row_idx, 17).value)
+        try:
+            content = self.SmartFetch(xl_sheet.cell(row_idx, 17).value)
+        except:
+            return
+        
+        if content is None:
+            return
+        news = NewsData(id = xl_sheet.cell(row_idx, 0).value, date = xl_sheet.cell(row_idx, 1).value, press = xl_sheet.cell(row_idx, 2).value, journalist = xl_sheet.cell(row_idx, 3).value, title = xl_sheet.cell(row_idx, 4).value, content = content)
+        self.NewsData_K.append(news)
+        
     def GetFromBigKinds(self, fileName="/Users/sjk/Desktop/뉴스/Fasttrack-NewsResult_20180101-20191029.xlsx"):
-        wb = load_workbook(fileName)
-        ws = wb.active
-        row_range = list(ws)
-        row_range.pop(0)
-        for news_line in row_range:
-            news = NewsData(id = news_line[0].value, date = news_line[1].value, press = news_line[2].value, journalist = news_line[3].value, title = news_line[4].value, content = news_line[16].value)
-            self.NewsData_K.append(news)
+        wb = xlrd.open_workbook(fileName)
+        xl_sheet = wb.sheet_by_index(0)
+        pool = Pool(self.threadCount)
+        func = partial(self.ReadAppend, xl_sheet)
+        #pool.map(func, range(1, xl_sheet.nrows))
+        with tqdm(total=xl_sheet.nrows) as pbar:
+            for i, _ in tqdm(enumerate(pool.imap_unordered(func, range(1, xl_sheet.nrows))), unit=" Articles"):
+                pbar.update()
+        #pool.close()
+        #pool.join()
         return 
 
     def SaveNews(self, fileName="NewsData"):
@@ -209,12 +353,16 @@ class NewsArticleCrawler:
 
         """
 
-        self.GetNewsMultithread()
+        #self.GetNewsMultithread()
+        self.ReadNewsFromFolder()
         news_list = list()
+        """
         for item in self.NewsData:
             if item is not None:
                 news_list.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
         news_list = NewsList(news_list + self.ReadNewsFromFolder())
+        """
+        news_list = NewsList(self.ReadNewsFromFolder())
         #news_list.printCell()
         news_list.exportPickle(fileName)
         return "Success"
@@ -226,6 +374,8 @@ if __name__ == "__main__":
     # api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=30, display=100)
     api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=1, display=10)
     crawler = NewsArticleCrawler(api.LinkData)
-    crawler.LinkData = api.LinkData
+    #crawler.LinkData = api.LinkData
     crawler.SaveNews()
+    #print(crawler.SmartFetch('https://www.asiae.co.kr/article/2019101509145170905'))
     print("Done!")
+    print("ERR CNT:", crawler.error_cnt)

@@ -5,7 +5,6 @@ from math import sqrt, ceil
 import sys
 import platform
 
-#os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
 from keras.callbacks import TensorBoard
@@ -185,16 +184,16 @@ class NewsML():
         self.__info(f'[{next(count)}] Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
 
-        #self.__info(f'[{next(count)}] Connect Tensorboard')
-        #tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
+        self.__info(f'[{next(count)}] Connect Tensorboard')
+        tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
         self.__info(f'[{next(count)}] Run RNN Model')
         self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, 
-        batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2, verbose=self.Verbose)
+        batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
         self.__info(f'[{next(count)}] Run CNN Model')
         self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, 
-        batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2, verbose=self.Verbose)
+        batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2, verbose=self.Verbose, callbacks=[tb])
 
         self.__info(f'[{next(count)}] Make Plot')
         self.__make_plot()
