@@ -92,7 +92,7 @@ class KeyWording:
     headline = set()  # 기사 제목 키워드 추출
     news_keyword = dict()
     word_regress = dict()
-    news_list = self.NewsList.importPickle()
+    news_list = self.NewsList.importPickle("./Test/Data/NewsData")
 
     def congressTotalImport(self,fileName):
         with open("./Test/Data/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
@@ -154,10 +154,10 @@ class KeyWording:
                     if word not in news.Keyword.keys():
                         news.Keyword[word] = 0
                     news.Keyword+=1
-    
-    def newsRegression(self):
-        for keyword in self.keyword:
-            
+            beta_square_sum=0
+            f_minus_alpha=0
+            for keyword in news.Keyword:
+                        
             
     def printByCount(self, count):
         for word in self.keyword.keys():
