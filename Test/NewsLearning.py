@@ -1,3 +1,7 @@
+"""
+Execute this file with command line
+$ python3 NewsLearning.py file=Test/NewsData dev=False
+"""
 import itertools
 from datetime import datetime
 import os
@@ -5,7 +9,6 @@ from math import sqrt, ceil
 import sys
 import platform
 
-#os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
 from keras.callbacks import TensorBoard
@@ -17,26 +20,6 @@ import numpy as np
 from bs4 import BeautifulSoup
 
 from data import NewsList
-
-'''
-from khaiii import KhaiiiApi
-class MorphAnalyzer:
-    """
-    
-    """
-    @classmethod
-    def getMorph(cls, sentence):
-        """
-        >>> MorphAnalyzer.getMorph()
-        {'안녕': 'IC', ',': 'SP', '세상': 'NNG'}
-        """
-        api = KhaiiiApi()
-        dic = {}
-        for word in api.analyze(sentence):
-            for morph in word.morphs:
-                dic[morph.lex] = morph.tag
-        return dic
-'''
 
 
 class Data:
@@ -310,10 +293,17 @@ class NewsMLHistory():
 
 if __name__ == '__main__':
     ml = NewsML()
-    ml.Dev = True
     for item in sys.argv:
-        if item[:4] == 'file':
-            ml.File = item[5:]
+        eq = item.index('=')
+        if item[:eq] == 'file':
+            ml.File = item[(eq+1):]
+        elif item[:eq] == 'dev':
+            if item[(eq+1):]=='true':
+                ml.Dev = True
+            elif item[(eq+1):]=='false':
+                ml.Dev = False
+            else:
+                raise ValueError()
     ml.run()
     #ml.show_plot()
     while True:
