@@ -4,6 +4,7 @@ import csv
 import re
 import datetime
 import glob
+import pickle
 from urllib.error import URLError
 from functools import partial
 
@@ -26,7 +27,7 @@ class NaverNewsAPI:
     """
     Client_ID = 'Mo_tHONZPPs7OeNzZQAE'
     Client_Secret = 'vVve0WqXE5'
-    LinkData = []  # Title, Link, OriginalLink, pubDate
+    LinkData = []  # {Title, Link, OriginalLink, Date}
 
     def RequestNewsLink(self, query, n=1, display=100, sort="sim"):
         """
@@ -56,8 +57,8 @@ class NaverNewsAPI:
             title = self.MakePlainText(item['title'])
             link = item['link']
             original_link = item['originallink']
-            pub_date = dateutil.parser.parse(item['pubDate'])  # Tue, 04 Jun 2019 11:52:00 +0900
-            self.LinkData.append({"Title": title, "Link": link, "OriginalLink": original_link, "pubDate": pub_date})
+            pub_date = dateutil.parser.parse(item['Date'])  # Tue, 04 Jun 2019 11:52:00 +0900
+            self.LinkData.append({"Title": title, "Link": link, "OriginalLink": original_link, "Date": pub_date})
         return "Success"
 
     @staticmethod
@@ -76,23 +77,6 @@ class NaverNewsAPI:
         title = re.sub('號', '호', title)
         return title
 
-    def SaveLink(self, fileName="LinkData.csv"):
-        """
-
-        """
-        with open(fileName, 'w', encoding='utf-8', newline='') as f:
-            try:
-                csv_file = csv.writer(f)
-                for item in tqdm(self.LinkData):
-                    title = item['Title']
-                    link = item['Link']
-                    original_link = item['OriginalLink']
-                    csv_file.writerow([title, link, original_link])
-                    f.close()
-                return "Success"
-            except FileNotFoundError:
-                return "Error : File {fileName} does not exist."
-
     def RequestNewsByDate(self, query, begin=datetime.datetime(1900, 1, 1), end=datetime.datetime.today(),
                           pages=1000, display=100):  # 날짜를 기준으로 거르기
         """
@@ -102,10 +86,10 @@ class NaverNewsAPI:
         for x in tqdm(range(1, pages + 1), desc='Grabbing Links'):
             self.RequestNewsLink(query, x, display, sort='date')
             for data in self.LinkData:
-                if data['pubDate'].replace(tzinfo=utc) < begin.replace(tzinfo=utc):
+                if data['Date'].replace(tzinfo=utc) < begin.replace(tzinfo=utc):
                     self.LinkData.remove(data)
                     continue
-                if data['pubDate'].replace(tzinfo=utc) > end.replace(tzinfo=utc):
+                if data['Date'].replace(tzinfo=utc) > end.replace(tzinfo=utc):
                     self.LinkData.remove(data)
                     break
 
@@ -114,50 +98,59 @@ class NewsArticleCrawler:
     """
 
     """
-    LinkData = []   # Title, Link, OriginalLink
-    NewsData = []   # Title, Press, Date, Content
-    NewsData_K = [] # NewsData List
-    error_cnt=0
-
+    LinkData = []   # {Title, Link, OriginalLink, Date}
+    NewsData = []   # {Title, Press, Date, Content, ID, Journalist}
+    NewsRaw = [] 
+    NewsLink = []
+    error_cnt={'url':0, 'connection':0, 'data':0, 'parse':0}
     UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15"
+    threadCount = 4
 
-    threadCount = 16
-
-    def __init__(self, linkData):
-        self.LinkData = linkData
-
-    def GetNewsMultithread(self):
-        # threadCount = 4
-        """
-
-        """
-        pool = Pool(self.threadCount)
-        print("Fetching News...")
-        pool.map(self.GetNews, self.LinkData)
-
-    def GetNews(self, item):
-        url = item["Link"]
+    def FetchNews(self, url):
+        if url == '':
+            self.error_cnt['url'] += 1
+            return ""
+        elif url.startswith('http:www.'): #아시아경제 나뻐
+            url = 'http://' + url[5:]
+        elif url.startswith('www.'): #빅카인즈 에휴
+            url = 'http://' + url
         request = urllib.request.Request(url)
         request.add_header("User-Agent", self.UserAgent)
         try :
             response = urllib.request.urlopen(request)
             rescode = response.getcode()
         except URLError as e:
-            print("URL Error -", e, url)
-            return "Error " + str(e)
+            #print("URL Error -", e, url)
+            self.error_cnt['url'] += 1
+            return ""
         except ConnectionResetError as e:
-            print("CR Error -", e, url)
-            return "Error " + str(e)
+            #print("CR Error -", e, url)
+            self.error_cnt['connection'] += 1
+            return ""
         if rescode != 200:
-            return "Error (http)" + rescode
-        content = response.read()
-        if "news.naver.com" in url:  # 네이버뉴스 모바일 - "dic_area"
-            formatted_data = self.Format_Naver(content, item)
-            if formatted_data is None:
-                print('Error (Parsing Newspaper Content)')
-            self.NewsData.append(formatted_data)
-        else:
-            pass
+            self.error_cnt['connection'] += 1
+            return ""
+        try:
+            content = response.read().decode('UTF-8')
+        except UnicodeDecodeError as e:
+            try:
+                content = response.read().decode('EUC-KR')
+            except UnicodeDecodeError as e:
+                self.error_cnt['data'] += 1
+                return ""
+        return content
+
+    def FetchNewsWrapper(self, newslink):
+        self.NewsRaw.append({
+            'Content' : self.FetchNews(newslink['OriginalLink']),
+            'Title' : newslink['Title'],
+            'Link' : newslink['OriginalLink'],
+            'ID' : newslink['ID'],
+            'Journalist' : newslink['Journalist'],
+            'Press': newslink['Press'],
+            'Date': newslink['Date']
+            })
+
     """
     def GetSource(self, content):
         # khaiii만 돌리기엔 신뢰성이 낮다(예 : 더불어민주당 => 더불어 민/NNP 주/NNG 당/NNP으로)
@@ -257,64 +250,32 @@ class NewsArticleCrawler:
         content = soup.find("section", {"id": "articleBody"})    #ETNEWS
         if content is not None:
             return content.text
-        content = soup.find("div", {"id": "article-view-content-div"}) #전북일보
+        content = soup.find("div", {"id": "articleBodyContents"}) #네이버
         if content is not None:
+            content = content.split('<a href')[0]
+            content = BeautifulSoup(content, 'html.parser').text
             return content.text
         #print("PARSE FAIL")
         #print(html)
-        self.error_cnt += 1
+        self.error_cnt['parse'] += 1
         return "ERR"
 
-    def Format_Naver(self, content, item):
-        """
-
-        """
-        soup = BeautifulSoup(content, 'html.parser')
-        content = soup.find("div", {"id": "dic_area"})
-        if content is None:
-            return None
-        content = str(content)
-        content = content.split('<a href')[0]
-        content = BeautifulSoup(content, 'html.parser').text
-        date = soup.find("span", {"class": "media_end_head_info_datestamp_time"}).text
-        #print(content)
-        # self.GetSource(content)
-        return item["Title"], urlparse(item["OriginalLink"]).netloc, date, content.split('.')
+    def MultiParseWrapper(self, newsitem):
+        if newsitem['Content'] == "":
+            self.error_cnt['data'] += 1
+            return
+        self.NewsData.append(NewsData(title=newsitem['Title'], press=newsitem['Press'], date=newsitem['Date'], content=self.multi_parser(newsitem['Content']), id=newsitem['ID'], journalist=newsitem['Journalist']))
 
     def SmartFetch(self, url):
-        if url.startswith('http:www.'): #아시아경제 나뻐
-            url = 'http://' + url[5:]
-        elif url.startswith('www.'):
-            url = 'http://' + url
-        request = urllib.request.Request(url)
-        request.add_header("User-Agent", self.UserAgent)
-        try :
-            response = urllib.request.urlopen(request)
-            rescode = response.getcode()
-        except URLError as e:
-            print("URL Error -", e, url)
-            return "Error " + str(e)
-        except ConnectionResetError as e:
-            print("CR Error -", e, url)
-            return "Error " + str(e)
-        if rescode != 200:
-            return "Error (http)" + rescode
-        try:
-            content = response.read().decode('UTF-8')
-        except UnicodeDecodeError as e:
-            try:
-                content = response.read().decode('EUC-KR')
-            except UnicodeDecodeError as e:
-                print('ay shit')
+        content = self.FetchNews(url)
         if content == "":
-            #print('aye shit')
+            self.error_cnt['data'] += 1
             return None
         content = self.multi_parser(content)
         if content == "ERR":
-            #print(url)
             return ""
-        #print("OK")
         return content
+    
     def ReadNewsFromFolder(self, dir_name="./Test/Data/BigKinds/조국/*.xlsx"):  # Multithreaded Read Operations
         files = glob.glob(dir_name)
         print(files)
@@ -333,7 +294,7 @@ class NewsArticleCrawler:
         if content is None:
             return
         news = NewsData(id = xl_sheet.cell(row_idx, 0).value, date = xl_sheet.cell(row_idx, 1).value, press = xl_sheet.cell(row_idx, 2).value, journalist = xl_sheet.cell(row_idx, 3).value, title = xl_sheet.cell(row_idx, 4).value, content = content)
-        self.NewsData_K.append(news)
+        #self.NewsData_K.append(news)
         
     def GetFromBigKinds(self, fileName="/Users/sjk/Desktop/뉴스/Fasttrack-NewsResult_20180101-20191029.xlsx"):
         wb = xlrd.open_workbook(fileName)
@@ -346,36 +307,71 @@ class NewsArticleCrawler:
                 pbar.update()
         #pool.close()
         #pool.join()
-        return 
-
-    def SaveNews(self, fileName="NewsData"):
-        """
-
-        """
-
-        #self.GetNewsMultithread()
-        self.ReadNewsFromFolder()
-        news_list = list()
-        """
-        for item in self.NewsData:
-            if item is not None:
-                news_list.append(NewsData(title=item[0], press=item[1], date=item[2], content=item[3]))
-        news_list = NewsList(news_list + self.ReadNewsFromFolder())
-        """
-        news_list = NewsList(self.ReadNewsFromFolder())
-        #news_list.printCell()
-        news_list.exportPickle(fileName)
-        return "Success"
+        return self.NewsData_K
+    
+    def ParseFromBigKinds(self, fileName="/Users/sjk/Desktop/뉴스/Fasttrack-NewsResult_20180101-20191029.xlsx"):
+        wb = xlrd.open_workbook(fileName)
+        xl_sheet = wb.sheet_by_index(0)
+        for row_idx in range(1, xl_sheet.nrows):
+            self.NewsLink.append({
+                'OriginalLink': xl_sheet.cell(row_idx, 17).value,
+                'Title': xl_sheet.cell(row_idx, 4).value,
+                'Date': xl_sheet.cell(row_idx, 1).value,
+                'Press':  xl_sheet.cell(row_idx, 2).value,
+                'ID' : xl_sheet.cell(row_idx, 0).value,
+                'Journalist': xl_sheet.cell(row_idx, 3).value
+            })
+        return self.NewsLink
 
 
 if __name__ == "__main__":
     api = NaverNewsAPI()
     # api.RequestNewsLink("19대 대선", 1, 1) #제안 : '이번 대선' 등으로 나타내는 경우도 있으므로 '대선' 이라고 찾은 뒤에 날짜로 필터링
     # api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=30, display=100)
-    api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=1, display=10)
-    crawler = NewsArticleCrawler(api.LinkData)
+    #api.RequestNewsByDate("19대 대선", datetime.datetime(2019, 6, 5), pages=1, display=10)
+    #crawler = NewsArticleCrawler(api.LinkData)
+    crawler = NewsArticleCrawler()
     #crawler.LinkData = api.LinkData
-    crawler.SaveNews()
+
+    #threadCount = int(input("Thread Count?"))
+    threadCount = 4
+
+    #PARSE NEWS LINK
+    print("OBTAINING LINK FROM EXCEL FILE...")
+    files = glob.glob("./Test/Data/BigKinds/조국/*.xlsx")
+    #files = glob.glob("/Users/sjk/Desktop/*.xlsx")
+    print(files)
+    results = list()
+    for file in tqdm(files, unit=" Sheet"):
+        crawler.ParseFromBigKinds(file)
+    with open("NewsParseLink.dat", 'wb') as f:
+        pickle.dump(crawler.NewsLink, f)
+
+    #DOWNLOAD FROM LINK
+    print("DOWNLOADING FROM LINK...")
+    with open("NewsParseLink.dat", 'rb') as f:
+        newslinklist = pickle.load(f)
+        pool = Pool(threadCount*2)
+        with tqdm(total=len(newslinklist)) as pbar:
+            for i, _ in tqdm(enumerate(pool.imap_unordered(crawler.FetchNewsWrapper, newslinklist)), unit=" Articles"):
+                pbar.update()
+    with open("NewsRawData.dat", 'wb') as f:
+        pickle.dump(crawler.NewsRaw, f)
+
+    #PARSE FROM DOWNLOADS
+    print("PARSING DOWNLOADS...")
+    with open("NewsRawData.dat", 'rb') as f:
+        newslist = pickle.load(f)
+        pool = Pool(threadCount)
+        with tqdm(total=len(newslist)) as pbar:
+            for i, _ in tqdm(enumerate(pool.imap_unordered(crawler.MultiParseWrapper, newslist)), unit=" Articles"):
+                pbar.update()
+    with open("NewsData.dat", 'wb') as f:
+        pickle.dump(crawler.NewsData, f)
+        
+
+
+    #crawler.ReadNewsFromFolder()
     #print(crawler.SmartFetch('https://www.asiae.co.kr/article/2019101509145170905'))
-    print("Done!")
-    print("ERR CNT:", crawler.error_cnt)
+    print("처리 끗")
+    print("(펑)한 개수:", crawler.error_cnt)
