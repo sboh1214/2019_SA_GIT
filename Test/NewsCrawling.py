@@ -5,6 +5,7 @@ import re
 import datetime
 import glob
 import pickle
+import chardet
 from urllib.error import URLError
 from functools import partial
 
@@ -12,11 +13,13 @@ import dateutil.parser  # pip install python-dateutil
 import pytz
 
 from tqdm import tqdm
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from multiprocessing.dummy import Pool
 import xlrd
 from xlrd.sheet import ctype_text 
+from selectolax.parser import HTMLParser
+import requests
 
 from data import NewsData, NewsList
 
@@ -114,20 +117,22 @@ class NewsArticleCrawler:
             url = 'http://' + url[5:]
         elif url.startswith('www.'): #빅카인즈 에휴
             url = 'http://' + url
+        """
         request = urllib.request.Request(url)
         request.add_header("User-Agent", self.UserAgent)
         try :
             response = urllib.request.urlopen(request)
             rescode = response.getcode()
         except URLError as e:
-            #print("URL Error -", e, url)
+            print("URL Error -", e, url)
             self.error_cnt['url'] += 1
             return ""
         except ConnectionResetError as e:
-            #print("CR Error -", e, url)
+            print("CR Error -", e, url)
             self.error_cnt['connection'] += 1
             return ""
         if rescode != 200:
+            print("Response Error -", rescode, url)
             self.error_cnt['connection'] += 1
             return ""
         try:
@@ -138,7 +143,20 @@ class NewsArticleCrawler:
             except UnicodeDecodeError as e:
                 self.error_cnt['data'] += 1
                 return ""
-        return content
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15',
+            'Host': url.split('/')[2],
+            'Connection': "keep-alive",
+            'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            'Accept-language': "ko-kr", 
+            'Referer': 'https://duckduckgo.com/',
+            "Accept-Encoding": "gzip, deflate, br"
+        }
+        r = requests.get(url, headers=headers)
+        if r.apparent_encoding != "Windows-1254":
+            r.encoding = r.apparent_encoding
+        return r.text
 
     def FetchNewsWrapper(self, newslink):
         self.NewsRaw.append({
@@ -165,113 +183,85 @@ class NewsArticleCrawler:
                     print(morph)
     """
 
-    def multi_parser(self, html):
-        soup = BeautifulSoup(html, 'html.parser')
-        content = soup.find("div", {"class": "art_txt"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"class": "article_area"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "article_body"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "article_content"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "article_story"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "contents"}) #동아
-        if content is not None:
-            try:
-                soup1 = BeautifulSoup(content, 'html.parser')
-                content = soup1.find("div", {"class": "article_txt"})
-                return content.text
-            except:
-                pass
-        content = soup.find("div", {"id": "article_txt"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "articleBody"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "articleText"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "articletxt"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "CmAdContent"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "cont_newstext"}) #KBS
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"class": "description"}) #KBS_i
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "contents"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "contents-article"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"class": "news_article"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "news_body_id"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "NewsAdContent"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"class": "text_area"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "textBody"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"class": "txt"})
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"itemprop": "articleBody"}) #아경 ㄱㅅㄲ
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"class": "va_cont"}) #아경 ㄱㅅㄲ(2)
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"class": "view_con"})
-        if content is not None:
-            return content.text
-        content = soup.find("section", {"class": "txt"})    #MBC
-        if content is not None:
-            return content.text
-        content = soup.find("section", {"id": "articleBody"})    #ETNEWS
-        if content is not None:
-            return content.text
-        content = soup.find("div", {"id": "articleBodyContents"}) #네이버
-        if content is not None:
-            content = content.split('<a href')[0]
-            content = BeautifulSoup(content, 'html.parser').text
-            return content.text
-        #print("PARSE FAIL")
-        #print(html)
-        self.error_cnt['parse'] += 1
-        return "ERR"
+    def multi_parser(self, html, link):
+        #soup = BeautifulSoup(html, 'html.parser')
+        if "khan" in link:
+            selector = "#articleBody > p"
+        elif "kmib" in link:
+            selector = "#articleBody"
+        elif "kookje" in link:
+            selector = ".news_article"
+        elif "naeil" in link:
+            selector = "#contents > p"
+        elif "donga" in link:
+            selector = ".article_txt" #동아 좆까
+        elif "dt.co.kr" in link:
+            selector = ".art_txt"
+        elif "mk.co.kr" in link: #빅카인즈 주소 오류ㅠ
+            selector = "#article_body"
+        elif "imaeil" in link:
+            selector = ".article_area > p" 
+        elif "moneytoday" in link:
+            selector = "#textBody" #리디렉션 오류
+        elif "munhwa" in link:
+            selector = "#NewsAdContent" 
+        elif "sedaily" in link:
+            selector = ".view_con"
+        elif "segye" in link:
+            selector = "#article_txt > article > p"
+        elif "asiae." in link:
+            selector = "#txt_area > p"
+        elif "ajunews." in link:
+            selector = "#articleBody"
+        elif "etnews." in link:
+            selector = "#articleBody > p"
+        elif "chosun." in link:
+            selector = "#news_body_id"
+        elif "joins." in link:
+            selector = "#article_body"
+        elif "fnnews." in link:
+            selector = "#article_content"
+        elif "hani." in link:
+            selector = "#contents-article .text"
+        elif "hankyung." in link:
+            selector = "#articletxt"
+        elif "hankookilbo." in link: #BigKinds 주소오류
+            selector = "#article_story"
+        elif "heraldcorp." in link:
+            selector = "#articleText > p"
+        elif "kbs." in link:
+            selector = "#cont_newstext"
+        elif "imbc." in link:
+            selector = ".txt"
+        elif "obsnews." in link:
+            selector = "#CmAdContent"
+        elif "sbs." in link:
+            selector = ".text_area"
+        elif "ytn." in link:
+            selector = "#CmAdContent > span"
+        elif "naver." in link:
+            selector = "#articleBodyContents"
+        else:
+            self.error_cnt['parse'] += 1
+            return "ERR"
+        text = ""
+        for node in HTMLParser(html).css(selector):
+            text += node.html
+        return re.sub('\xa0', '', text)
 
     def MultiParseWrapper(self, newsitem):
         if newsitem['Content'] == "":
             self.error_cnt['data'] += 1
             return
-        self.NewsData.append(NewsData(title=newsitem['Title'], press=newsitem['Press'], date=newsitem['Date'], content=self.multi_parser(newsitem['Content']), id=newsitem['ID'], journalist=newsitem['Journalist']))
+        self.NewsData.append(NewsData(title=newsitem['Title'], press=newsitem['Press'], date=newsitem['Date'], content=self.multi_parser(newsitem['Content'], newsitem['Link']), id=newsitem['ID'], journalist=newsitem['Journalist']))
 
     def SmartFetch(self, url):
         content = self.FetchNews(url)
+        #print(content)
         if content == "":
             self.error_cnt['data'] += 1
             return None
-        content = self.multi_parser(content)
+        content = self.multi_parser(content, url)
         if content == "ERR":
             return ""
         return content
@@ -368,10 +358,9 @@ if __name__ == "__main__":
                 pbar.update()
     with open("NewsData.dat", 'wb') as f:
         pickle.dump(crawler.NewsData, f)
-        
+    print("처리 끗")
+    print("(펑)한 개수:", crawler.error_cnt)
 
 
     #crawler.ReadNewsFromFolder()
-    #print(crawler.SmartFetch('https://www.asiae.co.kr/article/2019101509145170905'))
-    print("처리 끗")
-    print("(펑)한 개수:", crawler.error_cnt)
+    #print(crawler.SmartFetch(input("URL :")))
