@@ -4,6 +4,7 @@ from itertools import groupby
 from tqdm import tqdm
 from multiprocessing.dummy import Pool
 import pickle, code, traceback, signal
+from sklearn.linear_model import LinearRegression
 
 class MorphAnalyzer():
     def morphAnalyze(self, content):
@@ -85,7 +86,6 @@ class KeyWording:
     congress = dict()  # 국회의원의 편향도 (정당기반)
     headline = set()  # 기사 제목 키워드 추출
     news_keyword = dict()
-    word_regress = dict()
 
     def congressTotalImport(self,fileName):
         with open("./Test/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
@@ -99,25 +99,20 @@ class KeyWording:
         # NNG:일반명사 NNP:고유명사 NNB:의존명사 NP:대명사 NR:수사
         # JC:접속조사 JKG:관형격조사(소유격조사) 
         # VA : 형용사
-    def pdfKeywording(self):
-        minute_list=self.pdfList.importPickle()
-        for i in range(len(minute_list)):
-            for j in range(i+1,len(minute_list)):
-                if minute_list[i]==minute_list[j]:
-                    print("Same Minute!")
-        for minute in tqdm(minute_list,desc='Pdf Keywording'):
+    def pdfKeywordingMulti(self,minute):
+        try:
             for comment in minute:
                 if len(minute)==1:
                     continue
-                #pool=Pool(self.thread)
                 morph=self.morphAnalyzer.morphAnalyze(comment[1])
                 com_keyword=self.morphAnalyzer.morphKeywording(morph)
                 for word in com_keyword:
                     if comment[0][1] == '의원':
                         if comment[0][0] in self.congress.keys():
                             if(word not in self.keyword.keys()):
-                                self.keyword[word]={'left':0,'right':0,'a':0,'b':0}
-                            if self.congress[comment[0][0]]<0.5: 
+                                self.keyword[word]={'left':0,'right':0,'count':0,'a':0,'b':0}
+                            self.keyword[word]['count']+=1
+                            if self.congress[comment[0][0]]['bias']<0.5: 
                                 self.keyword[word]['left']+=1
                             else:
                                 self.keyword[word]['right']+=1
@@ -126,7 +121,7 @@ class KeyWording:
                             self.congress[comment[0][0]]['word'][word]+=1
                             self.congress[comment[0][0]]['count']+=1
         except:
-            print("PDF 펑")
+            print("카이 펑")
 
     def pdfKeywording(self,threadCount=56):
         minute_list = self.pdfList.importPickle()
@@ -173,13 +168,19 @@ class KeyWording:
         for word in del_word:
             del self.keyword[word]
 
-    def exportPickle(self,fileName="./Test/pdfKeyword"):
-        with open(fileName + ".dat", 'wb') as f:
+    def exportPickle(self,keywordFile="./Test/Data/pdfKeyword",congressFile="./Test/Data/congressData"):
+        with open(keywordFile + ".dat", 'wb') as f:
             pickle.dump(self.keyword, f)
+        with open(congressFile + ".dat", 'wb') as f:
+            pickle.dump(self.congress,f)
+        print("Pickle Export Finish")
     
-    def importPickle(self,fileName="./Test/pdfKeyword"):
-        with open(fileName + ".dat", 'rb') as f:
+    def importPickle(self,keywordFile="./Test/Data/pdfKeyword",congressFile="./Test/Data/congressData"):
+        with open(keywordFile + ".dat", 'rb') as f:
             self.keyword = pickle.load(f)
+        with open(congressFile + ".dat", 'rb') as f:
+            self.congress = pickle.load(f)
+        print("Pickle Import Finish")
     
     def headlineKeywording(self):
         news_list = self.newsList.importPickle()
@@ -244,41 +245,15 @@ class KeyWording:
 
     def newsLabeling(self,fileName="NewsData",threadCount=56):
         news_list = self.newsList.importPickle("./Test/Data/NewsData")
-        excepted=0
         pool=Pool(threadCount)
         result:NewsList = pool.map(self.newsLabelingMulti,news_list)
         newsList=NewsList(result)
         newsList.exportPickle(fileName)
 
-    '''def newsTagging(self):
-        news_list = self.newsList.importPickle()
-        for news in news_list:
-            #print(news.Content )
-            all_bias = 0
-            for index, sentence in enumerate(news.Content):
-                sentence_split = sentence.split()
-                sentence_bias = 0
-                for wordIndex in range(len(sentence_split)-1):
-                    for i in range(1, 5):
-                        if wordIndex + i > len(sentence_split):
-                            break
-                        word = ""
-                        for j in range(wordIndex, wordIndex+i):
-                            word += sentence_split[j] + " "
-                        if word in self.keyword.keys():
-                            word_bias = self.keyword[word]['bias']  # 우편향일수록 양수. 중도가 0
-                            sentence_bias += word_bias
-                            all_bias += word_bias
-                news.Sentence_Bias[index] = sentence_bias
-            news.Bias = all_bias
-            print(news.Content, all_bias/len(news.Content))
-            print("\n\n\n")'''
-
 if __name__ == "__main__":
     threadCount=int(input("Process Count?"))
     keyWording = KeyWording()
     keyWording.congressTotalImport("total")
-    keyWording.newsKeywording()
     keyWording.importPickle()
     #keyWording.pdfKeywording(threadCount)
     #keyWording.exportPickle()
