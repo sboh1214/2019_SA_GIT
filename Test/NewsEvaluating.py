@@ -7,11 +7,11 @@ import pickle, code, traceback, signal
 from sklearn.linear_model import LinearRegression
 
 class MorphAnalyzer():
+    api = KhaiiiApi()
     def morphAnalyze(self, content):
-        api = KhaiiiApi()
         result = list()
         #print(content,'\n')
-        for word in api.analyze(content):
+        for word in self.api.analyze(content):
             for morph in word.morphs:
                 result.append([morph.lex,morph.tag])
         return result
@@ -86,13 +86,18 @@ class KeyWording:
     congress = dict()  # 국회의원의 편향도 (정당기반)
     headline = set()  # 기사 제목 키워드 추출
     news_keyword = dict()
+    news_list = list()
+    pdf_error = 0
+    news_error = 0
+    news_success = 0
+    with open("./Test/Data/NewsData" + ".dat", 'rb') as f:
+        news_list = pickle.load(f)
 
     def congressTotalImport(self,fileName):
         with open("./Test/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
             congress_list = f.read().split()
-            #   print(congress_list)
             for i in range(len(congress_list)//4):
-                self.congress[congress_list[4*i+1]]={'bias':(float(congress_list[4*i+3])+50)/100,'word':dict()}
+                self.congress[congress_list[4*i+1]]={'bias':(float(congress_list[4*i+3])+50)/100,'word':dict(),'count':0}
 
                     
 
@@ -104,8 +109,9 @@ class KeyWording:
             for comment in minute:
                 if len(minute)==1:
                     continue
-                morph=self.morphAnalyzer.morphAnalyze(comment[1])
-                com_keyword=self.morphAnalyzer.morphKeywording(morph)
+                morphAnalyzer=MorphAnalyzer()
+                morph=morphAnalyzer.morphAnalyze(comment[1])
+                com_keyword=morphAnalyzer.morphKeywording(morph)
                 for word in com_keyword:
                     if comment[0][1] == '의원':
                         if comment[0][0] in self.congress.keys():
@@ -121,14 +127,16 @@ class KeyWording:
                             self.congress[comment[0][0]]['word'][word]+=1
                             self.congress[comment[0][0]]['count']+=1
         except:
-            print("카이 펑")
+            self.pdf_error+=1
+            return -1
 
     def pdfKeywording(self,threadCount=56):
-        minute_list = self.pdfList.importPickle()
-        print("PDF Keywording Start")
+        minute_list = self.pdfList.importPickle("./Test/Data/parsedPDF.dat")
         pool = Pool(threadCount)
-        pool.map(self.pdfKeywordingMulti, minute_list)
-        print("PDF Keywording Finish")
+        with tqdm(total=len(minute_list)) as pbar:
+            for i, _ in tqdm(enumerate(pool.imap_unordered(self.pdfKeywordingMulti,minute_list))):
+                pbar.update()
+        print("Error PDF :",self.pdf_error)
 
     def keywordRegression(self):
         for keyword in self.keyword.keys():
@@ -201,63 +209,85 @@ class KeyWording:
             del(self.keyword[word])
 
     def newsLabelingMulti(self,news):
-        try:
-            news_keyword = dict()
-            news_count = 0
-            for index, sentence in enumerate(news.Content):
-                sentence_keyword = dict()
-                sentence_count = 0
+        news_keyword = dict()
+        news_count = 0
+        for index, sentence in enumerate(news.Content):
+            sentence_keyword = dict()
+            sentence_count = 0
+            try:
                 morph = self.morphAnalyzer.morphAnalyze(sentence)
                 sent_analyze = self.morphAnalyzer.morphKeywording(morph)
-                for word in sent_analyze:
-                    if word in self.keyword():
-                        if word not in news_keyword:
-                            news_keyword[word]=0
-                            sentence_keyword[word]=0
-                        elif word not in sentence_keyword:
-                            sentence_keyword[word]=0
+            except:
+                self.news_error+=1
+                news.Sentence_Bias[index]=None
+                continue
+            self.news_success+=1
+            for word in sent_analyze:
+                if word in self.keyword():
+                    if word not in news_keyword:
+                        news_keyword[word]=0
+                        sentence_keyword[word]=0
+                    elif word not in sentence_keyword:
+                        sentence_keyword[word]=0
                     news_count+=1
                     sentence_count+=1
                     news_keyword[word]+=1
                     sentence_keyword[word]+=1
-                sent_beta_square_sum=0
-                sent_f_minus_alpha=0
-                for keyword in sentence_keyword:
-                    f_pn=sentence_keyword[keyword]/sentence_count
-                    if keyword in self.keyword:
-                        sent_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
-                        sent_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
-                news.Sentence_Bias[index]=sent_f_minus_alpha/sent_beta_square_sum
-
-            news_beta_square_sum=0
-            news_f_minus_alpha=0
-            for keyword in news_keyword:
-                f_pn=news_keyword[keyword]/news_count
+            sent_f_minus_alpha=0
+            sent_beta_square_sum=0
+            for keyword in sentence_keyword:
+                f_pn=sentence_keyword[keyword]/sentence_count
                 if keyword in self.keyword:
-                    news_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
-                    news_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
-            news.Bias=news_f_minus_alpha/news_beta_square_sum   
-            return news
-        except:
-            news.Bias=None
-            print("News 펑")
-            return news
+                    sent_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
+                    sent_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
+            if(sent_beta_square_sum!=0):
+                news.Sentence_Bias[index]=sent_f_minus_alpha/sent_beta_square_sum
+            else:
+                news.Sentence_Bias[index]=None
 
-    def newsLabeling(self,fileName="NewsData",threadCount=56):
-        news_list = self.newsList.importPickle("./Test/Data/NewsData")
+        news_beta_square_sum=0
+        news_f_minus_alpha=0
+        for keyword in news_keyword:
+            f_pn=news_keyword[keyword]/news_count
+            if keyword in self.keyword:
+                news_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
+                news_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
+        if(news_beta_square_sum!=0):
+            news.Bias=news_f_minus_alpha/news_beta_square_sum   
+        else:
+            news.Bias=None
+        return news
+
+    def newsLabeling(self,threadCount=56,start=0,finish=1):
         pool=Pool(threadCount)
-        result:NewsList = pool.map(self.newsLabelingMulti,news_list)
-        newsList=NewsList(result)
-        newsList.exportPickle(fileName)
+        with tqdm(total=len(self.news_list[start:finish])) as pbar:
+            for i, _ in tqdm(enumerate(pool.imap_unordered(self.newsLabelingMulti,self.news_list[start:finish]))):
+                pbar.update()
+        print("Error News :",self.news_error)
+        print("Success News :",self.news_success)
+        del_list=list()
+        del_count=0
+        for news in self.news_list:
+            if news.Bias==None:
+                del_list.append(news)
+                del_count+=1
+        for news in del_list:
+            self.news_list.remove(news)
+        print(del_count," news removed")
+        with open("./Test/Data/NewsData"+str(start)+"-"+str(finish) + ".dat", 'wb') as f:
+            pickle.dump(self.news_list[start:finish], f)
+        print("Export Done")
 
 if __name__ == "__main__":
     threadCount=int(input("Process Count?"))
+    start=int(input("Start index?"))
+    finish=int(input("Finish index?"))
     keyWording = KeyWording()
     keyWording.congressTotalImport("total")
     keyWording.importPickle()
+    keyWording.keywordRegression()
     #keyWording.pdfKeywording(threadCount)
     #keyWording.exportPickle()
-    keyWording.keywordRegression()
     #keyWording.printByCount(5)
     #keyWording.printByCount(1)
-    keyWording.newsLabeling(threadCount)
+    keyWording.newsLabeling(threadCount,start,finish)

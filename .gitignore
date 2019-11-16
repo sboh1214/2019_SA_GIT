@@ -130,3 +130,4 @@ graph/
 Test/Data/*
 result/
 NewsData.dat
+Test/parsedPDF.dat
