@@ -159,30 +159,30 @@ class NewsML():
     
     def run(self):
         count = itertools.count(1)
-        self.__info(next(count) + ' Prepare Data')
+        self.__info(str(next(count)) + ' Prepare Data')
         self.Data = Data(file=self.File, max_len=self.RnnMaxLen ,verbose=self.Verbose, dev=self.Dev)
 
-        self.__info(next(count) + ' Build RNN Model')
+        self.__info(str(next(count)) + ' Build RNN Model')
         self.Rnn = RNN(max_len=self.RnnMaxLen,data_count=len(self.Data.RnnX),max_features=20000)
 
-        self.__info(next(count) + ' Build CNN Model')
+        self.__info(str(next(count)) + ' Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
 
-        #self.__info(next(count) + ' Connect Tensorboard')
+        #self.__info(str(next(count)) + ' Connect Tensorboard')
         #tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
-        self.__info(next(count) + ' Run RNN Model')
+        self.__info(str(next(count)) + ' Run RNN Model')
         self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, 
         batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2, verbose=self.Verbose)
 
-        self.__info(next(count) + ' Run CNN Model')
+        self.__info(str(next(count)) + ' Run CNN Model')
         self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, 
         batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2, verbose=self.Verbose)
 
-        self.__info(next(count) + ' Make Plot')
+        self.__info(str(next(count)) + ' Make Plot')
         self.__make_plot()
 
-        self.__info(next(count) + ' Save History and Configuration as HTML')
+        self.__info(str(next(count)) + ' Save History and Configuration as HTML')
         self.__save()
 
         self.__info('Done')
