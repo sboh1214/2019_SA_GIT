@@ -146,16 +146,16 @@ class CNN(models.Model):
 
 class NewsML():
     def __init__(self):
-        self.Verbose:bool = True
-        self.Dev:bool = True
+        self.Verbose = True
+        self.Dev = True
         self.File = 'Test/NewsData'
 
-        self.RnnEpoch:int = 10
-        self.RnnBatch:int = 256
-        self.RnnMaxLen:int = 100
+        self.RnnEpoch = 10
+        self.RnnBatch = 256
+        self.RnnMaxLen = 100
 
-        self.CnnEpoch:int = 10
-        self.CnnBatch:int = 256
+        self.CnnEpoch = 10
+        self.CnnBatch = 256
     
     def run(self):
         count = itertools.count(1)
@@ -224,12 +224,12 @@ class NewsML():
 
     def __save(self):
         n = datetime.now()
-        os.makedirs(f'./result/{n}')
+        os.makedirs('./result/'+n)
 
-        self.Fig.savefig(f'./result/{n}/plot.png', dpi=1000)
+        self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
 
-        self.Rnn.save(f'./result/{n}/rnn_model.h5')
-        self.Cnn.save(f'./result/{n}/cnn_model.h5')
+        self.Rnn.save('./result/' + n + '/rnn_model.h5')
+        self.Cnn.save('./result/' + n + '/cnn_model.h5')
 
         basic="""
         <html>
@@ -274,7 +274,7 @@ class NewsML():
         self.Rnn.summary(print_fn=lambda x: self.__to_html(soup,'cnn_model',x))
 
         soup.prettify()
-        with open(f'./result/{n}/result.html',mode='w') as f:
+        with open('./result/' + n + '/result.html',mode='w') as f:
             f.write(str(soup))
 
     def __to_html(self, soup:BeautifulSoup, class_:str , x:str):
