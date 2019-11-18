@@ -46,7 +46,7 @@ class Data:
 
     @staticmethod
     def __info(msg):
-        print('\033[35m'+msg+'\033[0m')
+        print('\033[35m'+str(msg)+'\033[0m')
 
     @staticmethod
     def __clean(sentences:list):
@@ -78,10 +78,10 @@ class Data:
         news_list = NewsList().importPickle(filename)
         if self.Verbose:
             print(news_list[0])
-        print(len(news_list) + 'News Imported')
+        print(str(len(news_list)) + 'News Imported')
         if self.Dev == True:
             news_list = news_list[:100]
-        print(len(news_list) + 'News will be used')
+        print(str(len(news_list)) + 'News will be used')
 
         self.__info('\nAnalyze Data')
         max_sentence = 0
@@ -89,7 +89,7 @@ class Data:
             if max_sentence<len(i.Content):
                 max_sentence = len(i.Content)
         self.CnnSide = max_sentence
-        print('Maximum Sentences Count : ' + max_sentence)
+        print('Maximum Sentences Count : ' + str(max_sentence))
 
         self.__info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
         for news in tqdm(news_list):
@@ -99,13 +99,13 @@ class Data:
             self.CnnX.append(self.__square(news.Sentence_Bias, max_sentence))
             self.CnnY.append(news.Bias)
         if self.Verbose:
-            self.__info('Rnn X ('+len(self.RnnX)+')')
+            self.__info('Rnn X ('+str(len(self.RnnX))+')')
             print(str(self.RnnX[0])[:80])
-            self.__info('Rnn X ('+len(self.RnnY)+')')
+            self.__info('Rnn X ('+str(len(self.RnnY))+')')
             print(self.RnnY[0])
-            self.__info('Rnn X ('+len(self.CnnX)+')')
+            self.__info('Rnn X ('+str(len(self.CnnX))+')')
             print(str(self.CnnX[0])[:80])
-            self.__info('Rnn X ('+len(self.CnnY)+')')
+            self.__info('Rnn X ('+str(len(self.CnnY))+')')
             print(self.CnnY[0])
 
         self.__info('\nPre-Process CnnX')
@@ -146,43 +146,43 @@ class CNN(models.Model):
 
 class NewsML():
     def __init__(self):
-        self.Verbose:bool = True
-        self.Dev:bool = True
+        self.Verbose = True
+        self.Dev = True
         self.File = 'Test/NewsData'
 
-        self.RnnEpoch:int = 10
-        self.RnnBatch:int = 256
-        self.RnnMaxLen:int = 100
+        self.RnnEpoch = 10
+        self.RnnBatch = 256
+        self.RnnMaxLen = 100
 
-        self.CnnEpoch:int = 10
-        self.CnnBatch:int = 256
+        self.CnnEpoch = 10
+        self.CnnBatch = 256
     
     def run(self):
         count = itertools.count(1)
-        self.__info(next(count) + ' Prepare Data')
+        self.__info(str(next(count)) + ' Prepare Data')
         self.Data = Data(file=self.File, max_len=self.RnnMaxLen ,verbose=self.Verbose, dev=self.Dev)
 
-        self.__info(next(count) + ' Build RNN Model')
+        self.__info(str(next(count)) + ' Build RNN Model')
         self.Rnn = RNN(max_len=self.RnnMaxLen,data_count=len(self.Data.RnnX),max_features=20000)
 
-        self.__info(next(count) + ' Build CNN Model')
+        self.__info(str(next(count)) + ' Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
 
-        #self.__info(next(count) + ' Connect Tensorboard')
+        #self.__info(str(next(count)) + ' Connect Tensorboard')
         #tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
-        self.__info(next(count) + ' Run RNN Model')
+        self.__info(str(next(count)) + ' Run RNN Model')
         self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, 
         batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2, verbose=self.Verbose)
 
-        self.__info(next(count) + ' Run CNN Model')
+        self.__info(str(next(count)) + ' Run CNN Model')
         self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, 
         batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2, verbose=self.Verbose)
 
-        self.__info(next(count) + ' Make Plot')
+        self.__info(str(next(count)) + ' Make Plot')
         self.__make_plot()
 
-        self.__info(next(count) + ' Save History and Configuration as HTML')
+        self.__info(str(next(count)) + ' Save History and Configuration as HTML')
         self.__save()
 
         self.__info('Done')
@@ -224,12 +224,12 @@ class NewsML():
 
     def __save(self):
         n = datetime.now()
-        os.makedirs(f'./result/{n}')
+        os.makedirs('./result/'+n)
 
-        self.Fig.savefig(f'./result/{n}/plot.png', dpi=1000)
+        self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
 
-        self.Rnn.save(f'./result/{n}/rnn_model.h5')
-        self.Cnn.save(f'./result/{n}/cnn_model.h5')
+        self.Rnn.save('./result/' + n + '/rnn_model.h5')
+        self.Cnn.save('./result/' + n + '/cnn_model.h5')
 
         basic="""
         <html>
@@ -274,7 +274,7 @@ class NewsML():
         self.Rnn.summary(print_fn=lambda x: self.__to_html(soup,'cnn_model',x))
 
         soup.prettify()
-        with open(f'./result/{n}/result.html',mode='w') as f:
+        with open('./result/' + n + '/result.html',mode='w') as f:
             f.write(str(soup))
 
     def __to_html(self, soup:BeautifulSoup, class_:str , x:str):
