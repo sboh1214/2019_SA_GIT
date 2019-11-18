@@ -78,10 +78,10 @@ class Data:
         news_list = NewsList().importPickle(filename)
         if self.Verbose:
             print(news_list[0])
-        print(f'{len(news_list)} News Imported')
+        print(len(news_list) + 'News Imported')
         if self.Dev == True:
             news_list = news_list[:100]
-        print(f'{len(news_list)} News will be used')
+        print(len(news_list) + 'News will be used')
 
         self.__info('\nAnalyze Data')
         max_sentence = 0
@@ -89,7 +89,7 @@ class Data:
             if max_sentence<len(i.Content):
                 max_sentence = len(i.Content)
         self.CnnSide = max_sentence
-        print(f'Maximum Sentences Count : {max_sentence}')
+        print('Maximum Sentences Count : ' + max_sentence)
 
         self.__info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
         for news in tqdm(news_list):
