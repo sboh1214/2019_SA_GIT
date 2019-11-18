@@ -99,13 +99,13 @@ class Data:
             self.CnnX.append(self.__square(news.Sentence_Bias, max_sentence))
             self.CnnY.append(news.Bias)
         if self.Verbose:
-            self.__info(f'Rnn X ({len(self.RnnX)})')
+            self.__info('Rnn X ('+len(self.RnnX)+')')
             print(str(self.RnnX[0])[:80])
-            self.__info(f'Rnn Y ({len(self.RnnY)})')
+            self.__info('Rnn X ('+len(self.RnnY)+')')
             print(self.RnnY[0])
-            self.__info(f'Cnn X ({len(self.CnnX)})')
+            self.__info('Rnn X ('+len(self.CnnX)+')')
             print(str(self.CnnX[0])[:80])
-            self.__info(f'Cnn Y ({len(self.CnnY)})')
+            self.__info('Rnn X ('+len(self.CnnY)+')')
             print(self.CnnY[0])
 
         self.__info('\nPre-Process CnnX')
@@ -159,33 +159,33 @@ class NewsML():
     
     def run(self):
         count = itertools.count(1)
-        self.__info(f'[{next(count)}] Prepare Data')
+        self.__info(next(count) + ' Prepare Data')
         self.Data = Data(file=self.File, max_len=self.RnnMaxLen ,verbose=self.Verbose, dev=self.Dev)
 
-        self.__info(f'[{next(count)}] Build RNN Model')
+        self.__info(next(count) + ' Build RNN Model')
         self.Rnn = RNN(max_len=self.RnnMaxLen,data_count=len(self.Data.RnnX),max_features=20000)
 
-        self.__info(f'[{next(count)}] Build CNN Model')
+        self.__info(next(count) + ' Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
 
-        #self.__info(f'[{next(count)}] Connect Tensorboard')
+        #self.__info(next(count) + ' Connect Tensorboard')
         #tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
-        self.__info(f'[{next(count)}] Run RNN Model')
+        self.__info(next(count) + ' Run RNN Model')
         self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY, 
         batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2, verbose=self.Verbose)
 
-        self.__info(f'[{next(count)}] Run CNN Model')
+        self.__info(next(count) + ' Run CNN Model')
         self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY, 
         batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2, verbose=self.Verbose)
 
-        self.__info(f'[{next(count)}] Make Plot')
+        self.__info(next(count) + ' Make Plot')
         self.__make_plot()
 
-        self.__info(f'[{next(count)}] Save History and Configuration as HTML')
+        self.__info(next(count) + ' Save History and Configuration as HTML')
         self.__save()
 
-        self.__info(f'Done')
+        self.__info('Done')
 
     def __make_plot(self):
         """
@@ -294,14 +294,26 @@ class NewsMLHistory():
 if __name__ == '__main__':
     ml = NewsML()
     for item in sys.argv:
-        eq = item.index('=')
-        if item[:eq] == 'file':
+        eq = item.find('=')
+        if eq==-1:
+            continue
+
+        elif item[:eq] == 'file':
             ml.File = item[(eq+1):]
+
         elif item[:eq] == 'dev':
             if item[(eq+1):]=='true':
                 ml.Dev = True
             elif item[(eq+1):]=='false':
                 ml.Dev = False
+            else:
+                raise ValueError()
+        
+        elif item[:eq] == 'verbose':
+            if item[(eq+1):]=='true':
+                ml.Verbose = True
+            elif item[(eq+1):]=='false':
+                ml.Verbose = False
             else:
                 raise ValueError()
     ml.run()
