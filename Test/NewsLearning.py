@@ -38,7 +38,7 @@ class Data:
 
     History = None
 
-    def __init__(self, file, verbose=False, max_len=100, dev=False):
+    def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, dev=False):
         self.Verbose = verbose
         self.MaxLen = max_len
         self.Dev = dev
@@ -70,7 +70,7 @@ class Data:
         else:
             return a.extend([0 for _ in range(max_len-len(a))])
 
-    def __get_news_data(self, filename: str):
+    def __get_news_data(self, filename):
         """
 
         """
@@ -148,7 +148,7 @@ class NewsML():
     def __init__(self):
         self.Verbose = True
         self.Dev = True
-        self.File = 'Test/NewsData'
+        self.File = 'NewsData0_20000'
 
         self.RnnEpoch = 10
         self.RnnBatch = 256
