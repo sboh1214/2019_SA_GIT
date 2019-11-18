@@ -46,7 +46,7 @@ class Data:
 
     @staticmethod
     def __info(msg):
-        print('\033[35m'+msg+'\033[0m')
+        print('\033[35m'+str(msg)+'\033[0m')
 
     @staticmethod
     def __clean(sentences:list):
@@ -78,10 +78,10 @@ class Data:
         news_list = NewsList().importPickle(filename)
         if self.Verbose:
             print(news_list[0])
-        print(len(news_list) + 'News Imported')
+        print(str(len(news_list)) + 'News Imported')
         if self.Dev == True:
             news_list = news_list[:100]
-        print(len(news_list) + 'News will be used')
+        print(str(len(news_list)) + 'News will be used')
 
         self.__info('\nAnalyze Data')
         max_sentence = 0
@@ -89,7 +89,7 @@ class Data:
             if max_sentence<len(i.Content):
                 max_sentence = len(i.Content)
         self.CnnSide = max_sentence
-        print('Maximum Sentences Count : ' + max_sentence)
+        print('Maximum Sentences Count : ' + str(max_sentence))
 
         self.__info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
         for news in tqdm(news_list):
@@ -99,13 +99,13 @@ class Data:
             self.CnnX.append(self.__square(news.Sentence_Bias, max_sentence))
             self.CnnY.append(news.Bias)
         if self.Verbose:
-            self.__info('Rnn X ('+len(self.RnnX)+')')
+            self.__info('Rnn X ('+str(len(self.RnnX))+')')
             print(str(self.RnnX[0])[:80])
-            self.__info('Rnn X ('+len(self.RnnY)+')')
+            self.__info('Rnn X ('+str(len(self.RnnY))+')')
             print(self.RnnY[0])
-            self.__info('Rnn X ('+len(self.CnnX)+')')
+            self.__info('Rnn X ('+str(len(self.CnnX))+')')
             print(str(self.CnnX[0])[:80])
-            self.__info('Rnn X ('+len(self.CnnY)+')')
+            self.__info('Rnn X ('+str(len(self.CnnY))+')')
             print(self.CnnY[0])
 
         self.__info('\nPre-Process CnnX')
