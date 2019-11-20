@@ -278,7 +278,7 @@ if __name__ == "__main__":
     if s == "o":
         #PARSE NEWS LINK
         print("OBTAINING LINK FROM EXCEL FILE...")
-        files = glob.glob("./Test/Data/BigKinds/*/*.xlsx")
+        files = glob.glob("./BigKinds/*/*.xlsx")
         #files = glob.glob("/Users/sjk/Desktop/*.xlsx")
         print(files)
         results = list()
