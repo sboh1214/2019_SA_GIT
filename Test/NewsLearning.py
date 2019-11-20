@@ -78,6 +78,9 @@ class Data:
         if self.Dev:
             news_list = news_list[:100]
         print(str(len(news_list)) + 'News will be used')
+        bias = [i['bias'] for i in news_list]
+        print('Maximum Bias'+str(max(bias)))
+        print('Minimum Bias'+str(min(bias)))
 
         self.__info('\nAnalyze Data')
         max_sentence = 0
@@ -113,6 +116,7 @@ class Data:
             print(self.CnnY[2])
 
         self.__info('\nPre-Process CnnX')
+        self.CnnX = np.array(self.CnnX)
         for cnnx_item in tqdm(self.CnnX):
             cnnx_item.reshape(max_sentence, max_sentence, 1)
         if self.Verbose:
