@@ -60,9 +60,10 @@ class Data:
         if len(a) == max_len:
             return a
         elif len(a) > max_len:
-            return a[0:len(a)]
+            return a[0:max_len]
         else:
-            return a.extend([0 for _ in range(max_len - len(a))])
+            a.extend([0 for _ in range(max_len - len(a))])
+            return a
 
     def __get_news_data(self, filename):
         """
@@ -79,8 +80,8 @@ class Data:
             news_list = news_list[:100]
         print(str(len(news_list)) + 'News will be used')
         bias = [i.Bias for i in news_list]
-        print('Maximum Bias'+str(max(bias)))
-        print('Minimum Bias'+str(min(bias)))
+        print('Maximum Bias : '+str(max(bias)))
+        print('Minimum Bias : '+str(min(bias)))
 
         self.__info('\nAnalyze Data')
         max_sentence = 0
@@ -102,23 +103,23 @@ class Data:
             print(str(self.RnnX[0])[:80])
             print(str(self.RnnX[1])[:80])
             print(str(self.RnnX[2])[:80])
-            self.__info('Rnn X (' + str(len(self.RnnY)) + ')')
+            self.__info('Rnn Y (' + str(len(self.RnnY)) + ')')
             print(self.RnnY[0])
             print(self.RnnY[1])
             print(self.RnnY[2])
-            self.__info('Rnn X (' + str(len(self.CnnX)) + ')')
+            self.__info('Cnn X (' + str(len(self.CnnX)) + ')')
             print(str(self.CnnX[0])[:80])
             print(str(self.CnnX[1])[:80])
             print(str(self.CnnX[2])[:80])
-            self.__info('Rnn X (' + str(len(self.CnnY)) + ')')
+            self.__info('Cnn Y (' + str(len(self.CnnY)) + ')')
             print(self.CnnY[0])
             print(self.CnnY[1])
             print(self.CnnY[2])
 
         self.__info('\nPre-Process CnnX')
-        self.CnnX = np.array(self.CnnX)
-        for cnnx_item in tqdm(self.CnnX):
-            cnnx_item.reshape(max_sentence, max_sentence, 1)
+        cnnx = np.array(self.CnnX)
+        cnnx = cnnx.reshape((len(cnnx), max_sentence, max_sentence, 1))
+        self.CnnX = cnnx
         if self.Verbose:
             print(str(self.CnnX[0])[:80])
             print(str(self.CnnX[1])[:80])
@@ -127,11 +128,11 @@ class Data:
         self.__info('\nPre-Process RnnX')
         tokenizer = Tokenizer()
         tokenizer.fit_on_texts(self.RnnX)
-        rnn_x_list = tokenizer.texts_to_sequences(self.RnnX)
-        for i in tqdm(rnn_x_list):
+        rnnXlist = tokenizer.texts_to_sequences(self.RnnX)
+        for i in tqdm(rnnXlist):
             self.__pad(i, self.MaxLen)
-        rnn_x_array = np.array([self.__pad(i, self.MaxLen) for i in rnn_x_list])
-        self.RnnX = rnn_x_array
+        rnnXarray = np.array([self.__pad(i, self.MaxLen) for i in rnnXlist])
+        self.RnnX = rnnXarray
         if self.Verbose:
             print(str(self.RnnX[0])[:80])
             print(str(self.RnnX[1])[:80])
@@ -140,7 +141,7 @@ class Data:
 
 class RNN(models.Model):
     def __init__(self, max_len, data_count, max_features=20000):
-        x = layers.Input((max_len,))
+        x = layers.Input(shape=(max_len,))
         h = layers.Embedding(max_features, 128)(x)
         h = layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
         y = layers.Dense(units=1, activation=activations.sigmoid)(h)
@@ -241,7 +242,7 @@ class NewsML:
         pass
 
     def __save(self):
-        n = datetime.now()
+        n = str(datetime.now())
         os.makedirs('./result/' + n)
 
         self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
@@ -334,5 +335,6 @@ if __name__ == '__main__':
                 raise ValueError()
     ml.run()
     # ml.show_plot()
+    print("Ctrl+C to quit")
     while True:
         pass
