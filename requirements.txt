@@ -3,4 +3,8 @@ tqdm
 tensorflow==2.0.0
 #tensorflow-gpu
 keras==2.3.1
-bs4
+python-dateutil
+pytz
+xlrd
+selectolax
+requests

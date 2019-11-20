@@ -131,3 +131,9 @@ Test/Data/*
 result/
 NewsData.dat
 Test/parsedPDF.dat
+/Test/NewsDataM.dat
+/Test/NewsData.dat
+/NewsParseLink.dat
+/NewsRawData.dat
+/NewsRawData.dat998
+/NewsRawData_자유한국당.dat
