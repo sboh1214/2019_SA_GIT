@@ -78,7 +78,7 @@ class Data:
         if self.Dev:
             news_list = news_list[:100]
         print(str(len(news_list)) + 'News will be used')
-        bias = [i['bias'] for i in news_list]
+        bias = [i.Bias for i in news_list]
         print('Maximum Bias'+str(max(bias)))
         print('Minimum Bias'+str(min(bias)))
 
