@@ -3,7 +3,7 @@ version: '3'
 services:
   python:
     build: .
-    command: python /code/Test/NewsLearning.py file=/code/Test/NewsData
+    command: python Test/NewsLearning.py file=Test/NewsData verbose=true dev=false
     ports:
       - "8000:8000
     volumes:
