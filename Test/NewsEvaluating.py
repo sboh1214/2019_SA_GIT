@@ -164,6 +164,7 @@ class KeyWording:
             if self.keyword[word]['left']+self.keyword[word]['right'] >= count:
                 #pp=PrettyPrinter(indent=4)
                 print((word,self.keyword[word]))
+
     def printByBias(self, bias1, bias2):
         for word in self.keyword.keys():
             if self.keyword[word]['bias'] >= bias1 and self.keyword[word]['bias'] <=bias2:
@@ -212,7 +213,10 @@ class KeyWording:
     def newsLabelingMulti(self,index):
         news_keyword = dict()
         news_count = 0
-        for index, sentence in enumerate(self.news_list[index].Content):
+        if(type(self.news_list[index].Content)==str):
+            self.news_list[index].Bias=-9999
+            return -1
+        for sent_index, sentence in enumerate(self.news_list[index].Content):
             sentence_keyword = dict()
             sentence_count = 0
             try:
@@ -220,7 +224,7 @@ class KeyWording:
                 sent_analyze = self.morphAnalyzer.morphKeywording(morph)
             except:
                 self.sentence_error+=1
-                self.news_list[index].Content.Sentence_Bias[index]=None
+                self.news_list[index].Sentence_Bias[sent_index]=-9999
                 continue
             
             for word in sent_analyze:
@@ -246,8 +250,17 @@ class KeyWording:
                 self.news_list[index].Sentence_Bias[index]=sent_f_minus_alpha/sent_beta_square_sum
             else:
                 self.sentence_none+=1
-                self.news_list[index].Sentence_Bias[index]=None
-
+                self.news_list[index].Sentence_Bias[index]=0
+        del_list=list()
+        for sent_index,sentence in enumerate(self.news_list[index].Content):
+            if self.news_list[index].Sentence_Bias[sent_index]==-9999:
+                del_list.append(sentence)
+        
+        for sentence in del_list:
+            self.news_list[index].Content.remove(sentence)
+            self.news_list[index].Sentence_Bias.remove(-9999)
+            
+            
         news_beta_square_sum=0
         news_f_minus_alpha=0
         for keyword in news_keyword:
@@ -258,7 +271,7 @@ class KeyWording:
         if(news_beta_square_sum!=0):
             self.news_list[index].Bias=news_f_minus_alpha/news_beta_square_sum   
         else:
-            self.news_list[index].Bias=None
+            self.news_list[index].Bias=0
         return news
 
     def newsLabeling(self,threadCount=56,start=0,finish=1):
@@ -273,13 +286,13 @@ class KeyWording:
         del_list=list()
         del_count=0
         for news in self.news_list:
-            if news.Bias==None:
+            if news.Bias==-9999:
                 del_list.append(news)
                 del_count+=1
-        '''for news in del_list:
-            self.news_list.remove(news)'''
+        for news in del_list:
+            self.news_list.remove(news)
         print(del_count," news is None")
-        with open("./Test/Data/NewsData"+str(start)+"-"+str(finish) + ".dat", 'wb') as f:
+        with open("./Test/Data/NewsData"+"_"+str(start)+"_"+str(finish) + ".dat", 'wb') as f:
             pickle.dump(self.news_list[start:finish], f)
         print("Export Done")
 
