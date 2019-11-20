@@ -49,12 +49,6 @@ class Data:
         print('\033[35m' + str(msg) + '\033[0m')
 
     @staticmethod
-    def __clean(sentences: list):
-        for i in range(len(sentences)):
-            sentences[i] = sentences[i].replace('\n', '')
-        return sentences
-
-    @staticmethod
     def __square(a, side):
         output = [[0] * side for _ in range(side)]
         for i, bias in enumerate(a):
@@ -95,7 +89,7 @@ class Data:
 
         self.__info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
         for news in tqdm(news_list):
-            self.RnnX.extend(self.__clean(news.Content))
+            self.RnnX.extend(news.Content)
             self.RnnY.extend(news.Sentence_Bias)
             length = ceil(sqrt(len(news.Sentence_Bias)))
             self.CnnX.append(self.__square(news.Sentence_Bias, max_sentence))
