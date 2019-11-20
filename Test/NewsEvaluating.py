@@ -88,8 +88,9 @@ class KeyWording:
     news_keyword = dict()
     news_list = list()
     pdf_error = 0
-    news_error = 0
-    news_success = 0
+    sentence_error = 0
+    sentence_success = 0
+    sentence_none = 0
     with open("./Test/Data/NewsData" + ".dat", 'rb') as f:
         news_list = pickle.load(f)
 
@@ -208,20 +209,20 @@ class KeyWording:
         for word in delWord:
             del(self.keyword[word])
 
-    def newsLabelingMulti(self,news):
+    def newsLabelingMulti(self,index):
         news_keyword = dict()
         news_count = 0
-        for index, sentence in enumerate(news.Content):
+        for index, sentence in enumerate(self.news_list[index].Content):
             sentence_keyword = dict()
             sentence_count = 0
             try:
                 morph = self.morphAnalyzer.morphAnalyze(sentence)
                 sent_analyze = self.morphAnalyzer.morphKeywording(morph)
             except:
-                self.news_error+=1
-                news.Sentence_Bias[index]=None
+                self.sentence_error+=1
+                self.news_list[index].Content.Sentence_Bias[index]=None
                 continue
-            self.news_success+=1
+            
             for word in sent_analyze:
                 if word in self.keyword():
                     if word not in news_keyword:
@@ -241,9 +242,11 @@ class KeyWording:
                     sent_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
                     sent_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
             if(sent_beta_square_sum!=0):
-                news.Sentence_Bias[index]=sent_f_minus_alpha/sent_beta_square_sum
+                self.sentence_success+=1
+                self.news_list[index].Sentence_Bias[index]=sent_f_minus_alpha/sent_beta_square_sum
             else:
-                news.Sentence_Bias[index]=None
+                self.sentence_none+=1
+                self.news_list[index].Sentence_Bias[index]=None
 
         news_beta_square_sum=0
         news_f_minus_alpha=0
@@ -253,27 +256,29 @@ class KeyWording:
                 news_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
                 news_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
         if(news_beta_square_sum!=0):
-            news.Bias=news_f_minus_alpha/news_beta_square_sum   
+            self.news_list[index].Bias=news_f_minus_alpha/news_beta_square_sum   
         else:
-            news.Bias=None
+            self.news_list[index].Bias=None
         return news
 
     def newsLabeling(self,threadCount=56,start=0,finish=1):
         pool=Pool(threadCount)
-        with tqdm(total=len(self.news_list[start:finish])) as pbar:
-            for i, _ in tqdm(enumerate(pool.imap_unordered(self.newsLabelingMulti,self.news_list[start:finish]))):
+        index = [i for i in range(start,finish)]
+        with tqdm(total=len(index)) as pbar:
+            for i, _ in tqdm(enumerate(pool.imap_unordered(self.newsLabelingMulti,index))):
                 pbar.update()
-        print("Error News :",self.news_error)
-        print("Success News :",self.news_success)
+        print("Error News :",self.sentence_error)
+        print("None News:",self.sentence_none)
+        print("Success News :",self.sentence_success)
         del_list=list()
         del_count=0
         for news in self.news_list:
             if news.Bias==None:
                 del_list.append(news)
                 del_count+=1
-        for news in del_list:
-            self.news_list.remove(news)
-        print(del_count," news removed")
+        '''for news in del_list:
+            self.news_list.remove(news)'''
+        print(del_count," news is None")
         with open("./Test/Data/NewsData"+str(start)+"-"+str(finish) + ".dat", 'wb') as f:
             pickle.dump(self.news_list[start:finish], f)
         print("Export Done")
