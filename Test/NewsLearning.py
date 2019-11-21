@@ -8,6 +8,7 @@ import os
 from math import sqrt, ceil
 import sys
 import platform
+from multiprocessing.dummy import Pool
 
 from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
@@ -65,6 +66,12 @@ class Data:
             a.extend([0 for _ in range(max_len - len(a))])
             return a
 
+    def __build_data(self, news):
+        self.RnnX.extend(news.Content)
+        self.RnnY.extend(news.Sentence_Bias)
+        self.CnnX.append(self.__square(news.Sentence_Bias, self.CnnSide))
+        self.CnnY.append(news.Bias)
+
     def __get_news_data(self, filename):
         """
 
@@ -75,10 +82,10 @@ class Data:
             print(news_list[0])
             print(news_list[1])
             print(news_list[2])
-        print(str(len(news_list)) + 'News Imported')
+        print(str(len(news_list)) + ' News Imported')
         if self.Dev:
             news_list = news_list[:100]
-        print(str(len(news_list)) + 'News will be used')
+        print(str(len(news_list)) + ' News will be used')
         bias = [i.Bias for i in news_list]
         print('Maximum Bias : '+str(max(bias)))
         print('Minimum Bias : '+str(min(bias)))
@@ -88,16 +95,15 @@ class Data:
         for i in news_list:
             if max_sentence < len(i.Content):
                 max_sentence = len(i.Content)
-        self.CnnSide = max_sentence
+        self.CnnSide = ceil(sqrt(max_sentence))
         print('Maximum Sentences Count : ' + str(max_sentence))
 
         self.__info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
-        for news in tqdm(news_list):
-            self.RnnX.extend(news.Content)
-            self.RnnY.extend(news.Sentence_Bias)
-            length = ceil(sqrt(len(news.Sentence_Bias)))
-            self.CnnX.append(self.__square(news.Sentence_Bias, max_sentence))
-            self.CnnY.append(news.Bias)
+        pool = Pool(60)
+        with tqdm(total=len(news_list)) as bar:
+            for i, _ in tqdm(enumerate(pool.imap_unordered(self.__build_data, news_list))):
+                bar.update()
+
         if self.Verbose:
             self.__info('Rnn X (' + str(len(self.RnnX)) + ')')
             print(str(self.RnnX[0])[:80])
@@ -118,7 +124,7 @@ class Data:
 
         self.__info('\nPre-Process CnnX')
         cnnx = np.array(self.CnnX)
-        cnnx = cnnx.reshape((len(cnnx), max_sentence, max_sentence, 1))
+        cnnx = cnnx.reshape((len(cnnx), self.CnnSide, self.CnnSide, 1))
         self.CnnX = cnnx
         if self.Verbose:
             print(str(self.CnnX[0])[:80])
