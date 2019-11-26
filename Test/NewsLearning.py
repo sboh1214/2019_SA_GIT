@@ -29,11 +29,11 @@ class Data:
     """
     tokenizer = Tokenizer()
 
-    def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, dev=False):
+    def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, dev=False, divide=100000):
         self.Verbose = verbose
         self.MaxLen = max_len
         self.Dev = dev
-        self.Divide = 1000000
+        self.Divide = divide
         self.__get_news_data(filename=file)
 
     @staticmethod
@@ -155,7 +155,7 @@ class NewsML:
     def __init__(self):
         self.Verbose = True
         self.Dev = True
-        self.File = 'NewsData0_20000'
+        self.File = 'NewsData_0_20000'
 
         self.RnnEpoch = 10
         self.RnnBatch = 256
@@ -163,11 +163,12 @@ class NewsML:
 
         self.CnnEpoch = 10
         self.CnnBatch = 256
+        self.Divide = 1000000
 
     def run(self):
         count = itertools.count(1)
         self.__info(str(next(count)) + ' Prepare Data')
-        self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, dev=self.Dev)
+        self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, dev=self.Dev, divide=self.Divide)
 
         self.__info(str(next(count)) + ' Build RNN Model')
         self.Rnn = RNN(max_len=self.RnnMaxLen, data_count=len(self.Data.RnnX), max_features=20000)
