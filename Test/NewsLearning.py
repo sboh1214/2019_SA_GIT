@@ -73,7 +73,7 @@ class Data:
             self.__print(news_list)
         print(str(len(news_list)) + ' News Imported')
         if self.Dev:
-            news_list = news_list[:self.Divide]
+            news_list = news_list[:30000]
         print(str(len(news_list)) + ' News will be used')
         bias = [i.Bias for i in news_list]
         print('Maximum Bias : '+str(max(bias)))
