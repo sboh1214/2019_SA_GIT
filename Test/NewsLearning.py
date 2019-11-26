@@ -27,22 +27,13 @@ class Data:
     """
 
     """
-
     tokenizer = Tokenizer()
-    RnnX = []
-    RnnY = []
-    CnnX = []
-    CnnY = []
-
-    Rnn_Model = None
-    Cnn_Model = None
-
-    History = None
 
     def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, dev=False):
         self.Verbose = verbose
         self.MaxLen = max_len
         self.Dev = dev
+        self.Divide = 1000000
         self.__get_news_data(filename=file)
 
     @staticmethod
@@ -66,11 +57,11 @@ class Data:
             a.extend([0 for _ in range(max_len - len(a))])
             return a
 
-    def __build_data(self, news):
-        self.RnnX.extend(news.Content)
-        self.RnnY.extend(news.Sentence_Bias)
-        self.CnnX.append(self.__square(news.Sentence_Bias, self.CnnSide))
-        self.CnnY.append(news.Bias)
+    @staticmethod
+    def __print(a):
+        print(str(a[0])[:80])
+        print(str(a[1])[:80])
+        print(str(a[2])[:80])
 
     def __get_news_data(self, filename):
         """
@@ -79,12 +70,10 @@ class Data:
         self.__info('\nImport News List')
         news_list = NewsList().importPickle(filename)
         if self.Verbose:
-            print(news_list[0])
-            print(news_list[1])
-            print(news_list[2])
+            self.__print(news_list)
         print(str(len(news_list)) + ' News Imported')
         if self.Dev:
-            news_list = news_list[:100]
+            news_list = news_list[:self.Divide]
         print(str(len(news_list)) + ' News will be used')
         bias = [i.Bias for i in news_list]
         print('Maximum Bias : '+str(max(bias)))
@@ -98,51 +87,46 @@ class Data:
         self.CnnSide = ceil(sqrt(max_sentence))
         print('Maximum Sentences Count : ' + str(max_sentence))
 
+        self.__info('\nMake Array of Data')
+        self.RnnX = []
+        self.RnnY = []
+        self.CnnX = []
+        self.CnnY = []
+
         self.__info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
-        pool = Pool(60)
-        with tqdm(total=len(news_list)) as bar:
-            for i, _ in tqdm(enumerate(pool.imap_unordered(self.__build_data, news_list))):
-                bar.update()
+        for news in tqdm(news_list):
+            self.RnnX.extend(news.Content)
+            self.RnnY.extend(news.Sentence_Bias)
+            self.CnnX.append(self.__square(news.Sentence_Bias, self.CnnSide))
+            self.CnnY.append(news.Bias)
 
         if self.Verbose:
             self.__info('Rnn X (' + str(len(self.RnnX)) + ')')
-            print(str(self.RnnX[0])[:80])
-            print(str(self.RnnX[1])[:80])
-            print(str(self.RnnX[2])[:80])
+            self.__print(self.RnnX)
             self.__info('Rnn Y (' + str(len(self.RnnY)) + ')')
-            print(self.RnnY[0])
-            print(self.RnnY[1])
-            print(self.RnnY[2])
+            self.__print(self.RnnY)
             self.__info('Cnn X (' + str(len(self.CnnX)) + ')')
-            print(str(self.CnnX[0])[:80])
-            print(str(self.CnnX[1])[:80])
-            print(str(self.CnnX[2])[:80])
+            self.__print(self.CnnX)
             self.__info('Cnn Y (' + str(len(self.CnnY)) + ')')
-            print(self.CnnY[0])
-            print(self.CnnY[1])
-            print(self.CnnY[2])
+            self.__print(self.CnnY)
 
         self.__info('\nPre-Process CnnX')
         cnnx = np.array(self.CnnX)
         cnnx = cnnx.reshape((len(cnnx), self.CnnSide, self.CnnSide, 1))
         self.CnnX = cnnx
         if self.Verbose:
-            print(str(self.CnnX[0])[:80])
-            print(str(self.CnnX[1])[:80])
-            print(str(self.CnnX[2])[:80])
+            self.__print(self.CnnX)
 
         self.__info('\nPre-Process RnnX')
         tokenizer = Tokenizer()
         tokenizer.fit_on_texts(self.RnnX)
-        rnnXlist = tokenizer.texts_to_sequences(self.RnnX)
-        for i in tqdm(rnnXlist):
+        rnn_x_list = tokenizer.texts_to_sequences(self.RnnX)
+        for i in tqdm(rnn_x_list):
             self.__pad(i, self.MaxLen)
-        rnnXarray = np.array([self.__pad(i, self.MaxLen) for i in rnnXlist])
-        self.RnnX = rnnXarray
+        rnn_x_array = np.array([self.__pad(i, self.MaxLen) for i in rnn_x_list])
+        self.RnnX = rnn_x_array
         if self.Verbose:
-            print(str(self.RnnX[0])[:80])
-            print(str(self.RnnX[1])[:80])
-            print(str(self.RnnX[2])[:80])
+            self.__print(self.RnnX)
 
 
 class RNN(models.Model):
@@ -302,11 +286,13 @@ class NewsML:
         with open('./result/' + n + '/result.html', mode='w') as f:
             f.write(str(soup))
 
-    def __to_html(self, soup: BeautifulSoup, class_: str, x: str):
+    @staticmethod
+    def __to_html(soup: BeautifulSoup, class_: str, x: str):
         soup.html.body.find('div', attrs={'class': class_}).append(x)
         soup.html.body.find('div', attrs={'class': class_}).append(soup.new_tag('br'))
 
-    def show_plot(self):
+    @staticmethod
+    def show_plot():
         plt.show()
 
     @staticmethod
@@ -339,8 +325,8 @@ if __name__ == '__main__':
                 ml.Verbose = False
             else:
                 raise ValueError()
+
+        elif item[:eq] == 'divide':
+            ml.Divide = int(item[(eq + 1):])
     ml.run()
     # ml.show_plot()
-    print("Ctrl+C to quit")
-    while True:
-        pass
