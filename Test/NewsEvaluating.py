@@ -91,8 +91,11 @@ class KeyWording:
     sentence_error = 0
     sentence_success = 0
     sentence_none = 0
-    with open("./Test/Data/NewsData" + ".dat", 'rb') as f:
-        news_list = pickle.load(f)
+    error_press = dict()
+    error_link = list()
+    press_count = dict()
+    '''with open("./Test/Data/NewsData" + ".dat", 'rb') as f:
+        news_list = pickle.load(f)'''
 
     def congressTotalImport(self,fileName):
         with open("./Test/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
@@ -164,6 +167,7 @@ class KeyWording:
             if self.keyword[word]['left']+self.keyword[word]['right'] >= count:
                 #pp=PrettyPrinter(indent=4)
                 print((word,self.keyword[word]))
+
     def printByBias(self, bias1, bias2):
         for word in self.keyword.keys():
             if self.keyword[word]['bias'] >= bias1 and self.keyword[word]['bias'] <=bias2:
@@ -209,10 +213,18 @@ class KeyWording:
         for word in delWord:
             del(self.keyword[word])
 
-    def newsLabelingMulti(self,index):
+    def newsLabelingMultiOrigin(self,index):
         news_keyword = dict()
         news_count = 0
-        for index, sentence in enumerate(self.news_list[index].Content):
+        #print(self.news_list[index])
+        if(type(self.news_list[index].Content)==str):
+            self.error_link.append(self.news_list[index].ID)
+            if (self.news_list[index].Press not in self.error_press):
+                self.error_press[self.news_list[index].Press]=0
+            self.error_press[self.news_list[index].Press]+=1
+            self.news_list[index].Bias=-9999
+            return -1
+        for sent_index, sentence in enumerate(self.news_list[index].Content):
             sentence_keyword = dict()
             sentence_count = 0
             try:
@@ -220,11 +232,11 @@ class KeyWording:
                 sent_analyze = self.morphAnalyzer.morphKeywording(morph)
             except:
                 self.sentence_error+=1
-                self.news_list[index].Content.Sentence_Bias[index]=None
+                self.news_list[index].Sentence_Bias[sent_index]=-9999
                 continue
             
             for word in sent_analyze:
-                if word in self.keyword():
+                if word in self.keyword:
                     if word not in news_keyword:
                         news_keyword[word]=0
                         sentence_keyword[word]=0
@@ -243,11 +255,20 @@ class KeyWording:
                     sent_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
             if(sent_beta_square_sum!=0):
                 self.sentence_success+=1
-                self.news_list[index].Sentence_Bias[index]=sent_f_minus_alpha/sent_beta_square_sum
+                self.news_list[index].Sentence_Bias[sent_index]=sent_f_minus_alpha/sent_beta_square_sum
             else:
                 self.sentence_none+=1
-                self.news_list[index].Sentence_Bias[index]=None
-
+                self.news_list[index].Sentence_Bias[sent_index]=0
+        del_list=list()
+        for sent_index,sentence in enumerate(self.news_list[index].Content):
+            if self.news_list[index].Sentence_Bias[sent_index]==-9999:
+                del_list.append(sentence)
+        
+        for sentence in del_list:
+            self.news_list[index].Content.remove(sentence)
+            self.news_list[index].Sentence_Bias.remove(-9999)
+            
+            
         news_beta_square_sum=0
         news_f_minus_alpha=0
         for keyword in news_keyword:
@@ -258,29 +279,114 @@ class KeyWording:
         if(news_beta_square_sum!=0):
             self.news_list[index].Bias=news_f_minus_alpha/news_beta_square_sum   
         else:
-            self.news_list[index].Bias=None
-        return news
+            self.news_list[index].Bias=0
+
+    def newsLabelingMulti(self,news):
+        news_keyword = dict()
+        news_count = 0
+        #print(news)
+        if(type(news.Content)==str):
+            self.error_link.append(news.ID)
+            if (news.Press not in self.error_press):
+                self.error_press[news.Press]=0
+            self.error_press[news.Press]+=1
+            news.Bias=-9999
+            return -1
+        for sent_index, sentence in enumerate(news.Content):
+            sentence_keyword = dict()
+            sentence_count = 0
+            try:
+                morph = self.morphAnalyzer.morphAnalyze(sentence)
+                sent_analyze = self.morphAnalyzer.morphKeywording(morph)
+            except:
+                self.sentence_error+=1
+                news.Sentence_Bias[sent_index]=-9999
+                continue
+            
+            for word in sent_analyze:
+                if word in self.keyword:
+                    if word not in news_keyword:
+                        news_keyword[word]=0
+                        sentence_keyword[word]=0
+                    elif word not in sentence_keyword:
+                        sentence_keyword[word]=0
+                    news_count+=1
+                    sentence_count+=1
+                    news_keyword[word]+=1
+                    sentence_keyword[word]+=1
+            sent_f_minus_alpha=0
+            sent_beta_square_sum=0
+            for keyword in sentence_keyword:
+                f_pn=sentence_keyword[keyword]/sentence_count
+                if keyword in self.keyword:
+                    sent_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
+                    sent_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
+            if(sent_beta_square_sum!=0):
+                self.sentence_success+=1
+                news.Sentence_Bias[sent_index]=sent_f_minus_alpha/sent_beta_square_sum
+            else:
+                self.sentence_none+=1
+                news.Sentence_Bias[sent_index]=0
+        del_list=list()
+        for sent_index,sentence in enumerate(news.Content):
+            if news.Sentence_Bias[sent_index]==-9999:
+                del_list.append(sentence)
+        
+        for sentence in del_list:
+            news.Content.remove(sentence)
+            news.Sentence_Bias.remove(-9999)
+            
+            
+        news_beta_square_sum=0
+        news_f_minus_alpha=0
+        for keyword in news_keyword:
+            f_pn=news_keyword[keyword]/news_count
+            if keyword in self.keyword:
+                news_beta_square_sum+=pow(self.keyword[keyword]['b'],2)
+                news_f_minus_alpha+=self.keyword[keyword]['b']*(f_pn-self.keyword[keyword]['a'])
+        if(news_beta_square_sum!=0):
+            news.Bias=news_f_minus_alpha/news_beta_square_sum   
+        else:
+            news.Bias=0
+
+        self.news_list.append(news)
 
     def newsLabeling(self,threadCount=56,start=0,finish=1):
         pool=Pool(threadCount)
         index = [i for i in range(start,finish)]
+        with open("./Test/Data/NewsData_0_200000" + ".dat", 'rb') as f:
+            news_list = pickle.load(f)
+
         with tqdm(total=len(index)) as pbar:
-            for i, _ in tqdm(enumerate(pool.imap_unordered(self.newsLabelingMulti,index))):
+            for i, _ in tqdm(enumerate(pool.imap_unordered(self.newsLabelingMulti,news_list))):
                 pbar.update()
-        print("Error News :",self.sentence_error)
-        print("None News:",self.sentence_none)
-        print("Success News :",self.sentence_success)
+        
+        print("Error Sentence :",self.sentence_error)
+        print("None Sentence:",self.sentence_none)
+        print("Success Sentence :",self.sentence_success)
         del_list=list()
         del_count=0
+        for news in self.news_list[start:finish]:
+            if news.Press not in self.press_count:
+                self.press_count[news.Press]=0
+            self.press_count[news.Press]+=1
         for news in self.news_list:
-            if news.Bias==None:
+            if news.Bias==-9999:
                 del_list.append(news)
                 del_count+=1
-        '''for news in del_list:
-            self.news_list.remove(news)'''
-        print(del_count," news is None")
-        with open("./Test/Data/NewsData"+str(start)+"-"+str(finish) + ".dat", 'wb') as f:
-            pickle.dump(self.news_list[start:finish], f)
+        for news in del_list:
+            self.news_list.remove(news)
+        print(del_count," news is Deleted")
+        for press in self.press_count:
+            if press in self.error_press:
+                self.press_count[press]={"Total":self.press_count[press],"Error":self.error_press[press],"Rate":self.error_press[press]/self.press_count[press]}
+            else:
+                self.press_count[press]={"Total":self.press_count[press],"Error":0,"Rate":0}
+        print("Press Error")
+        for press in self.press_count:
+            print(self.press_count[press])
+        with open("./Test/Data/NewsData"+"_"+str(start)+"_"+str(finish) + ".dat", 'wb') as f:
+            pickle.dump(self.news_list[start:(finish-del_count)], f)
         print("Export Done")
 
 if __name__ == "__main__":
@@ -296,3 +402,4 @@ if __name__ == "__main__":
     #keyWording.printByCount(5)
     #keyWording.printByCount(1)
     keyWording.newsLabeling(threadCount,start,finish)
+
