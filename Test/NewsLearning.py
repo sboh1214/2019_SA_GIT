@@ -318,5 +318,11 @@ if __name__ == '__main__':
 
         elif item[:eq] == 'divide':
             ml.Divide = int(item[(eq + 1):])
+
+        elif item[:eq] == 'cnnepoch':
+            ml.CnnEpoch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'rnnepoch':
+            ml.RnnEpoch = int(item[(eq + 1):])
     ml.run()
     # ml.show_plot()
