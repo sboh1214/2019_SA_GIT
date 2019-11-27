@@ -29,10 +29,9 @@ class Data:
     """
     tokenizer = Tokenizer()
 
-    def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, dev=False, divide=100000):
+    def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, divide=100000):
         self.Verbose = verbose
         self.MaxLen = max_len
-        self.Dev = dev
         self.Divide = divide
         self.__get_news_data(filename=file)
 
@@ -72,8 +71,7 @@ class Data:
         if self.Verbose:
             self.__print(news_list)
         print(str(len(news_list)) + ' News Imported')
-        if self.Dev:
-            news_list = news_list[:30000]
+        news_list = news_list[:self.Divide]
         print(str(len(news_list)) + ' News will be used')
         bias = [i.Bias for i in news_list]
         print('Maximum Bias : '+str(max(bias)))
@@ -130,7 +128,7 @@ class Data:
 
 
 class RNN(models.Model):
-    def __init__(self, max_len, data_count, max_features=20000):
+    def __init__(self, max_len, max_features=20000):
         x = layers.Input(shape=(max_len,))
         h = layers.Embedding(max_features, 128)(x)
         h = layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
@@ -168,10 +166,10 @@ class NewsML:
     def run(self):
         count = itertools.count(1)
         self.__info(str(next(count)) + ' Prepare Data')
-        self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, dev=self.Dev, divide=self.Divide)
+        self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, divide=self.Divide)
 
         self.__info(str(next(count)) + ' Build RNN Model')
-        self.Rnn = RNN(max_len=self.RnnMaxLen, data_count=len(self.Data.RnnX), max_features=20000)
+        self.Rnn = RNN(max_len=self.RnnMaxLen, max_features=20000)
 
         self.__info(str(next(count)) + ' Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
@@ -310,14 +308,6 @@ if __name__ == '__main__':
 
         elif item[:eq] == 'file':
             ml.File = item[(eq + 1):]
-
-        elif item[:eq] == 'dev':
-            if item[(eq + 1):] == 'true':
-                ml.Dev = True
-            elif item[(eq + 1):] == 'false':
-                ml.Dev = False
-            else:
-                raise ValueError()
 
         elif item[:eq] == 'verbose':
             if item[(eq + 1):] == 'true':
