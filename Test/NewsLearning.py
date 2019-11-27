@@ -27,7 +27,6 @@ class Data:
     """
 
     """
-    tokenizer = Tokenizer()
 
     def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, divide=100000):
         self.Verbose = verbose
@@ -116,7 +115,7 @@ class Data:
             self.__print(self.CnnX)
 
         self.__info('\nPre-Process RnnX')
-        tokenizer = Tokenizer()
+        tokenizer = Tokenizer(num_words=10000)
         tokenizer.fit_on_texts(self.RnnX)
         rnn_x_list = tokenizer.texts_to_sequences(self.RnnX)
         for i in tqdm(rnn_x_list):
