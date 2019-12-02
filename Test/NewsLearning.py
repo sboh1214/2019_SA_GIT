@@ -17,17 +17,13 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import numpy as np
 from bs4 import BeautifulSoup
-from pandas import DataFrame
+from csv import writer
 
 from data import NewsList
 
 
 class Data:
-    """
-
-    """
-
-    def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, divide=100000):
+    def __init__(self, file='NewsData_0_20000', verbose=False, max_len=100, divide=100000):
         self.Verbose = verbose
         self.MaxLen = max_len
         self.Divide = divide
@@ -235,12 +231,18 @@ class NewsML:
         self.Rnn.save('./result/' + n + '/rnn_model.h5')
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
 
-        with open('./result/' + n + '/rnn_history.csv', mode='wb') as f:
-            frame = DataFrame(self.RnnHistory.history)
-            frame.to_csv(f, header=False, index=True)
-        with open('./result/' + n + '/cnn_history.csv', mode='wb') as f:
-            frame = DataFrame(self.CnnHistory.history)
-            frame.to_csv(f, header=False, index=True)
+        history = [self.RnnHistory.history['loss'],
+                   self.RnnHistory.history['val_loss'],
+                   self.RnnHistory.history['acc'],
+                   self.RnnHistory.history['val_acc'],
+                   self.CnnHistory.history['loss'],
+                   self.CnnHistory.history['val_loss'],
+                   self.CnnHistory.history['acc'],
+                   self.CnnHistory.history['val_acc']]
+        with open('./result/' + n + '/history.csv', mode='wb') as f:
+            csv = writer(f)
+            for line in history:
+                csv.writerow(line)
 
         basic = """
         <html>
