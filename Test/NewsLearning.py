@@ -237,10 +237,10 @@ class NewsML:
 
         with open('./result/' + n + '/rnn_history.csv', mode='wb') as f:
             frame = DataFrame(self.RnnHistory.history)
-            frame.to_csv(f, header=True, index=True)
+            frame.to_csv(f, header=False, index=True)
         with open('./result/' + n + '/cnn_history.csv', mode='wb') as f:
             frame = DataFrame(self.CnnHistory.history)
-            frame.to_csv(f, header=True, index=True)
+            frame.to_csv(f, header=False, index=True)
 
         basic = """
         <html>
