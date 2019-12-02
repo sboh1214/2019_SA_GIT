@@ -8,7 +8,7 @@ import os
 from math import sqrt, ceil
 import sys
 import platform
-from multiprocessing.dummy import Pool
+import csv
 
 from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import numpy as np
 from bs4 import BeautifulSoup
+import pandas as pd
 
 from data import NewsList
 
@@ -73,8 +74,8 @@ class Data:
         news_list = news_list[:self.Divide]
         print(str(len(news_list)) + ' News will be used')
         bias = [i.Bias for i in news_list]
-        print('Maximum Bias : '+str(max(bias)))
-        print('Minimum Bias : '+str(min(bias)))
+        print('Maximum Bias : ' + str(max(bias)))
+        print('Minimum Bias : ' + str(min(bias)))
 
         self.__info('\nAnalyze Data')
         max_sentence = 0
@@ -140,6 +141,10 @@ class CNN(models.Model):
     def __init__(self, side=100):
         x = layers.Input((side, side, 1))
         h = layers.Conv2D(filters=3, kernel_size=(3, 3), activation=activations.relu)(x)
+        h = layers.Conv2D(filters=3, kernel_size=(3, 3), activation=activations.relu)(h)
+        h = layers.MaxPooling2D(pool_size=(2, 2))(h)
+        h = layers.Conv2D(filters=3, kernel_size=(3, 3), activation=activations.relu)(h)
+        h = layers.Conv2D(filters=3, kernel_size=(3, 3), activation=activations.relu)(h)
         h = layers.MaxPooling2D(pool_size=(2, 2))(h)
         h = layers.Dropout(rate=0.25)(h)
         h = layers.Flatten()(h)
@@ -237,6 +242,13 @@ class NewsML:
 
         self.Rnn.save('./result/' + n + '/rnn_model.h5')
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
+
+        with open('./result/' + n + '/rnn_history.csv') as f:
+            frame = pd.DataFrame(self.RnnHistory)
+            frame.to_csv(f, header=False, index=True)
+        with open('./result/' + n + '/cnn_history.csv') as f:
+            frame = pd.DataFrame(self.CnnHistory)
+            frame.to_csv(f, header=False, index=True)
 
         basic = """
         <html>
