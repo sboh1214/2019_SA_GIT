@@ -243,10 +243,10 @@ class NewsML:
         self.Rnn.save('./result/' + n + '/rnn_model.h5')
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
 
-        with open('./result/' + n + '/rnn_history.csv') as f:
+        with open('./result/' + n + '/rnn_history.csv', mode='wb') as f:
             frame = pd.DataFrame(self.RnnHistory)
             frame.to_csv(f, header=False, index=True)
-        with open('./result/' + n + '/cnn_history.csv') as f:
+        with open('./result/' + n + '/cnn_history.csv', mode='wb') as f:
             frame = pd.DataFrame(self.CnnHistory)
             frame.to_csv(f, header=False, index=True)
 
