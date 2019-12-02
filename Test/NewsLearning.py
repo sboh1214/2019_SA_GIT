@@ -2,26 +2,24 @@
 Execute this file with command line
 $ python3 NewsLearning.py file=Test/NewsData dev=False
 """
-import itertools
+from itertools import count as iter_count
 from datetime import datetime
-import os
+from os import makedirs
 from math import sqrt, ceil
-import sys
-import platform
-import csv
+from sys import argv, version_info
+from platform import platform
 
 from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
-from keras.callbacks import TensorBoard
-from keras import backend as K
+from keras import backend as k
 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import numpy as np
 from bs4 import BeautifulSoup
-import pandas as pd
+from pandas import DataFrame
 
-from data import NewsList
+from .data import NewsList
 
 
 class Data:
@@ -168,7 +166,7 @@ class NewsML:
         self.Divide = 1000000
 
     def run(self):
-        count = itertools.count(1)
+        count = iter_count(1)
         self.__info(str(next(count)) + ' Prepare Data')
         self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, divide=self.Divide)
 
@@ -177,9 +175,6 @@ class NewsML:
 
         self.__info(str(next(count)) + ' Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
-
-        # self.__info(str(next(count)) + ' Connect Tensor board')
-        # tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
         self.__info(str(next(count)) + ' Run RNN Model')
         self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY,
@@ -231,12 +226,9 @@ class NewsML:
 
         self.Fig = fig
 
-    def open_tensorboard(self):
-        pass
-
     def __save(self):
         n = str(datetime.now())
-        os.makedirs('./result/' + n)
+        makedirs('./result/' + n)
 
         self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
 
@@ -244,11 +236,11 @@ class NewsML:
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
 
         with open('./result/' + n + '/rnn_history.csv', mode='wb') as f:
-            frame = pd.DataFrame(self.RnnHistory)
-            frame.to_csv(f, header=False, index=True)
+            frame = DataFrame(self.RnnHistory.history)
+            frame.to_csv(f, header=True, index=True)
         with open('./result/' + n + '/cnn_history.csv', mode='wb') as f:
-            frame = pd.DataFrame(self.CnnHistory)
-            frame.to_csv(f, header=False, index=True)
+            frame = DataFrame(self.CnnHistory.history)
+            frame.to_csv(f, header=True, index=True)
 
         basic = """
         <html>
@@ -280,9 +272,9 @@ class NewsML:
         """
         soup = BeautifulSoup(basic, 'html.parser')
         soup.html.body.find('div', attrs={'class': 'datetime'}).append(str(n))
-        soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform.platform()))
-        soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(sys.version_info))
-        soup.html.body.find('div', attrs={'class': 'keras_backend'}).append(K.backend())
+        soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform()))
+        soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(version_info))
+        soup.html.body.find('div', attrs={'class': 'keras_backend'}).append(k.backend())
 
         soup.html.body.find('div', attrs={'class': 'rnn_epoch'}).append(str(self.RnnEpoch))
         soup.html.body.find('div', attrs={'class': 'rnn_batch'}).append(str(self.RnnBatch))
@@ -312,7 +304,7 @@ class NewsML:
 
 if __name__ == '__main__':
     ml = NewsML()
-    for item in sys.argv:
+    for item in argv:
         eq = item.find('=')
         if eq == -1:
             continue
