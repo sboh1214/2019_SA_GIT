@@ -19,7 +19,7 @@ import numpy as np
 from bs4 import BeautifulSoup
 from pandas import DataFrame
 
-from .data import NewsList
+from data import NewsList
 
 
 class Data:
