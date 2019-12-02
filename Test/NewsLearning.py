@@ -239,7 +239,7 @@ class NewsML:
                    self.CnnHistory.history['val_loss'],
                    self.CnnHistory.history['acc'],
                    self.CnnHistory.history['val_acc']]
-        with open('./result/' + n + '/history.csv', mode='wb') as f:
+        with open('./result/' + n + '/history.csv', mode='w') as f:
             csv = writer(f)
             for line in history:
                 csv.writerow(line)
