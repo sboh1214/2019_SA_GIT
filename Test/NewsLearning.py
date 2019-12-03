@@ -35,7 +35,11 @@ class Data:
 
     @staticmethod
     def __square(a, side):
-        avg = sum(a)/len(a)
+        try:
+            avg = sum(a)/len(a)
+        except ZeroDivisionError:
+            print('There is no Bias')
+            avg = 0
         output = [[avg] * side for _ in range(side)]
         for i, bias in enumerate(a):
             output[i // side][i % side] = bias
