@@ -35,7 +35,8 @@ class Data:
 
     @staticmethod
     def __square(a, side):
-        output = [[0] * side for _ in range(side)]
+        avg = sum(a)/len(a)
+        output = [[avg] * side for _ in range(side)]
         for i, bias in enumerate(a):
             output[i // side][i % side] = bias
         return output
@@ -143,15 +144,9 @@ class CNN(models.Model):
         h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
         h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
         h = layers.MaxPooling2D(pool_size=(2, 2))(h)
-        h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
-        h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
-        h = layers.MaxPooling2D(pool_size=(2, 2))(h)
-        h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
-        h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
-        h = layers.MaxPooling2D(pool_size=(2, 2))(h)
         h = layers.Dropout(rate=0.25)(h)
         h = layers.Flatten()(h)
-        h = layers.Dense(units=5, activation=activations.relu)(h)
+        h = layers.Dense(units=4, activation=activations.relu)(h)
         y = layers.Dense(units=1, activation=activations.relu)(h)
         super().__init__(x, y)
         self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(), metrics=['acc'])
