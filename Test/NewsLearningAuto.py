@@ -2,39 +2,33 @@
 Execute this file with command line
 $ python3 NewsLearning.py file=Test/NewsData dev=False
 """
-import itertools
+from itertools import count as iter_count
 from datetime import datetime
-import os
+from os import makedirs
 from math import sqrt, ceil
-import sys
-import platform
-from multiprocessing.dummy import Pool
+from sys import argv, version_info
+from platform import platform
 
 from keras import layers, models, losses, optimizers, activations, Sequential
 from keras.preprocessing.text import Tokenizer
-from keras.callbacks import TensorBoard
-from keras import backend as K
+from keras import backend as k
+
+import talos
 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import numpy as np
 from bs4 import BeautifulSoup
-
-import talos
+from csv import writer
 
 from data import NewsList
 
 
 class Data:
-    """
-
-    """
-    tokenizer = Tokenizer()
-
-    def __init__(self, file='NewsData0_20000', verbose=False, divide=1000000):
+    def __init__(self, file='NewsData_0_20000', verbose=False, max_len=100, divide=100000):
         self.Verbose = verbose
-        self.MaxLen = 100
-        self.Divide = 1000000
+        self.MaxLen = max_len
+        self.Divide = divide
         self.__get_news_data(filename=file)
 
     @staticmethod
@@ -43,19 +37,23 @@ class Data:
 
     @staticmethod
     def __square(a, side):
-        output = [[0] * side for _ in range(side)]
+        try:
+            avg = sum(a) / len(a)
+        except ZeroDivisionError:
+            avg = 0
+        output = [[avg] * side for _ in range(side)]
         for i, bias in enumerate(a):
             output[i // side][i % side] = bias
         return output
 
     @staticmethod
-    def __pad(a):
-        if len(a) == 100:
+    def __pad(a, max_len):
+        if len(a) == max_len:
             return a
-        elif len(a) > 100:
-            return a[0:100]
+        elif len(a) > max_len:
+            return a[0:max_len]
         else:
-            a.extend([0 for _ in range(100 - len(a))])
+            a.extend([0 for _ in range(max_len - len(a))])
             return a
 
     @staticmethod
@@ -118,7 +116,7 @@ class Data:
             self.__print(self.CnnX)
 
         self.__info('\nPre-Process RnnX')
-        tokenizer = Tokenizer()
+        tokenizer = Tokenizer(num_words=10000)
         tokenizer.fit_on_texts(self.RnnX)
         rnn_x_list = tokenizer.texts_to_sequences(self.RnnX)
         for i in tqdm(rnn_x_list):
@@ -128,19 +126,25 @@ class Data:
         if self.Verbose:
             self.__print(self.RnnX)
 
+
+def rms(y_true, y_pred):
+    diff = y_true - y_pred
+    return k.sqrt(k.mean(k.square(diff)))
+
+
 class NewsML:
     def __init__(self):
         self.Verbose = True
         self.Dev = True
-        self.Divide = 10000000
-        self.File = 'NewsData0_20000'
+        self.File = 'NewsData_0_20000'
 
         self.RnnEpoch = 10
-        self.RnnBatch = 256
+        self.RnnBatch = 64
         self.RnnMaxLen = 100
 
         self.CnnEpoch = 10
-        self.CnnBatch = 256
+        self.CnnBatch = 64
+        self.Divide = 1000000
 
     def rnn_model(self, x_train, y_train, x_val, y_val, params):
         model = Sequential([
@@ -160,40 +164,6 @@ class NewsML:
 
         return out, model
 
-    def run(self):
-        count = itertools.count(1)
-        self.__info(str(next(count)) + ' Prepare Data')
-        self.Data = Data(file=self.File, verbose=self.Verbose, divide=self.Divide)
-
-        # self.__info(str(next(count)) + ' Build RNN Model')
-        # self.Rnn = RNN(data_count=len(self.Data.RnnX))
-        #
-        # self.__info(str(next(count)) + ' Build CNN Model')
-        # self.Cnn = CNN(side=self.Data.CnnSide)
-
-        # self.__info(str(next(count)) + ' Connect Tensor board')
-        # tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
-
-        self.run_talos()
-
-        # self.__info(str(next(count)) + ' Run RNN Model')
-        # self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY,
-        #                                batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2,
-        #                                verbose=self.Verbose)
-        #
-        # self.__info(str(next(count)) + ' Run CNN Model')
-        # self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY,
-        #                                batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2,
-        #                                verbose=self.Verbose)
-
-        self.__info(str(next(count)) + ' Make Plot')
-        self.__make_plot()
-
-        self.__info(str(next(count)) + ' Save History and Configuration as HTML')
-        self.__save()
-
-        self.__info('Done')
-
     def run_talos(self):
         p = talos.autom8.AutoParams().params
         x_split = int(len(self.Data.RnnX) * 0.8)
@@ -206,6 +176,31 @@ class NewsML:
                                  model=self.rnn_model)
         scan_object.best_model(metric='f1score', asc=False)
 
+    def run(self):
+        count = iter_count(1)
+        self.__info(str(next(count)) + ' Prepare Data')
+        self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, divide=self.Divide)
+
+        self.run_talos()
+
+        self.__info(str(next(count)) + ' Run RNN Model')
+        self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY,
+                                       batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2,
+                                       verbose=self.Verbose)
+
+        self.__info(str(next(count)) + ' Run CNN Model')
+        self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY,
+                                       batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2,
+                                       verbose=self.Verbose)
+
+        self.__info(str(next(count)) + ' Make Plot')
+        self.__make_plot()
+
+        self.__info(str(next(count)) + ' Save History and Configuration as HTML')
+        self.__save()
+
+        self.__info('Done')
+
     def __make_plot(self):
         """
         Plot history for loss and accuracy of train and validation data.
@@ -214,12 +209,12 @@ class NewsML:
 
         rnn_loss.plot(self.RnnHistory.history['loss'], 'y', label='train loss')
         rnn_loss.plot(self.RnnHistory.history['val_loss'], 'r', label='val loss')
-        rnn_acc.plot(self.RnnHistory.history['acc'], 'b', label='train acc')
-        rnn_acc.plot(self.RnnHistory.history['val_acc'], 'g', label='val acc')
+        rnn_acc.plot(self.RnnHistory.history['rms'], 'b', label='train rms')
+        rnn_acc.plot(self.RnnHistory.history['val_rms'], 'g', label='val rms')
         cnn_loss.plot(self.CnnHistory.history['loss'], 'y', label='train loss')
         cnn_loss.plot(self.CnnHistory.history['val_loss'], 'r', label='val loss')
-        cnn_acc.plot(self.CnnHistory.history['acc'], 'b', label='train acc')
-        cnn_acc.plot(self.CnnHistory.history['val_acc'], 'g', label='val acc')
+        cnn_acc.plot(self.CnnHistory.history['rms'], 'b', label='train rms')
+        cnn_acc.plot(self.CnnHistory.history['val_rms'], 'g', label='val rms')
 
         rnn_loss.set_xlabel('epoch')
         rnn_acc.set_xlabel('epoch')
@@ -238,40 +233,54 @@ class NewsML:
 
         self.Fig = fig
 
-    def open_tensorboard(self):
-        pass
-
     def __save(self):
         n = str(datetime.now())
-        os.makedirs('./result/' + n)
+        makedirs('./result/' + n)
 
         self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
 
         self.Rnn.save('./result/' + n + '/rnn_model.h5')
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
 
+        history = [self.RnnHistory.history['loss'],
+                   self.RnnHistory.history['val_loss'],
+                   self.RnnHistory.history['binary_accuracy'],
+                   self.RnnHistory.history['val_binary_accuracy'],
+                   self.RnnHistory.history['rms'],
+                   self.RnnHistory.history['val_rms'],
+                   self.CnnHistory.history['loss'],
+                   self.CnnHistory.history['val_loss'],
+                   self.CnnHistory.history['binary_accuracy'],
+                   self.CnnHistory.history['val_binary_accuracy'],
+                   self.CnnHistory.history['rms'],
+                   self.CnnHistory.history['val_rms']]
+        with open('./result/' + n + '/history.csv', mode='w') as f:
+            csv = writer(f)
+            for line in history:
+                csv.writerow(line)
+
         basic = """
         <html>
         <body>
-
+        
         <h1>Machine Learning Result</h1>
         <div class="datetime">Date and Time : </div>
-
+        
         <h2>Environment</h2>
         <div class="sys_info">System Info : </div>
         <div class="py_version">Python Version : </div>
         <div class="keras_backend">Keras Backend : </div>
-
+        
         <h2>RNN Configuration</h2>
         <div class="rnn_epoch">Epoch : </div>
         <div class="rnn_batch">Batch Size : </div>
         <div class="rnn_model"></div>
-
+        
         <h2>CNN Configuration</h2>
         <div class="cnn_epoch">Epoch : </div>
         <div class="cnn_batch">Batch Size : </div>
         <div class="cnn_model"></div>
-
+        
         <h2>Plot<h2>
         <img src="plot.png" alt="plt" height="400" width="600">
 
@@ -280,9 +289,9 @@ class NewsML:
         """
         soup = BeautifulSoup(basic, 'html.parser')
         soup.html.body.find('div', attrs={'class': 'datetime'}).append(str(n))
-        soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform.platform()))
-        soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(sys.version_info))
-        soup.html.body.find('div', attrs={'class': 'keras_backend'}).append(K.backend())
+        soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform()))
+        soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(version_info))
+        soup.html.body.find('div', attrs={'class': 'keras_backend'}).append(k.backend())
 
         soup.html.body.find('div', attrs={'class': 'rnn_epoch'}).append(str(self.RnnEpoch))
         soup.html.body.find('div', attrs={'class': 'rnn_batch'}).append(str(self.RnnBatch))
@@ -312,21 +321,13 @@ class NewsML:
 
 if __name__ == '__main__':
     ml = NewsML()
-    for item in sys.argv:
+    for item in argv:
         eq = item.find('=')
         if eq == -1:
             continue
 
         elif item[:eq] == 'file':
             ml.File = item[(eq + 1):]
-
-        elif item[:eq] == 'dev':
-            if item[(eq + 1):] == 'true':
-                ml.Dev = True
-            elif item[(eq + 1):] == 'false':
-                ml.Dev = False
-            else:
-                raise ValueError()
 
         elif item[:eq] == 'verbose':
             if item[(eq + 1):] == 'true':
@@ -338,5 +339,17 @@ if __name__ == '__main__':
 
         elif item[:eq] == 'divide':
             ml.Divide = int(item[(eq + 1):])
+
+        elif item[:eq] == 'cnnepoch':
+            ml.CnnEpoch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'rnnepoch':
+            ml.RnnEpoch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'cnnbatch':
+            ml.CnnBatch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'rnnbatch':
+            ml.RnnBatch = int(item[(eq + 1):])
     ml.run()
     # ml.show_plot()
