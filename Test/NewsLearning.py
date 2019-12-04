@@ -136,7 +136,7 @@ class RNN(models.Model):
         h = layers.CuDNNLSTM(128)(h)
         y = layers.Dense(units=1, activation=activations.relu)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=1),
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.RMSprop(learning_rate=1),
                      metrics=['acc', 'binary_accuracy', rms])
 
 
@@ -157,7 +157,7 @@ class CNN(models.Model):
         h = layers.Dense(units=1, activation=activations.relu)(h)
         y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=1),
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.RMSprop(learning_rate=1),
                      metrics=['acc', 'binary_accuracy', rms])
 
 
@@ -245,12 +245,12 @@ class NewsML:
         self.Rnn.save('./result/' + n + '/rnn_model.h5')
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
 
-        history = [self.RnnHistory.history['loss'].insert(0, 'rnn loss'),
-                   self.RnnHistory.history['val_loss'].insert(0, 'rnn val_loss'),
-                   self.RnnHistory.history['acc'].insert(0, 'rnn acc'),
-                   self.RnnHistory.history['val_acc'].insert(0, 'rnn val_acc'),
-                   self.RnnHistory.history['rms'].insert(0, 'rnn rms'),
-                   self.RnnHistory.history['val_rms'].insert(0, 'rnn val_rms'),
+        history = [self.RnnHistory.history['loss'],
+                   self.RnnHistory.history['val_loss'],
+                   self.RnnHistory.history['acc'],
+                   self.RnnHistory.history['val_acc'],
+                   self.RnnHistory.history['rms'],
+                   self.RnnHistory.history['val_rms'],
                    self.CnnHistory.history['loss'],
                    self.CnnHistory.history['val_loss'],
                    self.CnnHistory.history['acc'],
