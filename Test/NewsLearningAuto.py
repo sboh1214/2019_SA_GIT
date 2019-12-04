@@ -164,7 +164,7 @@ class NewsML:
         self.CnnEpoch = 10
         self.CnnBatch = 256
 
-    def rnn_model(self, max_len, max_features):
+    def rnn_model(self, max_len, max_features): (x_train, y_train, x_val, y_val, params):
         model = Sequential([
             layers.Input(shape=(max_len,)),
             layers.Embedding(max_features, 128),
@@ -175,8 +175,8 @@ class NewsML:
         model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss=losses.MeanSquaredError())
 
         self.RnnHistory = model.fit(self.Data.CnnX, self.Data.CnnY,
-                        batch_size=self.RnnBatch,
-                        epochs=self.RnnEpoch,
+                        batch_size=params['batch_size']self.RnnBatch,
+                        epochs=params['epochs']self.RnnEpoch,
                         validation_split=0.2,
                         verbose=self.Verbose)
 
@@ -227,6 +227,24 @@ class NewsML:
         self.__save()
 
         self.__info('Done')
+
+    def runTalos(self):
+        p = {'activation':['relu', 'elu'],
+     'optimizer': ['AdaDelta'],
+     'losses': ['logcosh'],
+     'shapes': ['brick'],
+     'first_neuron': [32],
+     'dropout': [.2, .3],
+     'batch_size': [64, 128, 256],
+     'epochs': [1]}
+        p = talos.Autom8.AutoParams().params
+        p.batch_size(bottom_value=, max_value=100, steps=10)
+        scan_object = talos.Scan(x=self.Data.CnnX,
+                                 y=self.Data.CnnY,
+                                 params=p,
+                                 model=self.cnn_model)
+
+
 
     def __make_plot(self):
         """
