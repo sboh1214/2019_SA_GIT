@@ -21,6 +21,7 @@ from csv import writer
 
 from data import NewsList
 
+tokenizer = Tokenizer(num_words=100000)
 
 class Data:
     def __init__(self, file='NewsData_0_20000', verbose=False, max_len=100, divide=100000):
@@ -114,7 +115,6 @@ class Data:
             self.__print(self.CnnX)
 
         self.__info('\nPre-Process RnnX')
-        tokenizer = Tokenizer(num_words=10000)
         tokenizer.fit_on_texts(self.RnnX)
         rnn_x_list = tokenizer.texts_to_sequences(self.RnnX)
         for i in tqdm(rnn_x_list):
@@ -139,7 +139,7 @@ class RNN(models.Model):
         h = layers.Dropout(rate=0.2)(h)
         y = layers.Dense(units=1, activation=None)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.01),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
                      metrics=['binary_accuracy', rms])
 
 
@@ -156,7 +156,7 @@ class CNN(models.Model):
         h = layers.Dropout(rate=0.2)(h)
         y = layers.Dense(units=1)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.01),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
                      metrics=['binary_accuracy', rms])
 
 
