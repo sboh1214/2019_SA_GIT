@@ -164,36 +164,25 @@ class NewsML:
         self.CnnEpoch = 10
         self.CnnBatch = 256
 
-    def cnn_model(self, x_train, y_train, x_val, y_val, params):
-        x = layers.Input(shape=(max_len,))
-        h = layers.Embedding(max_features, 128)(x)
-        h = layers.CuDNNLSTM(128, return_sequences=False)(h)
-        h = layers.Dropout(rate=0.2)(h)
-        y = layers.Dense(units=1, activation=None)(h)
-        super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.001),
-                     metrics=['binary_accuracy', rms])
-
+    def rnn_model(self, max_len, max_features):
         model = Sequential([
-            Input(shape=(max_len,)),
-            Embedding(max_features, 128),
-            CuDNNLSTM(128, return_sequences=False),
-            Dropout(rate=0.2),
-            Dense(units=1, activation=None)
+            layers.Input(shape=(max_len,)),
+            layers.Embedding(max_features, 128),
+            layers.CuDNNLSTM(128, return_sequences=False),
+            layers.Dropout(rate=0.2),
+            layers.Dense(units=1, activation=None)
         ])
-        model.add(Dense(32, input_dim=4, activation=params['activation']))
-        model.add(Dense(3, activation='softmax'))
-        model.compile(optimizer=params['optimizer'], loss=params['losses'])
+        model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss=losses.MeanSquaredError())
 
-        out = model.fit(x_train, y_train,
-                        batch_size=params['batch_size'],
-                        epochs=params['epochs'],
-                        validation_data=[x_val, y_val],
-                        verbose=0)
+        self.RnnHistory = model.fit(self.Data.CnnX, self.Data.CnnY,
+                        batch_size=self.RnnBatch,
+                        epochs=self.RnnEpoch,
+                        validation_split=0.2,
+                        verbose=self.Verbose)
 
-        return out, model
+        return self.RnnHistory, model
 
-    def rnn_model(self, x_train, y_train, x_val, y_val, params):
+    def cnn_model(self, x_train, y_train, x_val, y_val, params):
         model = Sequential()
         model.add(Dense(32, input_dim=4, activation=params['activation']))
         model.add(Dense(3, activation='softmax'))
