@@ -129,7 +129,7 @@ class RNN(models.Model):
     def __init__(self, max_len, max_features=20000):
         x = layers.Input(shape=(max_len,))
         h = layers.Embedding(max_features, 128)(x)
-        h = layers.CuDNNLSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
+        h = layers.CuDNNLSTM(128)(h)
         y = layers.Dense(units=1, activation=activations.relu)(h)
         super().__init__(x, y)
         self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001), metrics=['acc'])
