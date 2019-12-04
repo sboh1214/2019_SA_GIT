@@ -61,6 +61,14 @@ class Data:
         print(str(a[1])[:80])
         print(str(a[2])[:80])
 
+    @staticmethod
+    def newsCali(news_list):
+        rtn_list = list()
+        for news in news_list:
+            if news.Bias < 300 and news.Bias > -300:
+                rtn_list.append(news)
+        return rtn_list
+
     def get_news_data(self, filename):
         """
 
@@ -138,7 +146,7 @@ class RNN(models.Model):
     def __init__(self, max_len, max_features=20000):
         x = layers.Input(shape=(max_len,))
         h = layers.Embedding(max_features, 100)(x)
-        h = layers.CuDNNLSTM(100, return_sequences=False)(h)
+        h = layers.Bidirectional(layers.CuDNNLSTM(100, return_sequences=False))(h)
         h = layers.Dropout(rate=0.2)(h)
         h = layers.BatchNormalization()(h)
         h = layers.Dense(units=1)(h)
@@ -159,7 +167,7 @@ class CNN(models.Model):
         h = layers.Dense(units=1)(h)
         y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.0001),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.0001),
                      metrics=['binary_accuracy', rms])
 
 
