@@ -20,6 +20,8 @@ from tqdm import tqdm
 import numpy as np
 from bs4 import BeautifulSoup
 
+import talos
+
 from data import NewsList
 
 
@@ -29,9 +31,9 @@ class Data:
     """
     tokenizer = Tokenizer()
 
-    def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, dev=False):
+    def __init__(self, file='NewsData0_20000', verbose=False, dev=False):
         self.Verbose = verbose
-        self.MaxLen = max_len
+        self.MaxLen = 100
         self.Dev = dev
         self.Divide = 1000000
         self.__get_news_data(filename=file)
@@ -48,13 +50,13 @@ class Data:
         return output
 
     @staticmethod
-    def __pad(a, max_len):
-        if len(a) == max_len:
+    def __pad(a):
+        if len(a) == 100:
             return a
-        elif len(a) > max_len:
-            return a[0:max_len]
+        elif len(a) > 100:
+            return a[0:100]
         else:
-            a.extend([0 for _ in range(max_len - len(a))])
+            a.extend([0 for _ in range(100 - len(a))])
             return a
 
     @staticmethod
@@ -130,9 +132,9 @@ class Data:
 
 
 class RNN(models.Model):
-    def __init__(self, max_len, data_count, max_features=20000):
-        x = layers.Input(shape=(max_len,))
-        h = layers.Embedding(max_features, 128)(x)
+    def __init__(self, data_count):
+        x = layers.Input(shape=(100,))
+        h = layers.Embedding(20000, 128)(x)
         h = layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
         y = layers.Dense(units=1, activation=activations.sigmoid)(h)
         super().__init__(x, y)
@@ -164,45 +166,31 @@ class NewsML:
         self.CnnEpoch = 10
         self.CnnBatch = 256
 
-    def rnn_model(self, max_len, max_features): (x_train, y_train, x_val, y_val, params):
+    def rnn_model(self, x_train, y_train, x_val, y_val, params):
         model = Sequential([
-            layers.Input(shape=(max_len,)),
-            layers.Embedding(max_features, 128),
-            layers.CuDNNLSTM(128, return_sequences=False),
+            layers.Input(shape=(100,)),
+            layers.Embedding(20000, 128),
+            layers.LSTM(128, return_sequences=False),
             layers.Dropout(rate=0.2),
             layers.Dense(units=1, activation=None)
         ])
         model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss=losses.MeanSquaredError())
 
-        self.RnnHistory = model.fit(self.Data.CnnX, self.Data.CnnY,
-                        batch_size=params['batch_size']self.RnnBatch,
-                        epochs=params['epochs']self.RnnEpoch,
-                        validation_split=0.2,
-                        verbose=self.Verbose)
-
-        return self.RnnHistory, model
-
-    def cnn_model(self, x_train, y_train, x_val, y_val, params):
-        model = Sequential()
-        model.add(Dense(32, input_dim=4, activation=params['activation']))
-        model.add(Dense(3, activation='softmax'))
-        model.compile(optimizer=params['optimizer'], loss=params['losses'])
-
-        out = model.fit(x_train, y_train,
+        out = model.fit(x_train, y_train, 
+                        validation_data=[x_val, y_val],
                         batch_size=params['batch_size'],
                         epochs=params['epochs'],
-                        validation_data=[x_val, y_val],
-                        verbose=0)
+                        verbose=self.Verbose)
 
         return out, model
 
     def run(self):
         count = itertools.count(1)
         self.__info(str(next(count)) + ' Prepare Data')
-        self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, dev=self.Dev)
+        self.Data = Data(file=self.File, verbose=self.Verbose, dev=self.Dev)
 
         self.__info(str(next(count)) + ' Build RNN Model')
-        self.Rnn = RNN(max_len=self.RnnMaxLen, data_count=len(self.Data.RnnX), max_features=20000)
+        self.Rnn = RNN(data_count=len(self.Data.RnnX))
 
         self.__info(str(next(count)) + ' Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
@@ -210,15 +198,17 @@ class NewsML:
         # self.__info(str(next(count)) + ' Connect Tensor board')
         # tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
-        self.__info(str(next(count)) + ' Run RNN Model')
-        self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY,
-                                       batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2,
-                                       verbose=self.Verbose)
+        self.run_talos()
 
-        self.__info(str(next(count)) + ' Run CNN Model')
-        self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY,
-                                       batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2,
-                                       verbose=self.Verbose)
+        # self.__info(str(next(count)) + ' Run RNN Model')
+        # self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY,
+        #                                batch_size=self.RnnBatch, epochs=self.RnnEpoch, validation_split=0.2,
+        #                                verbose=self.Verbose)
+        #
+        # self.__info(str(next(count)) + ' Run CNN Model')
+        # self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY,
+        #                                batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2,
+        #                                verbose=self.Verbose)
 
         self.__info(str(next(count)) + ' Make Plot')
         self.__make_plot()
@@ -228,21 +218,17 @@ class NewsML:
 
         self.__info('Done')
 
-    def runTalos(self):
-        p = {'activation':['relu', 'elu'],
-     'optimizer': ['AdaDelta'],
-     'losses': ['logcosh'],
-     'shapes': ['brick'],
-     'first_neuron': [32],
-     'dropout': [.2, .3],
-     'batch_size': [64, 128, 256],
-     'epochs': [1]}
-        p = talos.Autom8.AutoParams().params
-        p.batch_size(bottom_value=, max_value=100, steps=10)
-        scan_object = talos.Scan(x=self.Data.CnnX,
-                                 y=self.Data.CnnY,
+    def run_talos(self):
+        p = talos.autom8.AutoParams().params
+        x_split = int(len(self.Data.RnnX)*0.8)
+        y_split = int(len(self.Data.RnnY)*0.8)
+        scan_object = talos.Scan(x=self.Data.RnnX[0:x_split],
+                                 y=self.Data.RnnY[0:y_split],
+                                 x_val=self.Data.RnnX[x_split:len(self.Data.RnnX)],
+                                 y_val=self.Data.RnnY[y_split:len(self.Data.RnnY)],
                                  params=p,
-                                 model=self.cnn_model)
+                                 model=self.rnn_model)
+        scan_object.best_model(metric='f1score', asc=False)
 
 
 

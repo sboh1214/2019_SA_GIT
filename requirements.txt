@@ -1,3 +1,4 @@
+talos
 numpy
 matplotlib
 tqdm
