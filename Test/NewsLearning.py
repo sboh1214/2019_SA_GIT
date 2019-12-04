@@ -137,7 +137,7 @@ class RNN(models.Model):
         y = layers.Dense(units=1, activation=None)(h)
         super().__init__(x, y)
         self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
-                     metrics=['acc', 'binary_accuracy', rms])
+                     metrics=['binary_accuracy', rms])
 
 
 class CNN(models.Model):
@@ -157,7 +157,7 @@ class CNN(models.Model):
         y = layers.Dense(units=1, activation=None)(h)
         super().__init__(x, y)
         self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
-                     metrics=['acc', 'binary_accuracy', rms])
+                     metrics=['binary_accuracy', rms])
 
 
 class NewsML:
@@ -246,14 +246,14 @@ class NewsML:
 
         history = [self.RnnHistory.history['loss'],
                    self.RnnHistory.history['val_loss'],
-                   self.RnnHistory.history['acc'],
-                   self.RnnHistory.history['val_acc'],
+                   self.RnnHistory.history['binary_accuracy'],
+                   self.RnnHistory.history['val_binary_accuracy'],
                    self.RnnHistory.history['rms'],
                    self.RnnHistory.history['val_rms'],
                    self.CnnHistory.history['loss'],
                    self.CnnHistory.history['val_loss'],
-                   self.CnnHistory.history['acc'],
-                   self.CnnHistory.history['val_acc'],
+                   self.CnnHistory.history['binary_accuracy'],
+                   self.CnnHistory.history['val_binary_accuracy'],
                    self.CnnHistory.history['rms'],
                    self.CnnHistory.history['val_rms']]
         with open('./result/' + n + '/history.csv', mode='w') as f:
