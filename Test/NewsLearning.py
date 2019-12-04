@@ -154,13 +154,13 @@ class RNN(models.Model):
     def __init__(self, max_len, max_features):
         x = layers.Input(shape=(max_len,))
         h = layers.Embedding(max_features, 100)(x)
-        h = layers.CuDNNLSTM(100, return_sequences=True)(h)
-        h = layers.CuDNNLSTM(100, return_sequences=False)(h)
+        h = layers.Bidirectional(layers.CuDNNLSTM(100, return_sequences=True))(h)
+        h = layers.Bidirectional(layers.CuDNNLSTM(100, return_sequences=False))(h)
         h = layers.Dropout(rate=0.2)(h)
         h = layers.Dense(units=1)(h)
         y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.1),
                      metrics=['binary_accuracy', rms])
 
 
