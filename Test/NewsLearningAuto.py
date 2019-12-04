@@ -173,7 +173,8 @@ class NewsML:
                                  x_val=self.Data.RnnX[x_split:len(self.Data.RnnX)],
                                  y_val=self.Data.RnnY[y_split:len(self.Data.RnnY)],
                                  params=p,
-                                 model=self.rnn_model)
+                                 model=self.rnn_model,
+                                 experiment_name='rnn')
         scan_object.best_model(metric='f1score', asc=False)
 
     def run(self):
