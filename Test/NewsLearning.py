@@ -56,7 +56,7 @@ class Data:
             return a
 
     @staticmethod
-    def print(a):
+    def __print(a):
         print(str(a[0])[:80])
         print(str(a[1])[:80])
         print(str(a[2])[:80])
