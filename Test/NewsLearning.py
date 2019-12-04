@@ -146,7 +146,7 @@ class CNN(models.Model):
     def __init__(self, side=100):
         x = layers.Input((side, side, 1))
         h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(x)
-        h = layers.MaxPooling2D(pool_size=(2, 2), activation=activations.relu)(h)
+        h = layers.MaxPooling2D(pool_size=(2, 2))(h)
         h = layers.Dropout(rate=0.2)(h)
         h = layers.Flatten()(h)
         h = layers.Dense(units=10, activation=activations.sigmoid)(h)
