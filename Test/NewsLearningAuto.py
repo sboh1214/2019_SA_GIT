@@ -31,10 +31,9 @@ class Data:
     """
     tokenizer = Tokenizer()
 
-    def __init__(self, file='NewsData0_20000', verbose=False, dev=False):
+    def __init__(self, file='NewsData0_20000', verbose=False, divide=1000000):
         self.Verbose = verbose
         self.MaxLen = 100
-        self.Dev = dev
         self.Divide = 1000000
         self.__get_news_data(filename=file)
 
@@ -74,8 +73,7 @@ class Data:
         if self.Verbose:
             self.__print(news_list)
         print(str(len(news_list)) + ' News Imported')
-        if self.Dev:
-            news_list = news_list[:self.Divide]
+        news_list = news_list[:self.Divide]
         print(str(len(news_list)) + ' News will be used')
         bias = [i.Bias for i in news_list]
         print('Maximum Bias : ' + str(max(bias)))
@@ -134,6 +132,7 @@ class NewsML:
     def __init__(self):
         self.Verbose = True
         self.Dev = True
+        self.Divide = 10000000
         self.File = 'NewsData0_20000'
 
         self.RnnEpoch = 10
@@ -164,7 +163,7 @@ class NewsML:
     def run(self):
         count = itertools.count(1)
         self.__info(str(next(count)) + ' Prepare Data')
-        self.Data = Data(file=self.File, verbose=self.Verbose, dev=self.Dev)
+        self.Data = Data(file=self.File, verbose=self.Verbose, divide=self.Divide)
 
         # self.__info(str(next(count)) + ' Build RNN Model')
         # self.Rnn = RNN(data_count=len(self.Data.RnnX))
