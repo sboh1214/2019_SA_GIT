@@ -140,7 +140,7 @@ class RNN(models.Model):
         h = layers.Dense(units=1, activation=None)(h)
         y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.001),
                      metrics=['binary_accuracy', rms])
 
 
@@ -149,7 +149,6 @@ class CNN(models.Model):
         x = layers.Input((side, side, 1))
         h = layers.Conv2D(filters=2, kernel_size=(2, 2))(x)
         h = layers.MaxPooling2D(pool_size=(2, 2))(h)
-        h = layers.LeakyReLU()(h)
         h = layers.Dropout(rate=0.2)(h)
         h = layers.Flatten()(h)
         h = layers.Dense(units=1)(h)
