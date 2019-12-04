@@ -159,7 +159,7 @@ class RNN(models.Model):
         h = layers.Dense(units=1)(h)
         y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.0001),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.000001),
                      metrics=['binary_accuracy', rms])
 
 
