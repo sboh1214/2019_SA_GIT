@@ -250,7 +250,7 @@ class NewsML:
                    self.RnnHistory.history['acc'].insert(0, 'rnn acc'),
                    self.RnnHistory.history['val_acc'].insert(0, 'rnn val_acc'),
                    self.RnnHistory.history['rms'].insert(0, 'rnn rms'),
-                   self.RnnHistory.history['rms_acc'].insert(0, 'rnn val_rms'),
+                   self.RnnHistory.history['val_rms'].insert(0, 'rnn val_rms'),
                    self.CnnHistory.history['loss'],
                    self.CnnHistory.history['val_loss'],
                    self.CnnHistory.history['acc'],
