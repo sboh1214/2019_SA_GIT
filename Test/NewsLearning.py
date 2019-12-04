@@ -135,12 +135,11 @@ class RNN(models.Model):
         x = layers.Input(shape=(max_len,))
         h = layers.Embedding(max_features, 128)(x)
         h = layers.CuDNNLSTM(128, return_sequences=True)(h)
-        h = layers.CuDNNLSTM(128, return_sequences=True)(h)
         h = layers.CuDNNLSTM(128, return_sequences=False)(h)
         h = layers.Dropout(rate=0.2)(h)
         y = layers.Dense(units=1, activation=None)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=1),
                      metrics=['binary_accuracy', rms])
 
 
@@ -157,7 +156,7 @@ class CNN(models.Model):
         h = layers.Dropout(rate=0.2)(h)
         y = layers.Dense(units=1)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=1),
                      metrics=['binary_accuracy', rms])
 
 
