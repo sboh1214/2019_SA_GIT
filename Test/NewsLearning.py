@@ -127,8 +127,7 @@ class Data:
 
 def rms(y_true, y_pred):
     diff = y_true - y_pred
-    k.sqrt(k.mean(k.square(diff)))
-
+    return k.sqrt(k.mean(k.square(diff)))
 
 class RNN(models.Model):
     def __init__(self, max_len, max_features=20000):
