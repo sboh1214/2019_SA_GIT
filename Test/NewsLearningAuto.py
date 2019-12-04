@@ -171,12 +171,12 @@ class NewsML:
             layers.Input(shape=(100,)),
             layers.Embedding(20000, 128),
             layers.LSTM(128, return_sequences=False),
-            layers.Dropout(rate=0.2),
-            layers.Dense(units=1, activation=None)
+            layers.Dropout(rate=params['dropout']),
+            layers.Dense(units=1, activation=params['activations'])
         ])
-        model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss=losses.MeanSquaredError())
+        model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss=params['losses'])
 
-        out = model.fit(x_train, y_train, 
+        out = model.fit(x_train, y_train,
                         validation_data=[x_val, y_val],
                         batch_size=params['batch_size'],
                         epochs=params['epochs'],
@@ -189,11 +189,11 @@ class NewsML:
         self.__info(str(next(count)) + ' Prepare Data')
         self.Data = Data(file=self.File, verbose=self.Verbose, dev=self.Dev)
 
-        self.__info(str(next(count)) + ' Build RNN Model')
-        self.Rnn = RNN(data_count=len(self.Data.RnnX))
-
-        self.__info(str(next(count)) + ' Build CNN Model')
-        self.Cnn = CNN(side=self.Data.CnnSide)
+        # self.__info(str(next(count)) + ' Build RNN Model')
+        # self.Rnn = RNN(data_count=len(self.Data.RnnX))
+        #
+        # self.__info(str(next(count)) + ' Build CNN Model')
+        # self.Cnn = CNN(side=self.Data.CnnSide)
 
         # self.__info(str(next(count)) + ' Connect Tensor board')
         # tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
@@ -220,8 +220,8 @@ class NewsML:
 
     def run_talos(self):
         p = talos.autom8.AutoParams().params
-        x_split = int(len(self.Data.RnnX)*0.8)
-        y_split = int(len(self.Data.RnnY)*0.8)
+        x_split = int(len(self.Data.RnnX) * 0.8)
+        y_split = int(len(self.Data.RnnY) * 0.8)
         scan_object = talos.Scan(x=self.Data.RnnX[0:x_split],
                                  y=self.Data.RnnY[0:y_split],
                                  x_val=self.Data.RnnX[x_split:len(self.Data.RnnX)],
@@ -229,8 +229,6 @@ class NewsML:
                                  params=p,
                                  model=self.rnn_model)
         scan_object.best_model(metric='f1score', asc=False)
-
-
 
     def __make_plot(self):
         """
