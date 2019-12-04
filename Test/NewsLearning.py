@@ -21,21 +21,21 @@ from csv import writer
 
 from data import NewsList
 
-tokenizer = Tokenizer(num_words=100000)
 
 class Data:
     def __init__(self, file='NewsData_0_20000', verbose=False, max_len=100, divide=100000):
         self.Verbose = verbose
         self.MaxLen = max_len
         self.Divide = divide
-        self.__get_news_data(filename=file)
+        self.Tokenizer = Tokenizer(num_words=100000)
+        self.get_news_data(file)
 
     @staticmethod
-    def __info(msg):
+    def info(msg):
         print('\033[35m' + str(msg) + '\033[0m')
 
     @staticmethod
-    def __square(a, side):
+    def square(a, side):
         try:
             avg = sum(a) / len(a)
         except ZeroDivisionError:
@@ -46,7 +46,7 @@ class Data:
         return output
 
     @staticmethod
-    def __pad(a, max_len):
+    def pad(a, max_len):
         if len(a) == max_len:
             return a
         elif len(a) > max_len:
@@ -56,16 +56,16 @@ class Data:
             return a
 
     @staticmethod
-    def __print(a):
+    def print(a):
         print(str(a[0])[:80])
         print(str(a[1])[:80])
         print(str(a[2])[:80])
 
-    def __get_news_data(self, filename):
+    def get_news_data(self, filename):
         """
 
         """
-        self.__info('\nImport News List')
+        self.info('\nImport News List')
         news_list = NewsList().importPickle(filename)
         if self.Verbose:
             self.__print(news_list)
@@ -76,7 +76,7 @@ class Data:
         print('Maximum Bias : ' + str(max(bias)))
         print('Minimum Bias : ' + str(min(bias)))
 
-        self.__info('\nAnalyze Data')
+        self.info('\nAnalyze Data')
         max_sentence = 0
         for i in news_list:
             if max_sentence < len(i.Content):
@@ -84,42 +84,42 @@ class Data:
         self.CnnSide = ceil(sqrt(max_sentence))
         print('Maximum Sentences Count : ' + str(max_sentence))
 
-        self.__info('\nMake Array of Data')
+        self.info('\nMake Array of Data')
         self.RnnX = []
         self.RnnY = []
         self.CnnX = []
         self.CnnY = []
 
-        self.__info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
+        self.info('\nBuild Data : RnnX, RnnY, CnnX, CnnY')
         for news in tqdm(news_list):
             self.RnnX.extend(news.Content)
             self.RnnY.extend(news.Sentence_Bias)
-            self.CnnX.append(self.__square(news.Sentence_Bias, self.CnnSide))
+            self.CnnX.append(self.square(news.Sentence_Bias, self.CnnSide))
             self.CnnY.append(news.Bias)
 
         if self.Verbose:
-            self.__info('Rnn X (' + str(len(self.RnnX)) + ')')
+            self.info('Rnn X (' + str(len(self.RnnX)) + ')')
             self.__print(self.RnnX)
-            self.__info('Rnn Y (' + str(len(self.RnnY)) + ')')
+            self.info('Rnn Y (' + str(len(self.RnnY)) + ')')
             self.__print(self.RnnY)
-            self.__info('Cnn X (' + str(len(self.CnnX)) + ')')
+            self.info('Cnn X (' + str(len(self.CnnX)) + ')')
             self.__print(self.CnnX)
-            self.__info('Cnn Y (' + str(len(self.CnnY)) + ')')
+            self.info('Cnn Y (' + str(len(self.CnnY)) + ')')
             self.__print(self.CnnY)
 
-        self.__info('\nPre-Process CnnX')
+        self.info('\nPre-Process CnnX')
         cnnx = np.array(self.CnnX)
         cnnx = cnnx.reshape((len(cnnx), self.CnnSide, self.CnnSide, 1))
         self.CnnX = cnnx
         if self.Verbose:
             self.__print(self.CnnX)
 
-        self.__info('\nPre-Process RnnX')
-        tokenizer.fit_on_texts(self.RnnX)
-        rnn_x_list = tokenizer.texts_to_sequences(self.RnnX)
+        self.info('\nPre-Process RnnX')
+        self.Tokenizer.fit_on_texts(self.RnnX)
+        rnn_x_list = self.Tokenizer.texts_to_sequences(self.RnnX)
         for i in tqdm(rnn_x_list):
-            self.__pad(i, self.MaxLen)
-        rnn_x_array = np.array([self.__pad(i, self.MaxLen) for i in rnn_x_list])
+            self.pad(i, self.MaxLen)
+        rnn_x_array = np.array([self.pad(i, self.MaxLen) for i in rnn_x_list])
         self.RnnX = rnn_x_array
         if self.Verbose:
             self.__print(self.RnnX)
@@ -137,7 +137,8 @@ class RNN(models.Model):
         h = layers.CuDNNLSTM(128, return_sequences=True)(h)
         h = layers.CuDNNLSTM(128, return_sequences=False)(h)
         h = layers.Dropout(rate=0.2)(h)
-        y = layers.Dense(units=1, activation=None)(h)
+        h = layers.Dense(units=1, activation=None)(h)
+        y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
         self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
                      metrics=['binary_accuracy', rms])
@@ -149,12 +150,12 @@ class CNN(models.Model):
         h = layers.Conv2D(filters=2, kernel_size=(2, 2))(x)
         h = layers.MaxPooling2D(pool_size=(2, 2))(h)
         h = layers.Dropout(rate=0.2)(h)
+        h = layers.Conv2D(filters=2, kernel_size=(2, 2))(h)
+        h = layers.MaxPooling2D(pool_size=(2, 2))(h)
+        h = layers.Dropout(rate=0.2)(h)
         h = layers.Flatten()(h)
-        h = layers.Dense(units=10)(h)
-        h = layers.Dropout(rate=0.2)(h)
-        h = layers.Dense(units=4)(h)
-        h = layers.Dropout(rate=0.2)(h)
         y = layers.Dense(units=1)(h)
+        y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
         self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
                      metrics=['binary_accuracy', rms])
