@@ -84,6 +84,10 @@ class Data:
         self.CnnSide = ceil(sqrt(max_sentence))
         print('Maximum Sentences Count : ' + str(max_sentence))
 
+        self.info('\nNormalizing Data')
+        for item in news_list:
+            item.Bias
+
         self.info('\nMake Array of Data')
         self.RnnX = []
         self.RnnY = []
@@ -155,7 +159,7 @@ class CNN(models.Model):
         h = layers.Dense(units=1)(h)
         y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=10),
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.0001),
                      metrics=['binary_accuracy', rms])
 
 
