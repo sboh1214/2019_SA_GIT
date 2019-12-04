@@ -132,7 +132,7 @@ class RNN(models.Model):
         h = layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
         y = layers.Dense(units=1, activation=activations.relu)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.001), metrics=['acc'])
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001), metrics=['acc'])
 
 
 class CNN(models.Model):
@@ -152,7 +152,7 @@ class CNN(models.Model):
         h = layers.Dense(units=4, activation=activations.relu)(h)
         y = layers.Dense(units=1, activation=activations.relu)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.001), metrics=['acc'])
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001), metrics=['acc'])
 
 
 class NewsML:
