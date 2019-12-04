@@ -130,29 +130,6 @@ class Data:
         if self.Verbose:
             self.__print(self.RnnX)
 
-
-class RNN(models.Model):
-    def __init__(self, data_count):
-        x = layers.Input(shape=(100,))
-        h = layers.Embedding(20000, 128)(x)
-        h = layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
-        y = layers.Dense(units=1, activation=activations.sigmoid)(h)
-        super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(), metrics=['acc'])
-
-
-class CNN(models.Model):
-    def __init__(self, side=100):
-        x = layers.Input((side, side, 1))
-        h = layers.Conv2D(filters=3, kernel_size=(3, 3), activation=activations.relu)(x)
-        h = layers.MaxPooling2D(pool_size=(2, 2))(h)
-        h = layers.Dropout(rate=0.25)(h)
-        h = layers.Flatten()(h)
-        y = layers.Dense(units=1, activation=activations.sigmoid)(h)
-        super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(), metrics=['acc'])
-
-
 class NewsML:
     def __init__(self):
         self.Verbose = True
