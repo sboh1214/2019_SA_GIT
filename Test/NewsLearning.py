@@ -36,7 +36,7 @@ class Data:
     @staticmethod
     def __square(a, side):
         try:
-            avg = sum(a)/len(a)
+            avg = sum(a) / len(a)
         except ZeroDivisionError:
             avg = 0
         output = [[avg] * side for _ in range(side)]
@@ -125,6 +125,11 @@ class Data:
             self.__print(self.RnnX)
 
 
+def rms(y_true, y_pred):
+    diff = y_true - y_pred
+    k.sqrt(k.mean(k.square(diff)))
+
+
 class RNN(models.Model):
     def __init__(self, max_len, max_features=20000):
         x = layers.Input(shape=(max_len,))
@@ -132,7 +137,8 @@ class RNN(models.Model):
         h = layers.CuDNNLSTM(128)(h)
         y = layers.Dense(units=1, activation=activations.relu)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001), metrics=['acc'])
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001),
+                     metrics=['acc', 'binary_accuracy', rms])
 
 
 class CNN(models.Model):
@@ -149,10 +155,11 @@ class CNN(models.Model):
         h = layers.Flatten()(h)
         h = layers.Dense(units=4, activation=activations.relu)(h)
         h = layers.Dropout(rate=0.2)(h)
-        y = layers.Dense(units=1, activation=activations.relu)(h)
-        h = layers.Dropout(rate=0.2)(h)
+        h = layers.Dense(units=1, activation=activations.relu)(h)
+        y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001), metrics=['acc'])
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001),
+                     metrics=['acc', 'binary_accuracy', rms])
 
 
 class NewsML:
@@ -206,12 +213,12 @@ class NewsML:
 
         rnn_loss.plot(self.RnnHistory.history['loss'], 'y', label='train loss')
         rnn_loss.plot(self.RnnHistory.history['val_loss'], 'r', label='val loss')
-        rnn_acc.plot(self.RnnHistory.history['acc'], 'b', label='train acc')
-        rnn_acc.plot(self.RnnHistory.history['val_acc'], 'g', label='val acc')
+        rnn_acc.plot(self.RnnHistory.history['rms'], 'b', label='train acc')
+        rnn_acc.plot(self.RnnHistory.history['rms_acc'], 'g', label='val acc')
         cnn_loss.plot(self.CnnHistory.history['loss'], 'y', label='train loss')
         cnn_loss.plot(self.CnnHistory.history['val_loss'], 'r', label='val loss')
-        cnn_acc.plot(self.CnnHistory.history['acc'], 'b', label='train acc')
-        cnn_acc.plot(self.CnnHistory.history['val_acc'], 'g', label='val acc')
+        cnn_acc.plot(self.CnnHistory.history['rms'], 'b', label='train acc')
+        cnn_acc.plot(self.CnnHistory.history['rms_acc'], 'g', label='val acc')
 
         rnn_loss.set_xlabel('epoch')
         rnn_acc.set_xlabel('epoch')
@@ -239,14 +246,18 @@ class NewsML:
         self.Rnn.save('./result/' + n + '/rnn_model.h5')
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
 
-        history = [self.RnnHistory.history['loss'],
-                   self.RnnHistory.history['val_loss'],
-                   self.RnnHistory.history['acc'],
-                   self.RnnHistory.history['val_acc'],
-                   self.CnnHistory.history['loss'],
-                   self.CnnHistory.history['val_loss'],
-                   self.CnnHistory.history['acc'],
-                   self.CnnHistory.history['val_acc']]
+        history = ['rnn loss' + self.RnnHistory.history['loss'],
+                   'rnn val_loss' + self.RnnHistory.history['val_loss'],
+                   'rnn acc' + self.RnnHistory.history['acc'],
+                   'rnn val_acc' + self.RnnHistory.history['val_acc'],
+                   'rnn rms' + self.RnnHistory.history['rms'],
+                   'rnn val_rms' + self.RnnHistory.history['rms_acc'],
+                   'cnn loss' + self.CnnHistory.history['loss'],
+                   'cnn val_loss' + self.CnnHistory.history['val_loss'],
+                   'cnn acc' + self.CnnHistory.history['acc'],
+                   'cnn val_acc' + self.CnnHistory.history['val_acc'],
+                   'cnn rms' + self.CnnHistory.history['rms'],
+                   'cnn val_rms' + self.CnnHistory.history['val_rms']]
         with open('./result/' + n + '/history.csv', mode='w') as f:
             csv = writer(f)
             for line in history:
