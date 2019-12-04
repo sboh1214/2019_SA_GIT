@@ -137,7 +137,7 @@ class RNN(models.Model):
         h = layers.CuDNNLSTM(128, return_sequences=False)(h)
         y = layers.Dense(units=1, activation=None)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.00001),
                      metrics=['binary_accuracy', rms])
 
 
