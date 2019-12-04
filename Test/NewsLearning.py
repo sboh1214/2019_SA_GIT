@@ -62,12 +62,21 @@ class Data:
         print(str(a[2])[:80])
 
     @staticmethod
-    def newsCali(news_list):
-        rtn_list = list()
+    def news_calibrate(news_list):
         for news in news_list:
-            if news.Bias < 300 and news.Bias > -300:
-                rtn_list.append(news)
-        return rtn_list
+            if news.Bias > 300:
+                news.Bias = 300
+            if news.Bias < -300:
+                news.Bias = -300
+            news.Bias = news.Bias / 150
+        for news in news_list:
+            for index, bias in enumerate(news.Sentence_Bias):
+                if bias > 300:
+                    news.Sentence_Bias[index] = 300
+                if bias < -300:
+                    news.Sentence_Bias[index] = -300
+                news.Sentence_Bias[index] = bias / 150
+        return news_list
 
     def get_news_data(self, filename):
         """
@@ -92,9 +101,8 @@ class Data:
         self.CnnSide = ceil(sqrt(max_sentence))
         print('Maximum Sentences Count : ' + str(max_sentence))
 
-        self.info('\nNormalizing Data')
-        for item in news_list:
-            item.Bias
+        self.info('\nCalibrating Data')
+        news_list = self.news_calibrate(news_list)
 
         self.info('\nMake Array of Data')
         self.RnnX = []
