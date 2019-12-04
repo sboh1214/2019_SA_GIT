@@ -152,9 +152,9 @@ class NewsML:
             layers.Embedding(20000, 128),
             layers.LSTM(128, return_sequences=False),
             layers.Dropout(rate=params['dropout']),
-            layers.Dense(units=1, activation=params['activations'])
+            layers.Dense(units=1, activation=params['activation'])
         ])
-        model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss=params['losses'])
+        model.compile(optimizer=params['optimizer'], loss=params['loss'])
 
         out = model.fit(x_train, y_train,
                         validation_data=[x_val, y_val],
