@@ -151,15 +151,11 @@ class CNN(models.Model):
         h = layers.MaxPooling2D(pool_size=(2, 2))(h)
         h = layers.LeakyReLU()(h)
         h = layers.Dropout(rate=0.2)(h)
-        h = layers.Conv2D(filters=2, kernel_size=(2, 2))(h)
-        h = layers.MaxPooling2D(pool_size=(2, 2))(h)
-        h = layers.LeakyReLU()(h)
-        h = layers.Dropout(rate=0.2)(h)
         h = layers.Flatten()(h)
         h = layers.Dense(units=1)(h)
         y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.1),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=10),
                      metrics=['binary_accuracy', rms])
 
 
