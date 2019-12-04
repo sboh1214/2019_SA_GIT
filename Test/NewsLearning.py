@@ -213,12 +213,12 @@ class NewsML:
 
         rnn_loss.plot(self.RnnHistory.history['loss'], 'y', label='train loss')
         rnn_loss.plot(self.RnnHistory.history['val_loss'], 'r', label='val loss')
-        rnn_acc.plot(self.RnnHistory.history['rms'], 'b', label='train acc')
-        rnn_acc.plot(self.RnnHistory.history['rms_acc'], 'g', label='val acc')
+        rnn_acc.plot(self.RnnHistory.history['rms'], 'b', label='train rms')
+        rnn_acc.plot(self.RnnHistory.history['val_rms'], 'g', label='val rms')
         cnn_loss.plot(self.CnnHistory.history['loss'], 'y', label='train loss')
         cnn_loss.plot(self.CnnHistory.history['val_loss'], 'r', label='val loss')
-        cnn_acc.plot(self.CnnHistory.history['rms'], 'b', label='train acc')
-        cnn_acc.plot(self.CnnHistory.history['rms_acc'], 'g', label='val acc')
+        cnn_acc.plot(self.CnnHistory.history['rms'], 'b', label='train rms')
+        cnn_acc.plot(self.CnnHistory.history['val_rms'], 'g', label='val rms')
 
         rnn_loss.set_xlabel('epoch')
         rnn_acc.set_xlabel('epoch')
