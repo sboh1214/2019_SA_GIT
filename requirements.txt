@@ -5,3 +5,4 @@ tensorflow
 #tensorflow-gpu
 keras
 bs4
+pandas
