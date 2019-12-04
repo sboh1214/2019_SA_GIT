@@ -162,11 +162,11 @@ class NewsML:
         self.File = 'NewsData_0_20000'
 
         self.RnnEpoch = 10
-        self.RnnBatch = 256
+        self.RnnBatch = 64
         self.RnnMaxLen = 100
 
         self.CnnEpoch = 10
-        self.CnnBatch = 256
+        self.CnnBatch = 64
         self.Divide = 1000000
 
     def run(self):
@@ -338,5 +338,11 @@ if __name__ == '__main__':
 
         elif item[:eq] == 'rnnepoch':
             ml.RnnEpoch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'cnnbatch':
+            ml.CnnBatch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'rnnbatch':
+            ml.RnnBatch = int(item[(eq + 1):])
     ml.run()
     # ml.show_plot()
