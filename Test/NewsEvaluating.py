@@ -94,8 +94,8 @@ class KeyWording:
     error_press = dict()
     error_link = list()
     press_count = dict()
-    '''with open("./Test/Data/NewsData" + ".dat", 'rb') as f:
-        news_list = pickle.load(f)'''
+    with open("./Test/Data/NewsDataM" + ".dat", 'rb') as f:
+        news_list = pickle.load(f)
 
     def congressTotalImport(self,fileName):
         with open("./Test/Congress/"+fileName+".txt", 'rt', encoding='UTF8') as f:
@@ -162,7 +162,8 @@ class KeyWording:
         for word in del_list:
             del(self.keyword[word])
                 
-    def printByCount(self, count):
+    def printByCount(self):
+        count=int(input("Print Keyword Coun? :"))
         for word in self.keyword.keys():
             if self.keyword[word]['left']+self.keyword[word]['right'] >= count:
                 #pp=PrettyPrinter(indent=4)
@@ -284,7 +285,7 @@ class KeyWording:
     def newsLabelingMulti(self,news):
         news_keyword = dict()
         news_count = 0
-        #print(news)
+        #print(type(news))
         if(type(news.Content)==str):
             self.error_link.append(news.ID)
             if (news.Press not in self.error_press):
@@ -354,11 +355,11 @@ class KeyWording:
     def newsLabeling(self,threadCount=56,start=0,finish=1):
         pool=Pool(threadCount)
         index = [i for i in range(start,finish)]
-        with open("./Test/Data/NewsData_0_200000" + ".dat", 'rb') as f:
+        with open("./Test/Data/NewsDataM" + ".dat", 'rb') as f:
             news_list = pickle.load(f)
-
+        print("News Import Finish")
         with tqdm(total=len(index)) as pbar:
-            for i, _ in tqdm(enumerate(pool.imap_unordered(self.newsLabelingMulti,news_list))):
+            for i, _ in tqdm(enumerate(pool.imap_unordered(self.newsLabelingMulti,news_list[start:finish]))):
                 pbar.update()
         
         print("Error Sentence :",self.sentence_error)
@@ -399,7 +400,7 @@ if __name__ == "__main__":
     keyWording.keywordRegression()
     #keyWording.pdfKeywording(threadCount)
     #keyWording.exportPickle()
-    #keyWording.printByCount(5)
-    #keyWording.printByCount(1)
+    #keyWording.printByCount()
+    #print(len(keyWording.keyword))
     keyWording.newsLabeling(threadCount,start,finish)
 

@@ -2,38 +2,31 @@
 Execute this file with command line
 $ python3 NewsLearning.py file=Test/NewsData dev=False
 """
-import itertools
+from itertools import count as iter_count
 from datetime import datetime
-import os
+from os import makedirs
 from math import sqrt, ceil
-import sys
-import platform
-from multiprocessing.dummy import Pool
+from sys import argv, version_info
+from platform import platform
 
 from keras import layers, models, losses, optimizers, activations
 from keras.preprocessing.text import Tokenizer
-from keras.callbacks import TensorBoard
-from keras import backend as K
+from keras import backend as k
 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import numpy as np
 from bs4 import BeautifulSoup
+from csv import writer
 
 from data import NewsList
 
 
 class Data:
-    """
-
-    """
-    tokenizer = Tokenizer()
-
-    def __init__(self, file='NewsData0_20000', verbose=False, max_len=100, dev=False):
+    def __init__(self, file='NewsData_0_20000', verbose=False, max_len=100, divide=100000):
         self.Verbose = verbose
         self.MaxLen = max_len
-        self.Dev = dev
-        self.Divide = 1000000
+        self.Divide = divide
         self.__get_news_data(filename=file)
 
     @staticmethod
@@ -42,7 +35,11 @@ class Data:
 
     @staticmethod
     def __square(a, side):
-        output = [[0] * side for _ in range(side)]
+        try:
+            avg = sum(a)/len(a)
+        except ZeroDivisionError:
+            avg = 0
+        output = [[avg] * side for _ in range(side)]
         for i, bias in enumerate(a):
             output[i // side][i % side] = bias
         return output
@@ -72,12 +69,11 @@ class Data:
         if self.Verbose:
             self.__print(news_list)
         print(str(len(news_list)) + ' News Imported')
-        if self.Dev:
-            news_list = news_list[:self.Divide]
+        news_list = news_list[:self.Divide]
         print(str(len(news_list)) + ' News will be used')
         bias = [i.Bias for i in news_list]
-        print('Maximum Bias : '+str(max(bias)))
-        print('Minimum Bias : '+str(min(bias)))
+        print('Maximum Bias : ' + str(max(bias)))
+        print('Minimum Bias : ' + str(min(bias)))
 
         self.__info('\nAnalyze Data')
         max_sentence = 0
@@ -118,7 +114,7 @@ class Data:
             self.__print(self.CnnX)
 
         self.__info('\nPre-Process RnnX')
-        tokenizer = Tokenizer()
+        tokenizer = Tokenizer(num_words=10000)
         tokenizer.fit_on_texts(self.RnnX)
         rnn_x_list = tokenizer.texts_to_sequences(self.RnnX)
         for i in tqdm(rnn_x_list):
@@ -130,53 +126,59 @@ class Data:
 
 
 class RNN(models.Model):
-    def __init__(self, max_len, data_count, max_features=20000):
+    def __init__(self, max_len, max_features=20000):
         x = layers.Input(shape=(max_len,))
         h = layers.Embedding(max_features, 128)(x)
-        h = layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2)(h)
-        y = layers.Dense(units=1, activation=activations.sigmoid)(h)
+        h = layers.CuDNNLSTM(128)(h)
+        y = layers.Dense(units=1, activation=activations.relu)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(), metrics=['acc'])
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001), metrics=['acc'])
 
 
 class CNN(models.Model):
     def __init__(self, side=100):
         x = layers.Input((side, side, 1))
-        h = layers.Conv2D(filters=3, kernel_size=(3, 3), activation=activations.relu)(x)
+        h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(x)
+        h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
         h = layers.MaxPooling2D(pool_size=(2, 2))(h)
-        h = layers.Dropout(rate=0.25)(h)
+        h = layers.Dropout(rate=0.2)(h)
+        h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
+        h = layers.Conv2D(filters=2, kernel_size=(2, 2), activation=activations.relu)(h)
+        h = layers.MaxPooling2D(pool_size=(2, 2))(h)
+        h = layers.Dropout(rate=0.2)(h)
         h = layers.Flatten()(h)
-        y = layers.Dense(units=1, activation=activations.sigmoid)(h)
+        h = layers.Dense(units=4, activation=activations.relu)(h)
+        h = layers.Dropout(rate=0.2)(h)
+        y = layers.Dense(units=1, activation=activations.relu)(h)
+        h = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(), metrics=['acc'])
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.00001), metrics=['acc'])
 
 
 class NewsML:
     def __init__(self):
         self.Verbose = True
         self.Dev = True
-        self.File = 'NewsData0_20000'
+        self.File = 'NewsData_0_20000'
 
         self.RnnEpoch = 10
-        self.RnnBatch = 256
+        self.RnnBatch = 64
         self.RnnMaxLen = 100
 
         self.CnnEpoch = 10
-        self.CnnBatch = 256
+        self.CnnBatch = 64
+        self.Divide = 1000000
 
     def run(self):
-        count = itertools.count(1)
+        count = iter_count(1)
         self.__info(str(next(count)) + ' Prepare Data')
-        self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, dev=self.Dev)
+        self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, divide=self.Divide)
 
         self.__info(str(next(count)) + ' Build RNN Model')
-        self.Rnn = RNN(max_len=self.RnnMaxLen, data_count=len(self.Data.RnnX), max_features=20000)
+        self.Rnn = RNN(max_len=self.RnnMaxLen, max_features=20000)
 
         self.__info(str(next(count)) + ' Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
-
-        # self.__info(str(next(count)) + ' Connect Tensor board')
-        # tb = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
 
         self.__info(str(next(count)) + ' Run RNN Model')
         self.RnnHistory = self.Rnn.fit(x=self.Data.RnnX, y=self.Data.RnnY,
@@ -228,17 +230,27 @@ class NewsML:
 
         self.Fig = fig
 
-    def open_tensorboard(self):
-        pass
-
     def __save(self):
         n = str(datetime.now())
-        os.makedirs('./result/' + n)
+        makedirs('./result/' + n)
 
         self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
 
         self.Rnn.save('./result/' + n + '/rnn_model.h5')
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
+
+        history = [self.RnnHistory.history['loss'],
+                   self.RnnHistory.history['val_loss'],
+                   self.RnnHistory.history['acc'],
+                   self.RnnHistory.history['val_acc'],
+                   self.CnnHistory.history['loss'],
+                   self.CnnHistory.history['val_loss'],
+                   self.CnnHistory.history['acc'],
+                   self.CnnHistory.history['val_acc']]
+        with open('./result/' + n + '/history.csv', mode='w') as f:
+            csv = writer(f)
+            for line in history:
+                csv.writerow(line)
 
         basic = """
         <html>
@@ -270,9 +282,9 @@ class NewsML:
         """
         soup = BeautifulSoup(basic, 'html.parser')
         soup.html.body.find('div', attrs={'class': 'datetime'}).append(str(n))
-        soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform.platform()))
-        soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(sys.version_info))
-        soup.html.body.find('div', attrs={'class': 'keras_backend'}).append(K.backend())
+        soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform()))
+        soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(version_info))
+        soup.html.body.find('div', attrs={'class': 'keras_backend'}).append(k.backend())
 
         soup.html.body.find('div', attrs={'class': 'rnn_epoch'}).append(str(self.RnnEpoch))
         soup.html.body.find('div', attrs={'class': 'rnn_batch'}).append(str(self.RnnBatch))
@@ -302,21 +314,13 @@ class NewsML:
 
 if __name__ == '__main__':
     ml = NewsML()
-    for item in sys.argv:
+    for item in argv:
         eq = item.find('=')
         if eq == -1:
             continue
 
         elif item[:eq] == 'file':
             ml.File = item[(eq + 1):]
-
-        elif item[:eq] == 'dev':
-            if item[(eq + 1):] == 'true':
-                ml.Dev = True
-            elif item[(eq + 1):] == 'false':
-                ml.Dev = False
-            else:
-                raise ValueError()
 
         elif item[:eq] == 'verbose':
             if item[(eq + 1):] == 'true':
@@ -328,5 +332,17 @@ if __name__ == '__main__':
 
         elif item[:eq] == 'divide':
             ml.Divide = int(item[(eq + 1):])
+
+        elif item[:eq] == 'cnnepoch':
+            ml.CnnEpoch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'rnnepoch':
+            ml.RnnEpoch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'cnnbatch':
+            ml.CnnBatch = int(item[(eq + 1):])
+
+        elif item[:eq] == 'rnnbatch':
+            ml.RnnBatch = int(item[(eq + 1):])
     ml.run()
     # ml.show_plot()
