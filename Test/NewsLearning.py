@@ -129,6 +129,7 @@ def rms(y_true, y_pred):
     diff = y_true - y_pred
     return k.sqrt(k.mean(k.square(diff)))
 
+
 class RNN(models.Model):
     def __init__(self, max_len, max_features=20000):
         x = layers.Input(shape=(max_len,))
@@ -137,7 +138,7 @@ class RNN(models.Model):
         h = layers.Dropout(rate=0.2)(h)
         y = layers.Dense(units=1, activation=None)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.001),
                      metrics=['binary_accuracy', rms])
 
 
@@ -150,7 +151,7 @@ class CNN(models.Model):
         h = layers.Flatten()(h)
         y = layers.Dense(units=1)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.001),
+        self.compile(loss=losses.BinaryCrossentropy(), optimizer=optimizers.Adam(learning_rate=0.001),
                      metrics=['binary_accuracy', rms])
 
 
