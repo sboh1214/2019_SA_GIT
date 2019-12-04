@@ -133,9 +133,9 @@ def rms(y_true, y_pred):
 class RNN(models.Model):
     def __init__(self, max_len, max_features=20000):
         x = layers.Input(shape=(max_len,))
-        h = layers.Embedding(max_features, 128)(x)
-        h = layers.CuDNNLSTM(128, return_sequences=True)(h)
-        h = layers.CuDNNLSTM(128, return_sequences=False)(h)
+        h = layers.Embedding(max_features, 100)(x)
+        h = layers.CuDNNLSTM(100, return_sequences=True)(h)
+        h = layers.CuDNNLSTM(100, return_sequences=False)(h)
         h = layers.Dropout(rate=0.2)(h)
         h = layers.Dense(units=1, activation=None)(h)
         y = layers.Dropout(rate=0.2)(h)
