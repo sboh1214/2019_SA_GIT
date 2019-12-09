@@ -241,14 +241,14 @@ class NewsML:
         cnn_acc.set_xlabel('epoch')
 
         rnn_loss.set_ylabel('loss')
-        rnn_acc.set_ylabel('accuray')
+        rnn_acc.set_ylabel('RMSD')
         cnn_loss.set_ylabel('loss')
-        cnn_acc.set_ylabel('accuray')
+        cnn_acc.set_ylabel('RMSD')
 
         rnn_loss.title.set_text('RNN Loss')
-        rnn_acc.title.set_text('RNN Accuracy')
+        rnn_acc.title.set_text('RNN RMSD')
         cnn_loss.title.set_text('CNN Loss')
-        cnn_acc.title.set_text('CNN Accuracy')
+        cnn_acc.title.set_text('CNN RMSD')
 
         self.Fig = fig
 
