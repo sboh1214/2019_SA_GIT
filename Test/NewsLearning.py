@@ -9,9 +9,9 @@ from math import sqrt, ceil
 from sys import argv, version_info
 from platform import platform
 
-from keras import layers, models, losses, optimizers, activations
-from keras.preprocessing.text import Tokenizer
-from keras import backend as k
+from tensorflow.keras import layers, models, losses, optimizers, activations
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow import sqrt, reduce_mean, square
 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -147,7 +147,7 @@ class Data:
 
 def rms(y_true, y_pred):
     diff = y_true - y_pred
-    return k.sqrt(k.mean(k.square(diff)))
+    return sqrt(reduce_mean(square(diff)))
 
 
 class RNN(models.Model):
@@ -159,7 +159,7 @@ class RNN(models.Model):
         h = layers.Dense(units=1)(h)
         y = layers.Dropout(rate=0.2)(h)
         super().__init__(x, y)
-        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.000001),
+        self.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam(learning_rate=0.0001),
                      metrics=['binary_accuracy', rms])
 
 
@@ -310,7 +310,6 @@ class NewsML:
         soup.html.body.find('div', attrs={'class': 'datetime'}).append(str(n))
         soup.html.body.find('div', attrs={'class': 'sys_info'}).append(str(platform()))
         soup.html.body.find('div', attrs={'class': 'py_version'}).append(str(version_info))
-        soup.html.body.find('div', attrs={'class': 'keras_backend'}).append(k.backend())
 
         soup.html.body.find('div', attrs={'class': 'rnn_epoch'}).append(str(self.RnnEpoch))
         soup.html.body.find('div', attrs={'class': 'rnn_batch'}).append(str(self.RnnBatch))
