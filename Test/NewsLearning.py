@@ -9,9 +9,9 @@ from math import sqrt, ceil
 from sys import argv, version_info
 from platform import platform
 
+import tensorflow as tf
 from tensorflow.keras import layers, models, losses, optimizers, activations
 from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow import sqrt, reduce_mean, square
 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -147,7 +147,7 @@ class Data:
 
 def rms(y_true, y_pred):
     diff = y_true - y_pred
-    return sqrt(reduce_mean(square(diff)))
+    return tf.sqrt(tf.reduce_mean(tf.square(diff)))
 
 
 class RNN(models.Model):
