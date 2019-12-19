@@ -199,7 +199,7 @@ class NewsML:
         self.Data = Data(file=self.File, max_len=self.RnnMaxLen, verbose=self.Verbose, divide=self.Divide)
 
         self.__info(str(next(count)) + ' Build RNN Model')
-        self.Rnn = RNN(max_len=self.RnnMaxLen, max_features=10000)
+        self.Rnn = RNN(max_len=self.RnnMaxLen, max_features=100000)
 
         self.__info(str(next(count)) + ' Build CNN Model')
         self.Cnn = CNN(side=self.Data.CnnSide)
