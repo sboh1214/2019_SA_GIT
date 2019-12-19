@@ -133,6 +133,7 @@ class Data:
         self.CnnX = cnnx
         if self.Verbose:
             self.__print(self.CnnX)
+        self.CnnY = np.array(self.CnnY)
 
         self.info('\nPre-Process RnnX')
         self.Tokenizer.fit_on_texts(self.RnnX)
@@ -143,6 +144,7 @@ class Data:
         self.RnnX = rnn_x_array
         if self.Verbose:
             self.__print(self.RnnX)
+        self.RnnY = np.array(self.RnnY)
 
 
 def rms(y_true, y_pred):
