@@ -19,7 +19,7 @@ import numpy as np
 from bs4 import BeautifulSoup
 from csv import writer
 
-from data import NewsList
+from . import data
 
 
 class Data:
@@ -83,7 +83,7 @@ class Data:
 
         """
         self.info('\nImport News List')
-        news_list = NewsList().importPickle(filename)
+        news_list = data.NewsList().importPickle(filename)
         if self.Verbose:
             self.__print(news_list)
         print(str(len(news_list)) + ' News Imported')
