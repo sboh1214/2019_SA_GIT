@@ -9,9 +9,9 @@ from math import sqrt, ceil
 from sys import argv, version_info
 from platform import platform
 
-import keras.backend as k
-from keras import layers, models, losses, optimizers, activations
-from keras.preprocessing.text import Tokenizer
+import tensorflow as tf
+from tensorflow.keras import layers, models, losses, optimizers
+from tensorflow.keras.preprocessing.text import Tokenizer
 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -19,7 +19,7 @@ import numpy as np
 from bs4 import BeautifulSoup
 from csv import writer
 
-from data import NewsList
+from Test.data import NewsList
 
 
 class Data:
@@ -149,7 +149,7 @@ class Data:
 
 def rms(y_true, y_pred):
     diff = y_true - y_pred
-    return k.sqrt(k.mean(k.square(diff)))
+    return tf.sqrt(tf.reduce_mean(tf.square(diff)))
 
 
 class RNN(models.Model):
@@ -213,10 +213,6 @@ class NewsML:
         self.CnnHistory = self.Cnn.fit(x=self.Data.CnnX, y=self.Data.CnnY,
                                        batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2,
                                        verbose=self.Verbose)
-
-        self.__info(str(next(count)) + ' Predict')
-        self.PredictHistory = []
-        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[0]))
 
         self.__info(str(next(count)) + ' Make Plot')
         self.__make_plot()
@@ -284,33 +280,28 @@ class NewsML:
             for line in history:
                 csv.writerow(line)
 
-        with open('./result/' + n + '/predict.csv', mode='w') as f:
-            csv = writer(f)
-            for line in self.PredictHistory:
-                csv.writerow(line)
-
         basic = """
         <html>
         <body>
-        
+
         <h1>Machine Learning Result</h1>
         <div class="datetime">Date and Time : </div>
-        
+
         <h2>Environment</h2>
         <div class="sys_info">System Info : </div>
         <div class="py_version">Python Version : </div>
         <div class="keras_backend">Keras Backend : </div>
-        
+
         <h2>RNN Configuration</h2>
         <div class="rnn_epoch">Epoch : </div>
         <div class="rnn_batch">Batch Size : </div>
         <div class="rnn_model"></div>
-        
+
         <h2>CNN Configuration</h2>
         <div class="cnn_epoch">Epoch : </div>
         <div class="cnn_batch">Batch Size : </div>
         <div class="cnn_model"></div>
-        
+
         <h2>Plot<h2>
         <img src="plot.png" alt="plt" height="400" width="600">
 
