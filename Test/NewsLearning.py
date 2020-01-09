@@ -216,7 +216,11 @@ class NewsML:
 
         self.__info(str(next(count)) + ' Predict')
         self.PredictHistory = []
-        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[0]))
+        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[814219]))
+        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[42159]))
+        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[141318]))
+        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[48937]))
+        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[248414]))
 
         self.__info(str(next(count)) + ' Make Plot')
         self.__make_plot()
