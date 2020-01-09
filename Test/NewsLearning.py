@@ -84,6 +84,7 @@ class Data:
         """
         self.info('\nImport News List')
         news_list = NewsList().importPickle(filename)
+        self.NewsList = news_list
         if self.Verbose:
             self.__print(news_list)
         print(str(len(news_list)) + ' News Imported')
@@ -215,12 +216,10 @@ class NewsML:
                                        verbose=self.Verbose)
 
         self.__info(str(next(count)) + ' Predict')
+        self.PredictList = [814219, 42159, 141318, 48937, 248414]
         self.PredictHistory = []
-        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[814219]))
-        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[42159]))
-        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[141318]))
-        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[48937]))
-        self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[248414]))
+        for item in self.PredictList:
+            self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[item]))
 
         self.__info(str(next(count)) + ' Make Plot')
         self.__make_plot()
@@ -292,6 +291,8 @@ class NewsML:
             csv = writer(f)
             for line in self.PredictHistory:
                 csv.writerow(line)
+            for index in self.PredictList:
+                csv.writerow(self.Data.NewsList[index].Title)
 
         basic = """
         <html>
