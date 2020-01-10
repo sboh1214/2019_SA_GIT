@@ -1,6 +1,6 @@
 """
 Execute this file with command line
-$ python3 NewsLearning.py file=Test/NewsData dev=False
+$ python3 NLTF.py file=Test/NewsData
 """
 from itertools import count as iter_count
 from datetime import datetime
@@ -19,7 +19,7 @@ import numpy as np
 from bs4 import BeautifulSoup
 from csv import writer
 
-from Test.data import NewsList
+from data import NewsList
 
 
 class Data:
@@ -84,6 +84,7 @@ class Data:
         """
         self.info('\nImport News List')
         news_list = NewsList().importPickle(filename)
+        self.NewsList = news_list
         if self.Verbose:
             self.__print(news_list)
         print(str(len(news_list)) + ' News Imported')
@@ -214,6 +215,12 @@ class NewsML:
                                        batch_size=self.CnnBatch, epochs=self.CnnEpoch, validation_split=0.2,
                                        verbose=self.Verbose)
 
+        self.__info(str(next(count)) + ' Predict')
+        self.PredictList = [814219, 42159, 141318, 48937, 248414]
+        self.PredictHistory = []
+        for item in self.PredictList:
+            self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[item]))
+
         self.__info(str(next(count)) + ' Make Plot')
         self.__make_plot()
 
@@ -279,6 +286,13 @@ class NewsML:
             csv = writer(f)
             for line in history:
                 csv.writerow(line)
+
+        with open('./result/' + n + '/predict.csv', mode='w') as f:
+            csv = writer(f)
+            for line in self.PredictHistory:
+                csv.writerow(line)
+            for index in self.PredictList:
+                csv.writerow(self.Data.NewsList[index].Title)
 
         basic = """
         <html>
