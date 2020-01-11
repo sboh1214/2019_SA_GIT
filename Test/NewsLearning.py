@@ -217,9 +217,11 @@ class NewsML:
 
         self.__info(str(next(count)) + ' Predict')
         self.PredictList = [814219, 42159, 141318, 48937, 248414]
-        self.PredictHistory = []
+        self.PredictX = []
         for item in self.PredictList:
-            self.PredictHistory.append(self.Cnn.predict(self.Data.CnnX[item]))
+            self.PredictX.append(self.Data.CnnX[item])
+        self.PredictY = self.Cnn.predict(self.PredictX)
+
 
         self.__info(str(next(count)) + ' Make Plot')
         self.__make_plot()
@@ -289,7 +291,7 @@ class NewsML:
 
         with open('./result/' + n + '/predict.csv', mode='w') as f:
             csv = writer(f)
-            for line in self.PredictHistory:
+            for line in self.PredictY:
                 csv.writerow(line)
             for index in self.PredictList:
                 csv.writerow(self.Data.NewsList[index].Title)
