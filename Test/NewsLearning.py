@@ -237,12 +237,12 @@ class NewsML:
         """
         fig, ((rnn_loss, cnn_loss), (rnn_acc, cnn_acc)) = plt.subplots(nrows=2, ncols=2, constrained_layout=True)
 
-        rnn_loss.plot(self.RnnHistory.history['loss'], 'y', label='train loss')
-        rnn_loss.plot(self.RnnHistory.history['val_loss'], 'r', label='val loss')
+        rnn_loss.plot(self.RnnHistory.history['binary_accuracy'], 'y', label='train bin acc')
+        rnn_loss.plot(self.RnnHistory.history['val_binary_accuracy'], 'r', label='val bin acc')
         rnn_acc.plot(self.RnnHistory.history['rms'], 'b', label='train rms')
         rnn_acc.plot(self.RnnHistory.history['val_rms'], 'g', label='val rms')
-        cnn_loss.plot(self.CnnHistory.history['loss'], 'y', label='train loss')
-        cnn_loss.plot(self.CnnHistory.history['val_loss'], 'r', label='val loss')
+        cnn_loss.plot(self.CnnHistory.history['binary_accuracy'], 'y', label='train bin acc')
+        cnn_loss.plot(self.CnnHistory.history['val_binary_accuracy'], 'r', label='val bin acc')
         cnn_acc.plot(self.CnnHistory.history['rms'], 'b', label='train rms')
         cnn_acc.plot(self.CnnHistory.history['val_rms'], 'g', label='val rms')
 
