@@ -216,11 +216,10 @@ class NewsML:
                                        verbose=self.Verbose)
 
         self.__info(str(next(count)) + ' Predict')
-        self.PredictList = [814219, 42159, 141318, 48937, 248414]
-        self.PredictX = []
-        for item in self.PredictList:
-            self.PredictX.append(self.Data.CnnX[item])
-        self.PredictY = self.Cnn.predict(self.PredictX)
+        self.PredictX = [814219, 42159, 141318, 48937, 248414]
+        self.PredictY = []
+        for item in self.PredictX:
+            self.PredictY.append(self.Cnn.predict(self.Data.CnnX[item]))
 
 
         self.__info(str(next(count)) + ' Make Plot')
@@ -293,7 +292,7 @@ class NewsML:
             csv = writer(f)
             for line in self.PredictY:
                 csv.writerow(line)
-            for index in self.PredictList:
+            for index in self.PredictX:
                 csv.writerow(self.Data.NewsList[index].Title)
 
         basic = """
