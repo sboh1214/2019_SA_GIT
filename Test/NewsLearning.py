@@ -219,7 +219,7 @@ class NewsML:
         self.PredictX = [814219, 42159, 141318, 48937, 248414]
         self.PredictY = []
         for item in self.PredictX:
-            self.PredictY.append(self.Cnn.predict(self.Data.CnnX[item]))
+            self.PredictY.append(self.Cnn.predict([self.Data.CnnX[item]]))
 
 
         self.__info(str(next(count)) + ' Make Plot')
