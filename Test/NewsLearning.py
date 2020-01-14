@@ -224,7 +224,7 @@ class NewsML:
 
 
         self.__info(str(next(count)) + ' Make Plot')
-        self.__make_plot()
+        #self.__make_plot()
 
         self.__info(str(next(count)) + ' Save History and Configuration as HTML')
         self.__save()
