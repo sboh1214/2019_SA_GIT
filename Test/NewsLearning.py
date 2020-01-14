@@ -224,7 +224,7 @@ class NewsML:
 
 
         self.__info(str(next(count)) + ' Make Plot')
-        #self.__make_plot()
+        self.__make_plot()
 
         self.__info(str(next(count)) + ' Save History and Configuration as HTML')
         self.__save()
@@ -267,7 +267,7 @@ class NewsML:
         n = str(datetime.now())
         makedirs('./result/' + n)
 
-        #self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
+        self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
 
         self.Rnn.save('./result/' + n + '/rnn_model.h5')
         self.Cnn.save('./result/' + n + '/cnn_model.h5')
