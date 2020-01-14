@@ -224,7 +224,7 @@ class NewsML:
 
 
         self.__info(str(next(count)) + ' Make Plot')
-        self.__make_plot()
+        #self.__make_plot()
 
         self.__info(str(next(count)) + ' Save History and Configuration as HTML')
         self.__save()
@@ -267,27 +267,27 @@ class NewsML:
         n = str(datetime.now())
         makedirs('./result/' + n)
 
-        self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
-
-        self.Rnn.save('./result/' + n + '/rnn_model.h5')
-        self.Cnn.save('./result/' + n + '/cnn_model.h5')
-
-        history = [self.RnnHistory.history['loss'],
-                   self.RnnHistory.history['val_loss'],
-                   self.RnnHistory.history['binary_accuracy'],
-                   self.RnnHistory.history['val_binary_accuracy'],
-                   self.RnnHistory.history['rms'],
-                   self.RnnHistory.history['val_rms'],
-                   self.CnnHistory.history['loss'],
-                   self.CnnHistory.history['val_loss'],
-                   self.CnnHistory.history['binary_accuracy'],
-                   self.CnnHistory.history['val_binary_accuracy'],
-                   self.CnnHistory.history['rms'],
-                   self.CnnHistory.history['val_rms']]
-        with open('./result/' + n + '/history.csv', mode='w') as f:
-            csv = writer(f)
-            for line in history:
-                csv.writerow(line)
+        # self.Fig.savefig('./result/' + n + '/plot.png', dpi=1000)
+        #
+        # self.Rnn.save('./result/' + n + '/rnn_model.h5')
+        # self.Cnn.save('./result/' + n + '/cnn_model.h5')
+        #
+        # history = [self.RnnHistory.history['loss'],
+        #            self.RnnHistory.history['val_loss'],
+        #            self.RnnHistory.history['binary_accuracy'],
+        #            self.RnnHistory.history['val_binary_accuracy'],
+        #            self.RnnHistory.history['rms'],
+        #            self.RnnHistory.history['val_rms'],
+        #            self.CnnHistory.history['loss'],
+        #            self.CnnHistory.history['val_loss'],
+        #            self.CnnHistory.history['binary_accuracy'],
+        #            self.CnnHistory.history['val_binary_accuracy'],
+        #            self.CnnHistory.history['rms'],
+        #            self.CnnHistory.history['val_rms']]
+        # with open('./result/' + n + '/history.csv', mode='w') as f:
+        #     csv = writer(f)
+        #     for line in history:
+        #         csv.writerow(line)
 
         with open('./result/' + n + '/predict.csv', mode='w') as f:
             csv = writer(f)
