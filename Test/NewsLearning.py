@@ -295,6 +295,8 @@ class NewsML:
                 csv.writerow(line)
             for index in self.PredictX:
                 csv.writerow(self.Data.NewsList[index].Title)
+            for index in self.PredictY:
+                csv.writerow(self.Data.NewsList[index].Bias)
 
         basic = """
         <html>
