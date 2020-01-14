@@ -1,6 +1,5 @@
 """
-Execute this file with command line
-$ python3 NewsLearning.py file=Test/NewsData dev=False
+Deprecated
 """
 from itertools import count as iter_count
 from datetime import datetime
@@ -22,6 +21,7 @@ from csv import writer
 from data import NewsList
 
 
+@DeprecationWarning
 class Data:
     def __init__(self, file='NewsData_0_20000', verbose=False, max_len=100, divide=100000):
         self.Verbose = verbose
@@ -148,11 +148,13 @@ class Data:
         self.RnnY = np.array(self.RnnY)
 
 
+@DeprecationWarning
 def rms(y_true, y_pred):
     diff = y_true - y_pred
     return k.sqrt(k.mean(k.square(diff)))
 
 
+@DeprecationWarning
 class RNN(models.Model):
     def __init__(self, max_len, max_features):
         x = layers.Input(shape=(max_len,))
@@ -166,6 +168,7 @@ class RNN(models.Model):
                      metrics=['binary_accuracy', rms])
 
 
+@DeprecationWarning
 class CNN(models.Model):
     def __init__(self, side=100):
         x = layers.Input((side, side, 1))
@@ -180,6 +183,7 @@ class CNN(models.Model):
                      metrics=['binary_accuracy', rms])
 
 
+@DeprecationWarning
 class NewsML:
     def __init__(self):
         self.Verbose = True
@@ -222,9 +226,8 @@ class NewsML:
             input = np.expand_dims(np.array(self.Data.CnnX[item]), axis=0)
             self.PredictY.append(self.Cnn.predict(input))
 
-
         self.__info(str(next(count)) + ' Make Plot')
-        #self.__make_plot()
+        # self.__make_plot()
 
         self.__info(str(next(count)) + ' Save History and Configuration as HTML')
         self.__save()

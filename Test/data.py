@@ -52,12 +52,6 @@ class NewsList:
             self.List = pickle.load(f)
         return self.List
 
-    def printCell(self):
-        print("    {0:^20} {1:^20} {2:^5} {3:^50} ".format('Press', 'Date', 'Bias', 'Title'))
-        print(f"{'-'*3} {'-'*20} {'-'*20} {'-'*5} {'-'*70}")
-        for i, item in enumerate(self.List, 1):
-            print("{4:<3} {0:<20} {1:<20} {2:<5} {3:<50}".format(item.Press[:20], item.Date, item.Bias, item.Title[:50], i))
-
 
 class PdfData:
     def __init__(self, speaker, speech, word):
