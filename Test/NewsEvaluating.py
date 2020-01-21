@@ -305,9 +305,16 @@ class KeyWording:
         print("Export Done")
 
     def biasCheck(self):
-        with open("./Test/Data/NewsData_0_10000fix" + ".dat", 'rb') as f:
+        with open("./Test/Data/NewsData_0_1000000fix" + ".dat", 'rb') as f:
             news_list = pickle.load(f)
         #print(news_list[index].Bias)
+        news_over300=0
+        news_underm300=0
+        news_tot=0
+        sent_over300=0
+        sent_underm300=0
+        sent_tot=0
+
         news_max=-99999
         news_min=99999
         news_all=dict()
@@ -316,31 +323,53 @@ class KeyWording:
         sentence_all=dict()
         zero=0
         for news in news_list:
+            news_tot+=1
+            if news.Bias>300 : news_over300+=1
+            if news.Bias<-300 : news_underm300+=1
             if(news.Bias>news_max):news_max=news.Bias
             if(news.Bias<news_min):news_min=news.Bias
             if news.Bias not in news_all:
                 news_all[news.Bias]=0
             news_all[news.Bias]+=1
+
             for bias in news.Sentence_Bias:
+                sent_tot+=1
+                if bias>300 : sent_over300+=1
+                if bias<-300 : sent_underm300+=1
                 if(bias>sentence_max):sentence_max=bias
                 if(bias<sentence_min):sentence_min=bias
                 if bias not in sentence_all:
                     sentence_all[bias]=0
-                    sentence_all[bias]+=1
+                sentence_all[bias]+=1
             if(news.Bias==0):zero+=1
         news_x=list(news_all.keys())
         news_y=list(news_all.values())
         sent_x=list(sentence_all.keys())
         sent_y=list(sentence_all.values())
-    
-        plt.plot(news_x,news_y)
+
+        print("News",news_tot,news_over300,news_underm300)
+        print("Sent",sent_tot,sent_over300,sent_underm300)
+
+        plt.bar(sent_x,sent_y)
+        plt.ylim(0,500)
+        plt.xlim(-300,300)
         plt.xlabel('Bias')
         plt.ylabel('Count')
-        plt.show()
+        plt.savefig("sent_bias.png", dpi=350)
 
         print(news_max,news_min,sentence_max,sentence_min,zero)
+    def newsCali(news_list):
+        for news in news_list:
+            if news.Bias > 300 : news.Bias = 300
+            if news.Bias < -300 : news.Bias = -300
+            news.Bias=news.Bias/150
+        for news in news_list:
+            for index,bias in enumerate(news.Sentence_Bias):
+                if bias > 300 : news.Sentence_Bias[index]=300
+                if bias < -300 : news.Sentence_Bias[index]=-300
+            news.Sentence_Bias[index]=bias/150
 
-
+        return news_list
 if __name__ == "__main__":
     keyWording = KeyWording()
     keyWording.congressTotalImport("total")
